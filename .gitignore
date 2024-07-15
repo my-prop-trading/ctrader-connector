@@ -1,0 +1,13 @@
+/target
+Cargo.lock
+.idea
+.vscode
+.vs
+.DS_Store
+*.user
+**/*.min.css
+**/*.js.css
+
+**/bin
+**/obj
+**/node_modules

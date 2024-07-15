@@ -1,0 +1,37 @@
+[package]
+name = "ctrader-connector"
+version = "0.0.1"
+edition = "2021"
+authors = ["gorin <mxmgorin@gmail.com>"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[dependencies]
+rust-extensions = { tag = "0.1.4", git = "https://github.com/MyJetTools/rust-extensions.git" }
+
+http = "*"
+serde = { version = "*", features = ["derive"] }
+serde_json = "*"
+serde_derive = "*"
+tokio = { version = "*", features = ["full"] }
+tokio-util = "*"
+async-trait = "*"
+futures = "*"
+futures-util = { version = "*", default-features = false }
+futures-core = { version = "*", default-features = false }
+futures-channel = "*"
+reqwest = { version = "*", features = ["json"] }
+url = "*"
+error-chain = { version = "0.12.4", default-features = false }
+hmac = "*"
+sha2 = "*"
+hex = "*"
+serde_qs = "*"
+ring = "*"
+base64 = "0.21.0"
+lazy_static = "*"
+chrono = "*"
+uuid = { version = "1.7.0", features = ["v4"] }
+aes = "*"
+libaes = "*"
+rand = "*"
+urlencoding = "*"
