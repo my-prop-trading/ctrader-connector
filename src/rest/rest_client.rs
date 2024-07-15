@@ -2,7 +2,8 @@ use crate::rest::creds::CTraderCreds;
 use crate::rest::endpoints::CtraderEndpoint;
 use crate::rest::errors::Error;
 use crate::rest::models::{
-    CreateCtraderManagerTokenRequest, CreateCtraderManagerTokenResponse, CtraderRequest,
+    CreateCTIDRequest, CreateCTIDResponse, CreateCtraderManagerTokenRequest,
+    CreateCtraderManagerTokenResponse, CtraderRequest,
 };
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::de::DeserializeOwned;
@@ -24,6 +25,30 @@ impl CtraderRestClient {
             creds,
             current_token: None,
         }
+    }
+
+    pub async fn create_ctid(
+        &self,
+        request: CreateCTIDRequest,
+    ) -> Result<CreateCTIDResponse, Error> {
+        let url: String = format!(
+            "{}{}?token={}",
+            self.url,
+            String::from(&CtraderEndpoint::CreateManagerToken),
+            self.current_token.clone().unwrap_or("".to_string())
+        );
+        let headers = self.build_headers();
+        let request_json = serde_json::to_string(&request)?;
+
+        let response = self
+            .inner_client
+            .post(&url)
+            .body(request_json.clone())
+            .headers(headers)
+            .send()
+            .await;
+
+        crate::rest::response_handler::handle(response?, Some(request_json), &url).await
     }
 
     pub async fn authorize(&mut self) -> Result<(), Error> {
