@@ -8,8 +8,8 @@ pub enum CtraderEndpoint {
 impl From<&CtraderEndpoint> for String {
     fn from(item: &CtraderEndpoint) -> Self {
         match item {
-            CtraderEndpoint::CreateManagerToken => "/webserv/managers/token".to_string(),
-            CtraderEndpoint::CreateCTID => "/ctid/create".to_string(),
+            CtraderEndpoint::CreateManagerToken => "/v2/webserv/managers/token".to_string(),
+            CtraderEndpoint::CreateCTID => "/v2/ctid/create".to_string(),
         }
     }
 }
