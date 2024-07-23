@@ -10,14 +10,14 @@ use serde::de::DeserializeOwned;
 use std::collections::HashMap;
 
 #[derive(Clone)]
-pub struct CtraderRestClient {
+pub struct WebServicesRestClient {
     url: String,
     inner_client: reqwest::Client,
     creds: CTraderCreds,
     current_token: Option<String>,
 }
 
-impl CtraderRestClient {
+impl WebServicesRestClient {
     pub fn new(url: impl Into<String>, creds: CTraderCreds) -> Self {
         Self {
             url: url.into(),

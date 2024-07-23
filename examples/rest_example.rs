@@ -1,6 +1,6 @@
 use ctrader_connector::rest::creds::CTraderCreds;
 use ctrader_connector::rest::models::CreateCTIDRequest;
-use ctrader_connector::rest::rest_client::CtraderRestClient;
+use ctrader_connector::rest::rest_client::WebServicesRestClient;
 use uuid::Uuid;
 
 #[tokio::main]
@@ -11,11 +11,11 @@ async fn main() {
     };
     let url = std::env::var("CTRADER_URL").unwrap();
 
-    let mut rest_client = CtraderRestClient::new(url, creds);
+    let mut rest_client = WebServicesRestClient::new(url, creds);
     rest_client.authorize().await.unwrap();
 }
 
-pub async fn create_ctid(rest_client: &CtraderRestClient) {
+pub async fn create_ctid(rest_client: &WebServicesRestClient) {
     let uuid = &Uuid::new_v4().to_string()[..6];
     let request = CreateCTIDRequest {
         email: format!("{}@mailinator.com", uuid),
