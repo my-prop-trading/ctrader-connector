@@ -1,4 +1,4 @@
-use crate::rest::creds::CTraderCreds;
+use crate::rest::creds::ManagerCreds;
 use crate::rest::endpoints::CtraderEndpoint;
 use crate::rest::errors::Error;
 use crate::rest::models::{
@@ -13,12 +13,12 @@ use std::collections::HashMap;
 pub struct WebServicesRestClient {
     url: String,
     inner_client: reqwest::Client,
-    creds: CTraderCreds,
+    creds: ManagerCreds,
     current_token: Option<String>,
 }
 
 impl WebServicesRestClient {
-    pub fn new(url: impl Into<String>, creds: CTraderCreds) -> Self {
+    pub fn new(url: impl Into<String>, creds: ManagerCreds) -> Self {
         Self {
             url: url.into(),
             inner_client: reqwest::Client::new(),

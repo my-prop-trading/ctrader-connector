@@ -1,5 +1,5 @@
 #[derive(Clone)]
-pub struct CTraderCreds {
+pub struct ManagerCreds {
     pub password: String,
-    pub login: String,
+    pub login: i32,
 }

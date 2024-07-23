@@ -5,7 +5,7 @@ pub trait CtraderRequest: Serialize {}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CreateCtraderManagerTokenRequest {
-    pub login: String,
+    pub login: i32,
     #[serde(rename = "hashedPassword")]
     pub hashed_password: String,
 }

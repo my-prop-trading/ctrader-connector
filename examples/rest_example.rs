@@ -1,15 +1,16 @@
-use ctrader_connector::rest::creds::CTraderCreds;
+use ctrader_connector::rest::creds::ManagerCreds;
 use ctrader_connector::rest::models::CreateCTIDRequest;
 use ctrader_connector::rest::rest_client::WebServicesRestClient;
 use uuid::Uuid;
 
 #[tokio::main]
 async fn main() {
-    let creds = CTraderCreds {
+    let creds = ManagerCreds {
         password: std::env::var("CTRADER_PASSWORD").unwrap(),
-        login: std::env::var("CTRADER_LOGIN").unwrap(),
+        login: std::env::var("CTRADER_LOGIN").unwrap().parse().unwrap(),
     };
     let url = std::env::var("CTRADER_URL").unwrap();
+    println!("{}", url);
 
     let mut rest_client = WebServicesRestClient::new(url, creds);
     rest_client.authorize().await.unwrap();
