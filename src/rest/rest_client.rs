@@ -5,6 +5,7 @@ use crate::rest::models::{
     CreateCtidRequest, CreateCtidResponse, CreateCtraderManagerTokenRequest,
     CreateCtraderManagerTokenResponse, CreateTraderRequest, CreateTraderResponse, CtraderRequest,
 };
+use crate::rest::{LinkCtidRequest, LinkCtidResponse};
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::de::DeserializeOwned;
 use std::collections::HashMap;
@@ -33,6 +34,22 @@ impl WebServicesRestClient {
         };
 
         format!("{}{}?token={}", self.url, String::from(endpoint), token)
+    }
+
+    pub async fn link_ctid(&self, request: LinkCtidRequest) -> Result<LinkCtidResponse, Error> {
+        let url = self.generate_endpoint_url(&CtraderEndpoint::LinkCtid);
+        let headers = self.build_headers();
+        let request_json = serde_json::to_string(&request)?;
+
+        let response = self
+            .inner_client
+            .post(&url)
+            .body(request_json.clone())
+            .headers(headers)
+            .send()
+            .await;
+
+        crate::rest::response_handler::handle(response?, Some(request_json), &url).await
     }
 
     pub async fn create_trader(

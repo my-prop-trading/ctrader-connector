@@ -96,7 +96,6 @@ pub struct CreateTraderRequest {
     pub swap_free: Option<bool>,
 }
 
-
 #[derive(strum::Display, Debug, Clone, Serialize, Deserialize)]
 pub enum LimitedRiskMarginCalculationStrategy {
     /// Margin requirements have to be calculated based on the account leverage.
@@ -187,8 +186,8 @@ pub struct CreateTraderResponse {
     #[serde(rename = "freeMargin")]
     pub free_margin: i32,
     /// The current amount of funds that the account can withdraw.
-    // It is calculated via the following formula: cashEquity = balance + unrealized P&L - management fees, 
-    // where management fees are all management fees charged by the providers of strategies that the 
+    // It is calculated via the following formula: cashEquity = balance + unrealized P&L - management fees,
+    // where management fees are all management fees charged by the providers of strategies that the
     // account owner has invested in. Subject to moneyDigits.
     #[serde(rename = "cashEquity")]
     pub cash_equity: i32,
@@ -204,10 +203,34 @@ pub struct CreateTraderResponse {
     pub non_withdrawal_bonus: i32,
     #[serde(rename = "registrationTimestamp")]
     pub registration_timestamp: i32,
-    /// If this parameter equals true, rollover commissions are applied to the account instead of swaps. 
+    /// If this parameter equals true, rollover commissions are applied to the account instead of swaps.
     /// The reverse applies if the parameter is false. This field is useful for ensuring compliance with Sharia law.
     #[serde(rename = "swapFree")]
     pub swap_free: bool,
     #[serde(rename = "usedMargin")]
-    pub used_margin: i32,    
+    pub used_margin: i32,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct LinkCtidRequest {
+    #[serde(rename = "traderLogin")]
+    pub trader_login: i32,
+    #[serde(rename = "traderPasswordHash")]
+    pub trader_password_hash: String,
+    #[serde(rename = "userId")]
+    pub user_id: i32,
+    #[serde(rename = "brokerName")]
+    pub broker_name: String,
+    #[serde(rename = "environmentName")]
+    pub environment_name: String,
+    /// A flag that denotes whether the ctidTraderAccountId key is returned in the response to this API call.
+    /// Set it to true to ensure that the response to this call is not empty.
+    #[serde(rename = "returnAccountDetails")]
+    pub return_account_details: Option<bool>
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct LinkCtidResponse {
+    #[serde(rename = "ctidTraderAccountId")]
+    pub ctid_trader_account_id: Option<i32>,
 }
