@@ -104,9 +104,14 @@ impl WebServicesRestClient {
         let mut custom_headers = HeaderMap::new();
 
         custom_headers.insert(
-            "content-type",
+            "Content-Type",
             HeaderValue::from_str("application/json").unwrap(),
         );
+
+        custom_headers.insert(
+            "Accept",
+            HeaderValue::from_str("application/json").unwrap(),
+        );        
 
         custom_headers
     }
