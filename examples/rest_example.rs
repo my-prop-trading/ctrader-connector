@@ -1,5 +1,5 @@
 use ctrader_connector::rest::creds::ManagerCreds;
-use ctrader_connector::rest::models::CreateCTIDRequest;
+use ctrader_connector::rest::models::CreateCtidRequest;
 use ctrader_connector::rest::rest_client::WebServicesRestClient;
 use uuid::Uuid;
 
@@ -18,7 +18,7 @@ async fn main() {
 
 pub async fn create_ctid(rest_client: &WebServicesRestClient) {
     let uuid = &Uuid::new_v4().to_string()[..6];
-    let request = CreateCTIDRequest {
+    let request = CreateCtidRequest {
         email: format!("{}@mailinator.com", uuid),
         broker_name: std::env::var("CTRADER_BROKER_NAME").unwrap(),
         preferred_lang: None,

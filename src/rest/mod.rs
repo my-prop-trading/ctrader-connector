@@ -4,3 +4,5 @@ pub mod endpoints;
 pub mod models;
 pub mod rest_client;
 pub mod creds;
+
+pub use models::*;

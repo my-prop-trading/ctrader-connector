@@ -36,3 +36,4 @@ libaes = "*"
 rand = "*"
 urlencoding = "*"
 md5 = "0.7.0"
+strum = { version = "0.26", features = ["derive"] }

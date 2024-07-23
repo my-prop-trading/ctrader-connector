@@ -2,8 +2,8 @@ use crate::rest::creds::ManagerCreds;
 use crate::rest::endpoints::CtraderEndpoint;
 use crate::rest::errors::Error;
 use crate::rest::models::{
-    CreateCTIDRequest, CreateCTIDResponse, CreateCtraderManagerTokenRequest,
-    CreateCtraderManagerTokenResponse, CtraderRequest,
+    CreateCtidRequest, CreateCtidResponse, CreateCtraderManagerTokenRequest,
+    CreateCtraderManagerTokenResponse, CreateTraderRequest, CreateTraderResponse, CtraderRequest,
 };
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::de::DeserializeOwned;
@@ -27,16 +27,38 @@ impl WebServicesRestClient {
         }
     }
 
+    fn generate_endpoint_url(&self, endpoint: &CtraderEndpoint) -> String {
+        let Some(token) = self.current_token.as_ref() else {
+            panic!("Must be authorized at this point");
+        };
+
+        format!("{}{}?token={}", self.url, String::from(endpoint), token)
+    }
+
+    pub async fn create_trader(
+        &self,
+        request: CreateTraderRequest,
+    ) -> Result<CreateTraderResponse, Error> {
+        let url = self.generate_endpoint_url(&CtraderEndpoint::CreateTrader);
+        let headers = self.build_headers();
+        let request_json = serde_json::to_string(&request)?;
+
+        let response = self
+            .inner_client
+            .post(&url)
+            .body(request_json.clone())
+            .headers(headers)
+            .send()
+            .await;
+
+        crate::rest::response_handler::handle(response?, Some(request_json), &url).await
+    }
+
     pub async fn create_ctid(
         &self,
-        request: CreateCTIDRequest,
-    ) -> Result<CreateCTIDResponse, Error> {
-        let url: String = format!(
-            "{}{}?token={}",
-            self.url,
-            String::from(&CtraderEndpoint::CreateManagerToken),
-            self.current_token.clone().unwrap_or("".to_string())
-        );
+        request: CreateCtidRequest,
+    ) -> Result<CreateCtidResponse, Error> {
+        let url = self.generate_endpoint_url(&CtraderEndpoint::CreateCtid);
         let headers = self.build_headers();
         let request_json = serde_json::to_string(&request)?;
 
@@ -108,10 +130,7 @@ impl WebServicesRestClient {
             HeaderValue::from_str("application/json").unwrap(),
         );
 
-        custom_headers.insert(
-            "Accept",
-            HeaderValue::from_str("application/json").unwrap(),
-        );        
+        custom_headers.insert("Accept", HeaderValue::from_str("application/json").unwrap());
 
         custom_headers
     }

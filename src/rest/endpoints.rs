@@ -2,14 +2,20 @@ use http::Method;
 
 pub enum CtraderEndpoint {
     CreateManagerToken,
-    CreateCTID
+    CreateCtid,
+    CreateTrader,
 }
 
 impl From<&CtraderEndpoint> for String {
     fn from(item: &CtraderEndpoint) -> Self {
+        let api_version = "v2";
+
         match item {
-            CtraderEndpoint::CreateManagerToken => "/v2/webserv/managers/token".to_string(),
-            CtraderEndpoint::CreateCTID => "/v2/ctid/create".to_string(),
+            CtraderEndpoint::CreateManagerToken => {
+                format!("/{}/webserv/managers/token", api_version)
+            }
+            CtraderEndpoint::CreateCtid => format!("/{}/ctid/create", api_version),
+            CtraderEndpoint::CreateTrader => format!("/{}/webserv/traders", api_version),
         }
     }
 }
@@ -18,7 +24,8 @@ impl CtraderEndpoint {
     pub fn get_http_method(&self) -> Method {
         match &self {
             CtraderEndpoint::CreateManagerToken => Method::POST,
-            CtraderEndpoint::CreateCTID => Method::POST,
+            CtraderEndpoint::CreateCtid => Method::POST,
+            CtraderEndpoint::CreateTrader => Method::POST,
         }
     }
 }
