@@ -9,6 +9,7 @@ use crate::rest::{LinkCtidRequest, LinkCtidResponse};
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::de::DeserializeOwned;
 use std::collections::HashMap;
+use crate::rest::utils::generate_password_hash;
 
 #[derive(Clone)]
 pub struct WebServicesRestClient {
@@ -97,10 +98,9 @@ impl WebServicesRestClient {
             String::from(&CtraderEndpoint::CreateManagerToken)
         );
         let headers = self.build_headers();
-        let password_digest = md5::compute(self.creds.password.as_bytes());
         let request = CreateCtraderManagerTokenRequest {
             login: self.creds.login.clone(),
-            hashed_password: format!("{:x}", password_digest),
+            hashed_password: generate_password_hash(&self.creds.password),
         };
         let request_json = serde_json::to_string(&request)?;
 

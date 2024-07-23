@@ -1,15 +1,8 @@
 use error_chain::error_chain;
-use serde::Deserialize;
-use std::collections::HashMap;
-
-#[derive(Debug, Deserialize)]
-pub struct ErrorContent {
-    pub errors: HashMap<String, String>,
-}
 
 error_chain! {
     errors {
-       GenericError(response: ErrorContent)
+       RestError(response: String)
     }
     types {
         Error, ErrorKind, ResultExt, Result;

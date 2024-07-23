@@ -28,7 +28,7 @@ pub struct CreateCtidRequest {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CreateCtidResponse {
     #[serde(rename = "userId")]
-    pub user_id: i64,
+    pub user_id: i32,
     pub nickname: String,
     pub email: String,
     #[serde(rename = "preferredLanguage")]

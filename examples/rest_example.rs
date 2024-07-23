@@ -3,6 +3,7 @@ use ctrader_connector::rest::models::CreateCtidRequest;
 use ctrader_connector::rest::rest_client::WebServicesRestClient;
 use ctrader_connector::rest::{CreateTraderRequest, LinkCtidRequest, TotalMarginCalculationType, TraderAccessRights, TraderAccountType};
 use uuid::Uuid;
+use ctrader_connector::rest::utils::generate_password_hash;
 
 #[tokio::main]
 async fn main() {
@@ -36,7 +37,7 @@ pub async fn create_trader(rest_client: &WebServicesRestClient) {
         broker_name: std::env::var("CTRADER_BROKER_NAME").unwrap(),
         deposit_currency: "USD".to_string(),
         group_name: "default".to_string(),
-        hashed_password: generate_password_hash(),
+        hashed_password: generate_test_password_hash(),
         leverage_in_cents: 0,
         total_margin_calculation_type: TotalMarginCalculationType::Max,
         contact_details: None,
@@ -58,7 +59,7 @@ pub async fn create_trader(rest_client: &WebServicesRestClient) {
 pub async fn link_ctid(rest_client: &WebServicesRestClient) {
     let request = LinkCtidRequest {
         trader_login: 0,
-        trader_password_hash: generate_password_hash(),
+        trader_password_hash: generate_test_password_hash(),
         user_id: 0,
         broker_name: std::env::var("CTRADER_BROKER_NAME").unwrap(),
         environment_name: "Demo".to_string(),
@@ -69,6 +70,6 @@ pub async fn link_ctid(rest_client: &WebServicesRestClient) {
     println!("{:?}", resp)
 }
 
-fn generate_password_hash() -> String {
-    format!("{:x}", md5::compute("qwerty123"))
+fn generate_test_password_hash() -> String {
+    generate_password_hash("qwerty123")
 }
