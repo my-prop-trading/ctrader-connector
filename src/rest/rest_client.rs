@@ -18,9 +18,9 @@ pub struct CtraderRestClient {
 }
 
 impl CtraderRestClient {
-    pub fn new(host: &str, port: usize, creds: CTraderCreds) -> Self {
+    pub fn new(url: impl Into<String>, creds: CTraderCreds) -> Self {
         Self {
-            url: format!("https://{}:{}", host, port),
+            url: url.into(),
             inner_client: reqwest::Client::new(),
             creds,
             current_token: None,

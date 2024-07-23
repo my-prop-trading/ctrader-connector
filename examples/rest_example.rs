@@ -9,10 +9,9 @@ async fn main() {
         password: std::env::var("CTRADER_PASSWORD").unwrap(),
         login: std::env::var("CTRADER_LOGIN").unwrap(),
     };
-    let host = std::env::var("CTRADER_HOST").unwrap();
-    let port = std::env::var("CTRADER_PORT").unwrap().parse().unwrap();
+    let url = std::env::var("CTRADER_URL").unwrap();
 
-    let mut rest_client = CtraderRestClient::new(&host, port, creds);
+    let mut rest_client = CtraderRestClient::new(url, creds);
     rest_client.authorize().await.unwrap();
 }
 
