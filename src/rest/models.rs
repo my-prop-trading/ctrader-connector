@@ -88,8 +88,14 @@ pub struct CreateTraderRequest {
     pub group_name: String,
     #[serde(rename = "hashedPassword")]
     pub hashed_password: String,
+    /// The total amount of leverage available to the account; is specified in 10^2. E.g.,
+    /// the 1:1 leverage is leverageInCents=100 while the 1:100 leverage is leverageInCents=10000.
     #[serde(rename = "leverageInCents")]
     pub leverage_in_cents: i32,
+    /// The strategy via which the account margin is calculated. The following values are accepted.
+    /// "MAX". The total margin requirements per symbol are equal to the maximum margin requirements for all positions opened for this symbol.
+    /// "SUM". The total margin requirements per symbol are equal to the sum of all margin requirements of all positions opened for this symbol.
+    /// "NET". The total margin requirements per symbol are equal to the difference between the margin requirements for all long positions and all short positions opened for this symbol.
     #[serde(rename = "totalMarginCalculationType")]
     pub total_margin_calculation_type: TotalMarginCalculationType,
     #[serde(rename = "contactDetails")]
