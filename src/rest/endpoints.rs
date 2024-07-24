@@ -1,6 +1,6 @@
 use http::Method;
 
-pub enum CtraderEndpoint {
+pub enum WebservicesApiEndpoint {
     CreateManagerToken,
     CreateCtid,
     CreateTrader,
@@ -9,36 +9,36 @@ pub enum CtraderEndpoint {
     UpdateTraderBalance(String),
 }
 
-impl From<&CtraderEndpoint> for String {
-    fn from(item: &CtraderEndpoint) -> Self {
+impl From<&WebservicesApiEndpoint> for String {
+    fn from(item: &WebservicesApiEndpoint) -> Self {
         let api_version = "v2";
 
         match item {
-            CtraderEndpoint::CreateManagerToken => {
+            WebservicesApiEndpoint::CreateManagerToken => {
                 format!("/{}/webserv/managers/token", api_version)
             }
-            CtraderEndpoint::CreateCtid => format!("/{api_version}/ctid/create"),
-            CtraderEndpoint::CreateTrader => format!("/{api_version}/webserv/traders"),
-            CtraderEndpoint::LinkCtid => format!("/{api_version}/ctid/link"),
-            CtraderEndpoint::UpdateTrader(login) => {
+            WebservicesApiEndpoint::CreateCtid => format!("/{api_version}/ctid/create"),
+            WebservicesApiEndpoint::CreateTrader => format!("/{api_version}/webserv/traders"),
+            WebservicesApiEndpoint::LinkCtid => format!("/{api_version}/ctid/link"),
+            WebservicesApiEndpoint::UpdateTrader(login) => {
                 format!("/{api_version}/webserv/traders/{login}")
             }
-            CtraderEndpoint::UpdateTraderBalance(login) => {
+            WebservicesApiEndpoint::UpdateTraderBalance(login) => {
                 format!("/{api_version}/webserv/traders/{login}/changebalance")
             }
         }
     }
 }
 
-impl CtraderEndpoint {
+impl WebservicesApiEndpoint {
     pub fn get_http_method(&self) -> Method {
         match &self {
-            CtraderEndpoint::CreateManagerToken => Method::POST,
-            CtraderEndpoint::CreateCtid => Method::POST,
-            CtraderEndpoint::CreateTrader => Method::POST,
-            CtraderEndpoint::LinkCtid => Method::POST,
-            CtraderEndpoint::UpdateTrader(_) => Method::PATCH,
-            CtraderEndpoint::UpdateTraderBalance(_) => Method::POST
+            WebservicesApiEndpoint::CreateManagerToken => Method::POST,
+            WebservicesApiEndpoint::CreateCtid => Method::POST,
+            WebservicesApiEndpoint::CreateTrader => Method::POST,
+            WebservicesApiEndpoint::LinkCtid => Method::POST,
+            WebservicesApiEndpoint::UpdateTrader(_) => Method::PATCH,
+            WebservicesApiEndpoint::UpdateTraderBalance(_) => Method::POST
         }
     }
 }
