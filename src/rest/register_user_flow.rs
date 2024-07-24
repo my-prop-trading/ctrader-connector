@@ -81,7 +81,10 @@ impl RegisterUserFlow {
 
 #[derive(Debug, Clone)]
 pub struct RegisterUserInfo {
+    /// The number of a specific trading account. Linked to the user id
     pub trader_login: i32,
+    /// The unique identifier of the user entity. Linked to specified email
     pub user_id: i32,
+    /// The unique identifier of the linkage between a specific user and one of their trading accounts.
     pub account_id: i32,
 }
