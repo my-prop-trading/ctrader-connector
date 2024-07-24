@@ -10,8 +10,10 @@ use crate::rest::{
     LinkCtidRequest, LinkCtidResponse, UpdateTraderBalanceRequest, UpdateTraderBalanceResponse,
     UpdateTraderRequest,
 };
+use http::Method;
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::de::DeserializeOwned;
+use serde::Serialize;
 use std::collections::HashMap;
 
 /// A simple yet powerful RESTful API, designed to cover the basic integration requirements for CRM
@@ -34,26 +36,15 @@ impl WebservicesRestClient {
             current_token: None,
         }
     }
+
     /// Changes the balance of a trader entity (including allocating/removing credit).
     pub async fn update_trader_balance(
         &self,
         request: UpdateTraderBalanceRequest,
     ) -> Result<UpdateTraderBalanceResponse, Error> {
-        let url = self.generate_endpoint_url(&CtraderEndpoint::UpdateTraderBalance(
-            request.login.to_string(),
-        ));
-        let headers = self.build_headers();
-        let request_json = serde_json::to_string(&request)?;
-
-        let response = self
-            .inner_client
-            .post(&url)
-            .body(request_json.clone())
-            .headers(headers)
-            .send()
-            .await;
-
-        crate::rest::response_handler::handle(response?, Some(request_json), &url).await
+        let endpoint = CtraderEndpoint::UpdateTraderBalance(request.login.to_string());
+        let url = self.generate_endpoint_url(&endpoint);
+        self.send(&url, endpoint.get_http_method(), request).await
     }
 
     /// Updates a trader entity.
@@ -62,19 +53,9 @@ impl WebservicesRestClient {
         login: i32,
         request: UpdateTraderRequest,
     ) -> Result<(), Error> {
-        let url = self.generate_endpoint_url(&CtraderEndpoint::UpdateTrader(login.to_string()));
-        let headers = self.build_headers();
-        let request_json = serde_json::to_string(&request)?;
-
-        let response = self
-            .inner_client
-            .patch(&url)
-            .body(request_json.clone())
-            .headers(headers)
-            .send()
-            .await;
-
-        crate::rest::response_handler::handle(response?, Some(request_json), &url).await
+        let endpoint = CtraderEndpoint::UpdateTrader(login.to_string());
+        let url = self.generate_endpoint_url(&endpoint);
+        self.send(&url, endpoint.get_http_method(), request).await
     }
 
     fn generate_endpoint_url(&self, endpoint: &CtraderEndpoint) -> String {
@@ -87,19 +68,9 @@ impl WebservicesRestClient {
 
     /// Links a trader entity to a user entity.
     pub async fn link_ctid(&self, request: LinkCtidRequest) -> Result<LinkCtidResponse, Error> {
-        let url = self.generate_endpoint_url(&CtraderEndpoint::LinkCtid);
-        let headers = self.build_headers();
-        let request_json = serde_json::to_string(&request)?;
-
-        let response = self
-            .inner_client
-            .post(&url)
-            .body(request_json.clone())
-            .headers(headers)
-            .send()
-            .await;
-
-        crate::rest::response_handler::handle(response?, Some(request_json), &url).await
+        let endpoint = CtraderEndpoint::LinkCtid;
+        let url = self.generate_endpoint_url(&endpoint);
+        self.send(&url, endpoint.get_http_method(), request).await
     }
 
     /// Creates a new trader (e.g. account)entity.
@@ -107,19 +78,9 @@ impl WebservicesRestClient {
         &self,
         request: CreateTraderRequest,
     ) -> Result<CreateTraderResponse, Error> {
-        let url = self.generate_endpoint_url(&CtraderEndpoint::CreateTrader);
-        let headers = self.build_headers();
-        let request_json = serde_json::to_string(&request)?;
-
-        let response = self
-            .inner_client
-            .post(&url)
-            .body(request_json.clone())
-            .headers(headers)
-            .send()
-            .await;
-
-        crate::rest::response_handler::handle(response?, Some(request_json), &url).await
+        let endpoint = CtraderEndpoint::CreateTrader;
+        let url = self.generate_endpoint_url(&endpoint);
+        self.send(&url, endpoint.get_http_method(), request).await
     }
 
     /// Creates a new user entity. The cTID is used to authorize end users in the trading application(s) of their choice
@@ -127,61 +88,39 @@ impl WebservicesRestClient {
         &self,
         request: CreateCtidRequest,
     ) -> Result<CreateCtidResponse, Error> {
-        let url = self.generate_endpoint_url(&CtraderEndpoint::CreateCtid);
-        let headers = self.build_headers();
-        let request_json = serde_json::to_string(&request)?;
-
-        let response = self
-            .inner_client
-            .post(&url)
-            .body(request_json.clone())
-            .headers(headers)
-            .send()
-            .await;
-
-        crate::rest::response_handler::handle(response?, Some(request_json), &url).await
+        let endpoint = CtraderEndpoint::CreateCtid;
+        let url = self.generate_endpoint_url(&endpoint);
+        self.send(&url, endpoint.get_http_method(), request).await
     }
 
     pub async fn authorize(&mut self) -> Result<(), Error> {
-        let url: String = format!(
-            "{}{}",
-            self.url,
-            String::from(&CtraderEndpoint::CreateManagerToken)
-        );
-        let headers = self.build_headers();
+        let endpoint = CtraderEndpoint::CreateManagerToken;
+        let url: String = format!("{}{}", self.url, String::from(&endpoint));
         let request = CreateCtraderManagerTokenRequest {
             login: self.creds.login.clone(),
             hashed_password: generate_password_hash(&self.creds.password),
         };
-        let request_json = serde_json::to_string(&request)?;
 
-        let response = self
-            .inner_client
-            .post(&url)
-            .body(request_json.clone())
-            .headers(headers)
-            .send()
-            .await;
         let response: CreateCtraderManagerTokenResponse =
-            crate::rest::response_handler::handle(response?, Some(request_json), &url).await?;
+            self.send(&url, endpoint.get_http_method(), request).await?;
 
         self.current_token = Some(response.token);
 
         Ok(())
     }
 
-    pub async fn post<R: CtraderRequest, T: DeserializeOwned>(
+    pub async fn send<R: Serialize, T: DeserializeOwned>(
         &self,
-        endpoint: CtraderEndpoint,
+        url: &str,
+        method: Method,
         request: R,
     ) -> Result<T, Error> {
-        let url: String = format!("{}{}", self.url, String::from(&endpoint));
         let headers = self.build_headers();
-        let client = &self.inner_client;
         let request_json = serde_json::to_string(&request)?;
 
-        let response = client
-            .post(&url)
+        let response = self
+            .inner_client
+            .request(method, url)
             .body(request_json.clone())
             .headers(headers)
             .send()
