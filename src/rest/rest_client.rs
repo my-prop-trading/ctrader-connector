@@ -5,7 +5,7 @@ use crate::rest::models::{
     CreateCtidRequest, CreateCtidResponse, CreateCtraderManagerTokenRequest,
     CreateCtraderManagerTokenResponse, CreateTraderRequest, CreateTraderResponse, CtraderRequest,
 };
-use crate::rest::{LinkCtidRequest, LinkCtidResponse};
+use crate::rest::{LinkCtidRequest, LinkCtidResponse, UpdateTraderRequest};
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::de::DeserializeOwned;
 use std::collections::HashMap;
@@ -30,6 +30,27 @@ impl WebservicesRestClient {
             creds,
             current_token: None,
         }
+    }
+
+    /// Updates a trader entity.
+    pub async fn update_trader(
+        &self,
+        login: i32,
+        request: UpdateTraderRequest,
+    ) -> Result<(), Error> {
+        let url = self.generate_endpoint_url(&CtraderEndpoint::UpdateTrader(login.to_string()));
+        let headers = self.build_headers();
+        let request_json = serde_json::to_string(&request)?;
+
+        let response = self
+            .inner_client
+            .patch(&url)
+            .body(request_json.clone())
+            .headers(headers)
+            .send()
+            .await;
+
+        crate::rest::response_handler::handle(response?, Some(request_json), &url).await
     }
 
     fn generate_endpoint_url(&self, endpoint: &CtraderEndpoint) -> String {

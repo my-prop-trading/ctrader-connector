@@ -262,3 +262,53 @@ pub struct LinkCtidResponse {
     #[serde(rename = "ctidTraderAccountId")]
     pub ctid_trader_account_id: Option<i32>,
 }
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct UpdateTraderRequest {
+    #[serde(rename = "accessRights")]
+    pub access_rights: Option<TraderAccessRights>,
+    #[serde(rename = "accountType")]
+    pub account_type: Option<TraderAccountType>,
+    #[serde(rename = "brokerName")]
+    pub broker_name: Option<String>,
+    #[serde(rename = "depositCurrency")]
+    pub deposit_currency: Option<String>,
+    #[serde(rename = "groupName")]
+    pub group_name: Option<String>,
+    #[serde(rename = "hashedPassword")]
+    pub hashed_password: Option<String>,
+    /// The total amount of leverage available to the account; is specified in 10^2. E.g.,
+    /// the 1:1 leverage is leverageInCents=100 while the 1:100 leverage is leverageInCents=10000.
+    #[serde(rename = "leverageInCents")]
+    pub leverage_in_cents: Option<i32>,
+    /// The strategy via which the account margin is calculated. The following values are accepted.
+    /// "MAX". The total margin requirements per symbol are equal to the maximum margin requirements for all positions opened for this symbol.
+    /// "SUM". The total margin requirements per symbol are equal to the sum of all margin requirements of all positions opened for this symbol.
+    /// "NET". The total margin requirements per symbol are equal to the difference between the margin requirements for all long positions and all short positions opened for this symbol.
+    #[serde(rename = "totalMarginCalculationType")]
+    pub total_margin_calculation_type: TotalMarginCalculationType,
+    #[serde(rename = "contactDetails")]
+    pub contact_details: Option<TraderContactDetails>,
+    pub description: Option<String>,
+    #[serde(rename = "isLimitedRisk")]
+    pub is_limited_risk: Option<bool>,
+    #[serde(rename = "lastName")]
+    pub last_name: Option<String>,
+    /// The margin calculation strategy used for the limited risk account. The following values are accepted.
+    #[serde(rename = "limitedRiskMarginCalculationStrategy")]
+    pub limited_risk_margin_calculation_strategy: Option<LimitedRiskMarginCalculationStrategy>,
+    /// The maximum amount of leverage (in the base currency units) available to the account. Specified in 10^2.
+    #[serde(rename = "maxLeverage")]
+    pub max_leverage: Option<i32>,
+    /// The first name of the account holder.
+    pub name: Option<String>,
+    /// A flag determining whether a daily trading statement is sent to the trader.
+    #[serde(rename = "sendOwnStatement")]
+    pub send_own_statement: Option<bool>,
+    /// A flag determining whether a daily account trading statement is sent to the broker under which the account is registered.
+    #[serde(rename = "sendStatementToBroker")]
+    pub send_statement_to_broker: Option<bool>,
+    /// A flag determining whether the account is charged swaps (swapFree=true) or administrative fees (swapFree=false).
+    #[serde(rename = "swapFree")]
+    pub swap_free: Option<bool>,
+}

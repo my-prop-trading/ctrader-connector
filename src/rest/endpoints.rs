@@ -5,6 +5,7 @@ pub enum CtraderEndpoint {
     CreateCtid,
     CreateTrader,
     LinkCtid,
+    UpdateTrader(String),
 }
 
 impl From<&CtraderEndpoint> for String {
@@ -15,9 +16,12 @@ impl From<&CtraderEndpoint> for String {
             CtraderEndpoint::CreateManagerToken => {
                 format!("/{}/webserv/managers/token", api_version)
             }
-            CtraderEndpoint::CreateCtid => format!("/{}/ctid/create", api_version),
-            CtraderEndpoint::CreateTrader => format!("/{}/webserv/traders", api_version),
-            CtraderEndpoint::LinkCtid => format!("/{}//ctid/link", api_version),
+            CtraderEndpoint::CreateCtid => format!("/{api_version}/ctid/create"),
+            CtraderEndpoint::CreateTrader => format!("/{api_version}/webserv/traders"),
+            CtraderEndpoint::LinkCtid => format!("/{api_version}/ctid/link"),
+            CtraderEndpoint::UpdateTrader(login) => {
+                format!("/{api_version}/webserv/traders/{login}")
+            }
         }
     }
 }
@@ -29,6 +33,7 @@ impl CtraderEndpoint {
             CtraderEndpoint::CreateCtid => Method::POST,
             CtraderEndpoint::CreateTrader => Method::POST,
             CtraderEndpoint::LinkCtid => Method::POST,
+            CtraderEndpoint::UpdateTrader(_) => Method::PATCH
         }
     }
 }
