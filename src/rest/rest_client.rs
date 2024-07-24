@@ -3,7 +3,7 @@ use crate::rest::endpoints::CtraderEndpoint;
 use crate::rest::errors::Error;
 use crate::rest::models::{
     CreateCtidRequest, CreateCtidResponse, CreateCtraderManagerTokenRequest,
-    CreateCtraderManagerTokenResponse, CreateTraderRequest, CreateTraderResponse, CtraderRequest,
+    CreateCtraderManagerTokenResponse, CreateTraderRequest, CreateTraderResponse,
 };
 use crate::rest::utils::generate_password_hash;
 use crate::rest::{
