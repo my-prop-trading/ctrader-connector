@@ -5,7 +5,11 @@ pub enum WebservicesApiEndpoint {
     CreateCtid,
     CreateTrader,
     LinkCtid,
+    /// Changes of a trader entity (including allocating/removing credit).
+    /// Requires {login}
     UpdateTrader(String),
+    /// Changes the balance of a trader entity (including allocating/removing credit).
+    /// Requires {login}
     UpdateTraderBalance(String),
 }
 
@@ -38,7 +42,7 @@ impl WebservicesApiEndpoint {
             WebservicesApiEndpoint::CreateTrader => Method::POST,
             WebservicesApiEndpoint::LinkCtid => Method::POST,
             WebservicesApiEndpoint::UpdateTrader(_) => Method::PATCH,
-            WebservicesApiEndpoint::UpdateTraderBalance(_) => Method::POST
+            WebservicesApiEndpoint::UpdateTraderBalance(_) => Method::POST,
         }
     }
 }
