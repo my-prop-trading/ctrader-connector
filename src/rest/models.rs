@@ -16,6 +16,10 @@ pub struct CreateCtraderManagerTokenResponse {
     pub token: String,
 }
 
+/// Note that there are two possible outputs depending on whether you specify a unique email
+/// in the request body (an email that is not used by any of the users registered on your server).
+/// If email is unique, the response will include all parameters from the below table.
+/// If the specified email is already assigned to an existing user, the output will only include the userId parameter.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CreateCtidRequest {
     pub email: String,
@@ -25,19 +29,37 @@ pub struct CreateCtidRequest {
     pub preferred_lang: Option<String>,
 }
 
+/// Note that there are two possible outputs depending on whether you specify a unique email
+/// in the request body (an email that is not used by any of the users registered on your server).
+/// If email is unique, the response will include all parameters from the below table.
+/// If the specified email is already assigned to an existing user, the output will only include the userId parameter.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CreateCtidResponse {
+    /// The unique identifier of the user entity.
     #[serde(rename = "userId")]
     pub user_id: i32,
-    pub nickname: String,
-    pub email: String,
+    /// The nickname of the user entity. By default, nickname=ctid{userId}.
+    /// None when the specified email is already assigned to an existing user
+    pub nickname: Option<String>,
+    /// None when the specified email is already assigned to an existing user
+    pub email: Option<String>,
+    /// An Alpha-2 code denoting the preferred language of the user entity.
+    /// None when the specified email is already assigned to an existing user
     #[serde(rename = "preferredLanguage")]
-    pub preferred_lang: String,
+    pub preferred_lang: Option<String>,
+    /// The epoch unix timestamp of the creation of the user entity.
+    /// None when the specified email is already assigned to an existing user
     #[serde(rename = "utcCreateTimestamp")]
-    pub timestamp: u64,
-    pub status: CtidStatus,
+    pub timestamp: Option<u64>,
+    /// None when the specified email is already assigned to an existing user
+    pub status: Option<CtidStatus>,
 }
 
+/// The status of the new user entity. The following values are accepted.
+/// "CTID_NEW". The default status for any new user.
+/// "CTID_ACTIVE". The status denoting an existing active user who has confirmed their email address in the cTrader ecosystem. Note that only users with "CTID_ACTIVE" as their status receive trading notifications in their email inbox.
+/// "CTID_DELETED". The status denoting a deleted user entity.
+/// Note that receiving "CTID_ACTIVE" or "CTID_DELETED" in the response body would constitute unexpected behavior.
 #[derive(strum::Display, Debug, Clone, Serialize, Deserialize)]
 pub enum CtidStatus {
     #[strum(to_string = "CTID_NEW")]
@@ -226,7 +248,7 @@ pub struct LinkCtidRequest {
     /// A flag that denotes whether the ctidTraderAccountId key is returned in the response to this API call.
     /// Set it to true to ensure that the response to this call is not empty.
     #[serde(rename = "returnAccountDetails")]
-    pub return_account_details: Option<bool>
+    pub return_account_details: Option<bool>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
