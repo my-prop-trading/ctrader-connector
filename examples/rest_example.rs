@@ -62,7 +62,7 @@ pub async fn link_ctid(rest_client: &WebservicesRestClient) {
         trader_password_hash: generate_test_password_hash(),
         user_id: 0,
         broker_name: std::env::var("CTRADER_BROKER_NAME").unwrap(),
-        environment_name: "Demo".to_string(),
+        environment_name: "demo".to_string(),
         return_account_details: Some(true),
     };
     let resp = rest_client.link_ctid(request).await;
