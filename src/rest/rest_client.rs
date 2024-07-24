@@ -37,6 +37,7 @@ impl WebServicesRestClient {
         format!("{}{}?token={}", self.url, String::from(endpoint), token)
     }
 
+    /// Links a trader entity to a user entity.
     pub async fn link_ctid(&self, request: LinkCtidRequest) -> Result<LinkCtidResponse, Error> {
         let url = self.generate_endpoint_url(&CtraderEndpoint::LinkCtid);
         let headers = self.build_headers();
@@ -53,6 +54,7 @@ impl WebServicesRestClient {
         crate::rest::response_handler::handle(response?, Some(request_json), &url).await
     }
 
+    /// Creates a new trader (e.g. account)entity.
     pub async fn create_trader(
         &self,
         request: CreateTraderRequest,
@@ -72,6 +74,7 @@ impl WebServicesRestClient {
         crate::rest::response_handler::handle(response?, Some(request_json), &url).await
     }
 
+    /// Creates a new user entity. The cTID is used to authorize end users in the trading application(s) of their choice
     pub async fn create_ctid(
         &self,
         request: CreateCtidRequest,
