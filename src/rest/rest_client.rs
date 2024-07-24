@@ -11,6 +11,9 @@ use serde::de::DeserializeOwned;
 use std::collections::HashMap;
 use crate::rest::utils::generate_password_hash;
 
+/// A simple yet powerful RESTful API, designed to cover the basic integration requirements for CRM
+/// systems. It offers the capability to handle common CRM related tasks, such as the creation and
+/// updates of users and trading accounts, and performing deposits and withdrawals to those accounts.
 #[derive(Clone)]
 pub struct WebservicesRestClient {
     url: String,
