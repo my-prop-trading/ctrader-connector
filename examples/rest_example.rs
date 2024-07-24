@@ -1,6 +1,6 @@
 use ctrader_connector::rest::creds::ManagerCreds;
 use ctrader_connector::rest::models::CreateCtidRequest;
-use ctrader_connector::rest::rest_client::WebServicesRestClient;
+use ctrader_connector::rest::rest_client::WebservicesRestClient;
 use ctrader_connector::rest::{CreateTraderRequest, LinkCtidRequest, TotalMarginCalculationType, TraderAccessRights, TraderAccountType};
 use uuid::Uuid;
 use ctrader_connector::rest::utils::generate_password_hash;
@@ -13,11 +13,11 @@ async fn main() {
     };
     let url = std::env::var("CTRADER_URL").unwrap();
 
-    let mut rest_client = WebServicesRestClient::new(url, creds);
+    let mut rest_client = WebservicesRestClient::new(url, creds);
     rest_client.authorize().await.unwrap();
 }
 
-pub async fn create_ctid(rest_client: &WebServicesRestClient) {
+pub async fn create_ctid(rest_client: &WebservicesRestClient) {
     let uuid = &Uuid::new_v4().to_string()[..6];
     let request = CreateCtidRequest {
         email: format!("{}@mailinator.com", uuid),
@@ -29,7 +29,7 @@ pub async fn create_ctid(rest_client: &WebServicesRestClient) {
     println!("{:?}", resp)
 }
 
-pub async fn create_trader(rest_client: &WebServicesRestClient) {
+pub async fn create_trader(rest_client: &WebservicesRestClient) {
     let request = CreateTraderRequest {
         access_rights: TraderAccessRights::FullAccess,
         account_type: TraderAccountType::Hedged,
@@ -56,7 +56,7 @@ pub async fn create_trader(rest_client: &WebServicesRestClient) {
     println!("{:?}", resp)
 }
 
-pub async fn link_ctid(rest_client: &WebServicesRestClient) {
+pub async fn link_ctid(rest_client: &WebservicesRestClient) {
     let request = LinkCtidRequest {
         trader_login: 0,
         trader_password_hash: generate_test_password_hash(),

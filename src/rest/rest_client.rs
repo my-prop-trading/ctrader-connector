@@ -12,14 +12,14 @@ use std::collections::HashMap;
 use crate::rest::utils::generate_password_hash;
 
 #[derive(Clone)]
-pub struct WebServicesRestClient {
+pub struct WebservicesRestClient {
     url: String,
     inner_client: reqwest::Client,
     creds: ManagerCreds,
     current_token: Option<String>,
 }
 
-impl WebServicesRestClient {
+impl WebservicesRestClient {
     pub fn new(url: impl Into<String>, creds: ManagerCreds) -> Self {
         Self {
             url: url.into(),

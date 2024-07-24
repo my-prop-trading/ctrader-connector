@@ -1,5 +1,5 @@
 use crate::rest::errors::Error;
-use crate::rest::rest_client::WebServicesRestClient;
+use crate::rest::rest_client::WebservicesRestClient;
 use crate::rest::utils::generate_password_hash;
 use crate::rest::{
     CreateCtidRequest, CreateTraderRequest, LinkCtidRequest, TotalMarginCalculationType,
@@ -19,7 +19,7 @@ pub struct RegisterUserFlow {
 impl RegisterUserFlow {
     pub async fn execute(
         self,
-        rest_client: &WebServicesRestClient,
+        rest_client: &WebservicesRestClient,
     ) -> Result<RegisterUserInfo, Error> {
         // 1. Create a new cTID (API call 5.1.).
         // 2. Create a new account (API call 4.1.).
