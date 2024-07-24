@@ -6,6 +6,7 @@ use crate::rest::{
     TraderAccessRights, TraderAccountType,
 };
 
+/// A wrapper for needed operations for a full user registration
 #[derive(Debug, Clone)]
 pub struct RegisterUserFlow {
     pub user_email: String,
@@ -14,17 +15,20 @@ pub struct RegisterUserFlow {
     pub deposit_currency: String,
     pub group_name: String,
     pub environment_name: String,
+    pub leverage_in_cents: i32,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
+    pub swap_free: Option<bool>,
 }
 
 impl RegisterUserFlow {
+    /// 1. Create a new cTID (API call 5.1.).
+    /// 2. Create a new account (API call 4.1.).
+    /// 3. Link the new account to the cTID (API call 5.2).
     pub async fn execute(
         self,
         rest_client: &WebservicesRestClient,
     ) -> Result<RegisterUserInfo, Error> {
-        // 1. Create a new cTID (API call 5.1.).
-        // 2. Create a new account (API call 4.1.).
-        // 3. Link the new account to the cTID (API call 5.2).
-
         let create_ctid_resp = rest_client
             .create_ctid(CreateCtidRequest {
                 email: self.user_email,
@@ -43,18 +47,18 @@ impl RegisterUserFlow {
                 deposit_currency: self.deposit_currency,
                 group_name: self.group_name,
                 hashed_password: password_hash.clone(),
-                leverage_in_cents: 0,
+                leverage_in_cents: self.leverage_in_cents,
                 total_margin_calculation_type: TotalMarginCalculationType::Max,
                 contact_details: None,
                 description: None,
                 is_limited_risk: None,
-                last_name: None,
+                name: self.first_name,
+                last_name: self.last_name,
                 limited_risk_margin_calculation_strategy: None,
                 max_leverage: None,
-                name: None,
                 send_own_statement: None,
                 send_statement_to_broker: None,
-                swap_free: None,
+                swap_free: self.swap_free,
             })
             .await?;
 
