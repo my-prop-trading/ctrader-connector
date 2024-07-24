@@ -43,7 +43,7 @@ impl WebservicesRestClient {
         request: UpdateTraderBalanceRequest,
     ) -> Result<UpdateTraderBalanceResponse, Error> {
         let endpoint = CtraderEndpoint::UpdateTraderBalance(request.login.to_string());
-        let url = self.generate_endpoint_url(&endpoint);
+        let url = self.generate_full_url(&endpoint);
         self.send(&url, endpoint.get_http_method(), request).await
     }
 
@@ -54,11 +54,11 @@ impl WebservicesRestClient {
         request: UpdateTraderRequest,
     ) -> Result<(), Error> {
         let endpoint = CtraderEndpoint::UpdateTrader(login.to_string());
-        let url = self.generate_endpoint_url(&endpoint);
+        let url = self.generate_full_url(&endpoint);
         self.send(&url, endpoint.get_http_method(), request).await
     }
 
-    fn generate_endpoint_url(&self, endpoint: &CtraderEndpoint) -> String {
+    fn generate_full_url(&self, endpoint: &CtraderEndpoint) -> String {
         let Some(token) = self.current_token.as_ref() else {
             panic!("Must be authorized at this point");
         };
@@ -69,7 +69,7 @@ impl WebservicesRestClient {
     /// Links a trader entity to a user entity.
     pub async fn link_ctid(&self, request: LinkCtidRequest) -> Result<LinkCtidResponse, Error> {
         let endpoint = CtraderEndpoint::LinkCtid;
-        let url = self.generate_endpoint_url(&endpoint);
+        let url = self.generate_full_url(&endpoint);
         self.send(&url, endpoint.get_http_method(), request).await
     }
 
@@ -79,7 +79,7 @@ impl WebservicesRestClient {
         request: CreateTraderRequest,
     ) -> Result<CreateTraderResponse, Error> {
         let endpoint = CtraderEndpoint::CreateTrader;
-        let url = self.generate_endpoint_url(&endpoint);
+        let url = self.generate_full_url(&endpoint);
         self.send(&url, endpoint.get_http_method(), request).await
     }
 
@@ -89,7 +89,7 @@ impl WebservicesRestClient {
         request: CreateCtidRequest,
     ) -> Result<CreateCtidResponse, Error> {
         let endpoint = CtraderEndpoint::CreateCtid;
-        let url = self.generate_endpoint_url(&endpoint);
+        let url = self.generate_full_url(&endpoint);
         self.send(&url, endpoint.get_http_method(), request).await
     }
 
