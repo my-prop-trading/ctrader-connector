@@ -5,11 +5,14 @@ use crate::rest::models::{
     CreateCtidRequest, CreateCtidResponse, CreateCtraderManagerTokenRequest,
     CreateCtraderManagerTokenResponse, CreateTraderRequest, CreateTraderResponse, CtraderRequest,
 };
-use crate::rest::{LinkCtidRequest, LinkCtidResponse, UpdateTraderRequest};
+use crate::rest::utils::generate_password_hash;
+use crate::rest::{
+    LinkCtidRequest, LinkCtidResponse, UpdateTraderBalanceRequest, UpdateTraderBalanceResponse,
+    UpdateTraderRequest,
+};
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::de::DeserializeOwned;
 use std::collections::HashMap;
-use crate::rest::utils::generate_password_hash;
 
 /// A simple yet powerful RESTful API, designed to cover the basic integration requirements for CRM
 /// systems. It offers the capability to handle common CRM related tasks, such as the creation and
@@ -30,6 +33,27 @@ impl WebservicesRestClient {
             creds,
             current_token: None,
         }
+    }
+    /// Changes the balance of a trader entity (including allocating/removing credit).
+    pub async fn update_trader_balance(
+        &self,
+        request: UpdateTraderBalanceRequest,
+    ) -> Result<UpdateTraderBalanceResponse, Error> {
+        let url = self.generate_endpoint_url(&CtraderEndpoint::UpdateTraderBalance(
+            request.login.to_string(),
+        ));
+        let headers = self.build_headers();
+        let request_json = serde_json::to_string(&request)?;
+
+        let response = self
+            .inner_client
+            .post(&url)
+            .body(request_json.clone())
+            .headers(headers)
+            .send()
+            .await;
+
+        crate::rest::response_handler::handle(response?, Some(request_json), &url).await
     }
 
     /// Updates a trader entity.

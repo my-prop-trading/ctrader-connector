@@ -312,3 +312,53 @@ pub struct UpdateTraderRequest {
     #[serde(rename = "swapFree")]
     pub swap_free: Option<bool>,
 }
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct UpdateTraderBalanceRequest {    
+    /// A short note that can be attached to any balance change. This note is not shown to retail clients.
+    pub comment: Option<String>,
+    /// A number that matches an external identifier of the broker’s choosing. For instance, the value of externalId could be equal to the number of the bank transfer order through which the user chose to make a deposit.
+    #[serde(rename = "externalId")]
+    pub external_id: Option<String>,
+    /// A brief comment that can supplement a deposit or a withdrawal. In contrast to comment, this text is displayed to retail clients.
+    #[serde(rename = "externalNote")]
+    pub external_note: Option<String>,
+    /// login	Yes	integer	The number of a specific trading account.
+    pub login: i32,
+    /// preciseAmount	Yes	double	The precise amount of withdrawn or deposited funds/credit. Specified as a decimal number. For BTC and similar assets, the value of preciseAmount can include as many as eight digits after the decimal point.
+    #[serde(rename = "preciseAmount")]
+    pub precise_amount: f64,
+    /// source	No	string	The designated source of the deposit/withdrawal.
+    pub source: Option<String>,
+    /// The desired type of balance change. The following values are accepted.
+    /// "DEPOSIT". Deposit funds to the trader.
+    /// "WITHDRAW". Withdraw funds from the trader.
+    /// "DEPOSIT_NONWITHDRAWABLE_BONUS". Deposit credit to the trader.
+    /// "WITHDRAW_NONWITHDRAWABLE_BONUS". Withdraw credit from the trader.
+    #[serde(rename = "type")]
+    pub change_type: BalanceChangeType,
+}
+
+#[derive(strum::Display, Debug, Clone, Serialize, Deserialize)]
+pub enum BalanceChangeType {
+    #[strum(to_string = "DEPOSIT")]
+    #[serde(rename = "DEPOSIT")]
+    Deposit,
+    #[strum(to_string = "WITHDRAW")]
+    #[serde(rename = "WITHDRAW")]
+    Withdraw,
+    #[strum(to_string = "DEPOSIT_NONWITHDRAWABLE_BONUS")]
+    #[serde(rename = "DEPOSIT_NONWITHDRAWABLE_BONUS")]
+    DepositNonwithdrawableBonus,
+    #[strum(to_string = "WITHDRAW_NONWITHDRAWABLE_BONUS")]
+    #[serde(rename = "WITHDRAW_NONWITHDRAWABLE_BONUS")]
+    WithdrawNonwithdrawableBonus,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct UpdateTraderBalanceResponse {
+    /// The identifier of a balance history entity containing all balance-related transactions for the specified trader.
+    /// Note that bonus and credit are not included in balanceHistoryId.
+    #[serde(rename = "balanceHistoryId")]
+    pub balance_history_id: String,
+}
