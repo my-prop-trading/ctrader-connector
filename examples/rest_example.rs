@@ -1,7 +1,7 @@
 use ctrader_connector::rest::creds::ManagerCreds;
 use ctrader_connector::rest::models::CreateCtidRequest;
 use ctrader_connector::rest::rest_client::WebservicesRestClient;
-use ctrader_connector::rest::{CreateTraderRequest, LinkCtidRequest, TotalMarginCalculationType, TraderAccessRights, TraderAccountType};
+use ctrader_connector::rest::{BalanceChangeType, CreateTraderRequest, LinkCtidRequest, TotalMarginCalculationType, TraderAccessRights, TraderAccountType, UpdateTraderBalanceRequest};
 use uuid::Uuid;
 use ctrader_connector::rest::register_user_flow::RegisterUserFlow;
 use ctrader_connector::rest::utils::generate_password_hash;
@@ -16,13 +16,26 @@ async fn main() {
 
     let mut rest_client = WebservicesRestClient::new(url, creds);
     rest_client.authorize().await.unwrap();
-    
-    register(&rest_client).await;
+    deposit(&rest_client).await;
+}
+
+pub async fn deposit(rest_client: &WebservicesRestClient) {
+    let result = rest_client.update_trader_balance(UpdateTraderBalanceRequest {
+        comment: None,
+        external_id: None,
+        external_note: None,
+        login: 3238402,
+        precise_amount: 1.0,
+        source: None,
+        change_type: BalanceChangeType::Deposit,
+    }).await;
+
+    println!("{:?}", result)
 }
 
 pub async fn register(rest_client: &WebservicesRestClient) {
     let flow = RegisterUserFlow {
-        user_email: "ctrader-test-1@mailinator.com".to_string(),
+        user_email: "ctrader-test-3@mailinator.com".to_string(),
         broker_name: std::env::var("CTRADER_BROKER_NAME").unwrap(),
         user_password: "qwerty123".to_string(),
         deposit_currency: "USD".to_string(),
@@ -34,7 +47,7 @@ pub async fn register(rest_client: &WebservicesRestClient) {
         swap_free: None,
     };
     let result = flow.execute(rest_client).await;
-    
+
     println!("{:?}", result)
 }
 

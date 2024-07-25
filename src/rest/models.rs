@@ -358,5 +358,5 @@ pub struct UpdateTraderBalanceResponse {
     /// The identifier of a balance history entity containing all balance-related transactions for the specified trader.
     /// Note that bonus and credit are not included in balanceHistoryId.
     #[serde(rename = "balanceHistoryId")]
-    pub balance_history_id: String,
+    pub balance_history_id: i64,
 }
