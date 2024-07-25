@@ -3,7 +3,7 @@ use serde_derive::Deserialize;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CreateCtraderManagerTokenRequest {
-    pub login: i32,
+    pub login: i64,
     #[serde(rename = "hashedPassword")]
     pub hashed_password: String,
 }
@@ -35,7 +35,7 @@ pub struct CreateCtidRequest {
 pub struct CreateCtidResponse {
     /// The unique identifier of the user entity.
     #[serde(rename = "userId")]
-    pub user_id: i32,
+    pub user_id: i64,
     /// The nickname of the user entity. By default, nickname=ctid{userId}.
     /// None when the specified email is already assigned to an existing user
     pub nickname: Option<String>,
@@ -89,7 +89,7 @@ pub struct CreateTraderRequest {
     /// The total amount of leverage available to the account; is specified in 10^2. E.g.,
     /// the 1:1 leverage is leverageInCents=100 while the 1:100 leverage is leverageInCents=10000.
     #[serde(rename = "leverageInCents")]
-    pub leverage_in_cents: i32,
+    pub leverage_in_cents: i64,
     /// The strategy via which the account margin is calculated. The following values are accepted.
     /// "MAX". The total margin requirements per symbol are equal to the maximum margin requirements for all positions opened for this symbol.
     /// "SUM". The total margin requirements per symbol are equal to the sum of all margin requirements of all positions opened for this symbol.
@@ -108,7 +108,7 @@ pub struct CreateTraderRequest {
     pub limited_risk_margin_calculation_strategy: Option<LimitedRiskMarginCalculationStrategy>,
     /// The maximum amount of leverage (in the base currency units) available to the account. Specified in 10^2.
     #[serde(rename = "maxLeverage")]
-    pub max_leverage: Option<i32>,
+    pub max_leverage: Option<i64>,
     /// The first name of the account holder.
     pub name: Option<String>,
     /// A flag determining whether a daily trading statement is sent to the trader.
@@ -143,7 +143,7 @@ pub struct TraderContactDetails {
     pub address: Option<String>,
     pub city: Option<String>,
     #[serde(rename = "countryId")]
-    pub country_id: Option<i32>,
+    pub country_id: Option<i64>,
     #[serde(rename = "documentId")]
     pub document_id: Option<String>,
     pub email: Option<String>,
@@ -207,44 +207,44 @@ pub enum TraderAccessRights {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CreateTraderResponse {
-    pub bonus: i32,
-    pub equity: i32,
+    pub bonus: i64,
+    pub equity: i64,
     #[serde(rename = "freeMargin")]
-    pub free_margin: i32,
+    pub free_margin: i64,
     /// The current amount of funds that the account can withdraw.
     // It is calculated via the following formula: cashEquity = balance + unrealized P&L - management fees,
     // where management fees are all management fees charged by the providers of strategies that the
     // account owner has invested in. Subject to moneyDigits.
     #[serde(rename = "cashEquity")]
-    pub cash_equity: i32,
+    pub cash_equity: i64,
     #[serde(rename = "lastUpdateTimestamp")]
-    pub last_update_timestamp: i32,
-    pub login: i32,
+    pub last_update_timestamp: i64,
+    pub login: i64,
     /// The number that determines how finance-related values are defined for the account. E.g.,
     /// if moneyDigits=2 and balance=1234512, the account balance is 12345.12 in the account deposit currency.
     /// Additional details are given in Section 3.
     #[serde(rename = "moneyDigits")]
-    pub money_digits: i32,
+    pub money_digits: i64,
     #[serde(rename = "nonWithdrawableBonus")]
-    pub non_withdrawal_bonus: i32,
+    pub non_withdrawal_bonus: i64,
     #[serde(rename = "registrationTimestamp")]
-    pub registration_timestamp: i32,
+    pub registration_timestamp: i64,
     /// If this parameter equals true, rollover commissions are applied to the account instead of swaps.
     /// The reverse applies if the parameter is false. This field is useful for ensuring compliance with Sharia law.
     #[serde(rename = "swapFree")]
     pub swap_free: bool,
     #[serde(rename = "usedMargin")]
-    pub used_margin: i32,
+    pub used_margin: i64,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LinkCtidRequest {
     #[serde(rename = "traderLogin")]
-    pub trader_login: i32,
+    pub trader_login: i64,
     #[serde(rename = "traderPasswordHash")]
     pub trader_password_hash: String,
     #[serde(rename = "userId")]
-    pub user_id: i32,
+    pub user_id: i64,
     #[serde(rename = "brokerName")]
     pub broker_name: String,
     #[serde(rename = "environmentName")]
@@ -258,7 +258,7 @@ pub struct LinkCtidRequest {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LinkCtidResponse {
     #[serde(rename = "ctidTraderAccountId")]
-    pub ctid_trader_account_id: Option<i32>,
+    pub ctid_trader_account_id: Option<i64>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -278,7 +278,7 @@ pub struct UpdateTraderRequest {
     /// The total amount of leverage available to the account; is specified in 10^2. E.g.,
     /// the 1:1 leverage is leverageInCents=100 while the 1:100 leverage is leverageInCents=10000.
     #[serde(rename = "leverageInCents")]
-    pub leverage_in_cents: Option<i32>,
+    pub leverage_in_cents: Option<i64>,
     /// The strategy via which the account margin is calculated. The following values are accepted.
     /// "MAX". The total margin requirements per symbol are equal to the maximum margin requirements for all positions opened for this symbol.
     /// "SUM". The total margin requirements per symbol are equal to the sum of all margin requirements of all positions opened for this symbol.
@@ -297,7 +297,7 @@ pub struct UpdateTraderRequest {
     pub limited_risk_margin_calculation_strategy: Option<LimitedRiskMarginCalculationStrategy>,
     /// The maximum amount of leverage (in the base currency units) available to the account. Specified in 10^2.
     #[serde(rename = "maxLeverage")]
-    pub max_leverage: Option<i32>,
+    pub max_leverage: Option<i64>,
     /// The first name of the account holder.
     pub name: Option<String>,
     /// A flag determining whether a daily trading statement is sent to the trader.
@@ -322,7 +322,7 @@ pub struct UpdateTraderBalanceRequest {
     #[serde(rename = "externalNote")]
     pub external_note: Option<String>,
     /// login	Yes	integer	The number of a specific trading account.
-    pub login: i32,
+    pub login: i64,
     /// preciseAmount	Yes	double	The precise amount of withdrawn or deposited funds/credit. Specified as a decimal number. For BTC and similar assets, the value of preciseAmount can include as many as eight digits after the decimal point.
     #[serde(rename = "preciseAmount")]
     pub precise_amount: f64,

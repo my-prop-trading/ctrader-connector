@@ -15,7 +15,7 @@ pub struct RegisterUserFlow {
     pub deposit_currency: String,
     pub group_name: String,
     pub environment_name: String,
-    pub leverage_in_cents: i32,
+    pub leverage_in_cents: i64,
     pub first_name: Option<String>,
     pub last_name: Option<String>,
     pub swap_free: Option<bool>,
@@ -86,9 +86,9 @@ impl RegisterUserFlow {
 #[derive(Debug, Clone)]
 pub struct RegisterData {
     /// The number of a specific trading account. Linked to the user id
-    pub trader_login: i32,
+    pub trader_login: i64,
     /// The unique identifier of the user entity. Linked to specified email
-    pub user_id: i32,
+    pub user_id: i64,
     /// The unique identifier of the linkage between a specific user and one of their trading accounts.
-    pub account_id: i32,
+    pub account_id: i64,
 }
