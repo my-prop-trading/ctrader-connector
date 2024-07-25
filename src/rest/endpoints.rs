@@ -21,9 +21,9 @@ impl From<&WebservicesApiEndpoint> for String {
             WebservicesApiEndpoint::CreateManagerToken => {
                 format!("/{}/webserv/managers/token", api_version)
             }
-            WebservicesApiEndpoint::CreateCtid => format!("/{api_version}/ctid/create"),
+            WebservicesApiEndpoint::CreateCtid => "/cid/ctid/create".to_string(),
             WebservicesApiEndpoint::CreateTrader => format!("/{api_version}/webserv/traders"),
-            WebservicesApiEndpoint::LinkCtid => format!("/{api_version}/ctid/link"),
+            WebservicesApiEndpoint::LinkCtid => "/cid/ctid/link".to_string(),
             WebservicesApiEndpoint::UpdateTrader(login) => {
                 format!("/{api_version}/webserv/traders/{login}")
             }
