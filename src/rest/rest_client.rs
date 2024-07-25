@@ -57,7 +57,7 @@ impl WebservicesRestClient {
 
     fn generate_full_url(&self, endpoint: &WebservicesApiEndpoint) -> String {
         let Some(token) = self.current_token.as_ref() else {
-            panic!("Must be authorized at this point");
+            return format!("{}{}", self.url, String::from(endpoint));
         };
 
         format!("{}{}?token={}", self.url, String::from(endpoint), token)

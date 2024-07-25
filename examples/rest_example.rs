@@ -16,6 +16,8 @@ async fn main() {
 
     let mut rest_client = WebservicesRestClient::new(url, creds);
     rest_client.authorize().await.unwrap();
+    
+    register(&rest_client).await;
 }
 
 pub async fn register(rest_client: &WebservicesRestClient) {
