@@ -3,6 +3,7 @@ use ctrader_connector::rest::models::CreateCtidRequest;
 use ctrader_connector::rest::rest_client::WebservicesRestClient;
 use ctrader_connector::rest::{CreateTraderRequest, LinkCtidRequest, TotalMarginCalculationType, TraderAccessRights, TraderAccountType};
 use uuid::Uuid;
+use ctrader_connector::rest::register_user_flow::RegisterUserFlow;
 use ctrader_connector::rest::utils::generate_password_hash;
 
 #[tokio::main]
@@ -15,6 +16,24 @@ async fn main() {
 
     let mut rest_client = WebservicesRestClient::new(url, creds);
     rest_client.authorize().await.unwrap();
+}
+
+pub async fn register(rest_client: &WebservicesRestClient) {
+    let flow = RegisterUserFlow {
+        user_email: "ctrader-test-1@mailinator.com".to_string(),
+        broker_name: std::env::var("CTRADER_BROKER_NAME").unwrap(),
+        user_password: "qwerty123".to_string(),
+        deposit_currency: "USD".to_string(),
+        group_name: "default".to_string(),
+        environment_name: "demo".to_string(),
+        leverage_in_cents: 1000,
+        first_name: None,
+        last_name: None,
+        swap_free: None,
+    };
+    let result = flow.execute(rest_client).await;
+    
+    println!("{:?}", result)
 }
 
 pub async fn create_ctid(rest_client: &WebservicesRestClient) {

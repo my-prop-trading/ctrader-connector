@@ -28,7 +28,7 @@ impl RegisterUserFlow {
     pub async fn execute(
         self,
         rest_client: &WebservicesRestClient,
-    ) -> Result<RegisterUserInfo, Error> {
+    ) -> Result<RegisterData, Error> {
         let create_ctid_resp = rest_client
             .create_ctid(CreateCtidRequest {
                 email: self.user_email,
@@ -73,7 +73,7 @@ impl RegisterUserFlow {
             })
             .await?;
 
-        Ok(RegisterUserInfo {
+        Ok(RegisterData {
             trader_login: create_trader_resp.login,
             user_id: create_ctid_resp.user_id,
             account_id: link_ctid_resp
@@ -84,7 +84,7 @@ impl RegisterUserFlow {
 }
 
 #[derive(Debug, Clone)]
-pub struct RegisterUserInfo {
+pub struct RegisterData {
     /// The number of a specific trading account. Linked to the user id
     pub trader_login: i32,
     /// The unique identifier of the user entity. Linked to specified email
