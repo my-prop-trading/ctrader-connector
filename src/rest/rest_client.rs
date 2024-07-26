@@ -42,9 +42,11 @@ impl WebservicesRestClient {
     pub async fn get_traders(
         &self,
         request: &GetTradersRequestQuery,
-    ) -> Result<GetTradersResponse, Error> {
+    ) -> Result<Vec<TraderModel>, Error> {
         let endpoint = WebservicesApiEndpoint::GetTraders;
-        self.send(endpoint, request).await
+        let resp: GetTradersResponse = self.send(endpoint, request).await?;
+        
+        Ok(resp.trader)
     }
 
     pub async fn get_closed_positions(
