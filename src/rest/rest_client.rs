@@ -7,9 +7,9 @@ use crate::rest::models::{
 };
 use crate::rest::utils::generate_password_hash;
 use crate::rest::{
-    GetClosedPositionsRequestQuery, GetTradersRequestQuery, GetTradersResponse, LinkCtidRequest,
-    LinkCtidResponse, TraderModel, UpdateTraderBalanceRequest, UpdateTraderBalanceResponse,
-    UpdateTraderRequest,
+    ClosedPositionModel, GetClosedPositionsRequestQuery, GetTradersRequestQuery,
+    GetTradersResponse, LinkCtidRequest, LinkCtidResponse, TraderModel, UpdateTraderBalanceRequest,
+    UpdateTraderBalanceResponse, UpdateTraderRequest,
 };
 use error_chain::bail;
 use http::{Method, StatusCode};
@@ -50,9 +50,26 @@ impl WebservicesRestClient {
     pub async fn get_closed_positions(
         &self,
         request: &GetClosedPositionsRequestQuery,
-    ) -> Result<GetTradersResponse, Error> {
+    ) -> Result<Vec<ClosedPositionModel>, Error> {
         let endpoint = WebservicesApiEndpoint::GetClosedPositions;
-        self.send(endpoint, request).await
+        let data: String = self.send(endpoint, request).await?;
+        let mut reader = csv::ReaderBuilder::new()
+            .has_headers(true)
+            .from_reader(data.as_bytes());
+        let mut positions = Vec::with_capacity(20);
+
+        for result in reader.deserialize() {
+            let result: Result<ClosedPositionModel, _> = result;
+
+            let Ok(position) = result else {
+                let msg = format!("Failed to parse: {:?}. Resp: {data}", result.unwrap_err());
+                return Err(msg.into());
+            };
+
+            positions.push(position)
+        }
+
+        Ok(positions)
     }
 
     /// Changes the balance of a trader entity (including allocating/removing credit).

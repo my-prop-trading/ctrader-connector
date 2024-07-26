@@ -412,4 +412,41 @@ pub struct GetClosedPositionsRequestQuery {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct GetClosedPositionsResponse {}
+pub struct ClosedPositionModel {
+    #[serde(rename = "login")]
+    pub login: u64,
+    #[serde(rename = "positionId")]
+    pub position_id: u32,
+    #[serde(rename = "dealId")]
+    pub deal_id: u32,
+    #[serde(rename = "openTimestamp")]
+    pub open_timestamp: String,
+    #[serde(rename = "closeTimestamp")]
+    pub close_timestamp: String,
+    #[serde(rename = "entryPrice")]
+    pub entry_price: f64,
+    #[serde(rename = "closePrice")]
+    pub close_price: f64,
+    #[serde(rename = "direction")]
+    pub direction: String,
+    #[serde(rename = "volume")]
+    pub volume: f64,
+    #[serde(rename = "symbol")]
+    pub symbol: String,
+    #[serde(rename = "commission")]
+    pub commission: f64,
+    #[serde(rename = "swap")]
+    pub swap: f64,
+    #[serde(rename = "pnl")]
+    pub pnl: f64,
+    #[serde(rename = "depositConversionRate")]
+    pub deposit_conversion_rate: f64,
+    #[serde(rename = "usdConversionRate")]
+    pub usd_conversion_rate: f64,
+    #[serde(rename = "bookType")]
+    pub book_type: String,
+    #[serde(rename = "stake")]
+    pub stake: f64,
+    #[serde(rename = "spreadBetting")]
+    pub spread_betting: bool,
+}
