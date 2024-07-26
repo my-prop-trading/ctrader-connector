@@ -466,3 +466,25 @@ pub struct TraderGroupModel {
     pub description: String,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct GetSymbolsResponse {
+    #[serde(rename = "symbol")]
+    pub items: Vec<SymbolModel>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct SymbolModel {
+    pub id: i64,
+    pub name: String,
+    pub description: String,
+    #[serde(rename = "assetClass")]
+    pub asset_class: String,
+    pub category: String,
+    /// The flag that determines whether a symbol is currently receiving quotes.
+    #[serde(rename = "quotesEnabled")]
+    pub quotes_enabled: bool,
+    /// The flag that determines whether a symbol is currently shown in cTrader applications.
+    #[serde(rename = "showInCtrader")]
+    pub show_in_ctrader: bool,
+}
+

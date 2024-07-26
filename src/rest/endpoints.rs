@@ -14,6 +14,7 @@ pub enum WebservicesApiEndpoint {
     GetTraders,
     GetClosedPositions,
     GetTraderGroups,
+    GetSymbols,
 }
 
 impl From<&WebservicesApiEndpoint> for String {
@@ -42,6 +43,9 @@ impl From<&WebservicesApiEndpoint> for String {
             WebservicesApiEndpoint::GetTraderGroups => {
                 format!("/{api_version}/webserv/tradergroups")
             }
+            WebservicesApiEndpoint::GetSymbols => {
+                format!("/{api_version}/webserv/symbols")
+            }
         }
     }
 }
@@ -58,6 +62,7 @@ impl WebservicesApiEndpoint {
             WebservicesApiEndpoint::GetTraders => Method::GET,
             WebservicesApiEndpoint::GetClosedPositions => Method::GET,
             WebservicesApiEndpoint::GetTraderGroups => Method::GET,
+            WebservicesApiEndpoint::GetSymbols => Method::GET
         }
     }
 }

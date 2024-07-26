@@ -6,7 +6,7 @@ use crate::rest::models::{
     CreateCtraderManagerTokenResponse, CreateTraderRequest,
 };
 use crate::rest::utils::generate_password_hash;
-use crate::rest::{ClosedPositionModel, GetClosedPositionsRequestQuery, GetTraderGroupsResponse, GetTradersRequestQuery, GetTradersResponse, LinkCtidRequest, LinkCtidResponse, TraderGroupModel, TraderModel, UpdateTraderBalanceRequest, UpdateTraderBalanceResponse, UpdateTraderRequest};
+use crate::rest::{ClosedPositionModel, GetClosedPositionsRequestQuery, GetSymbolsResponse, GetTraderGroupsResponse, GetTradersRequestQuery, GetTradersResponse, LinkCtidRequest, LinkCtidResponse, SymbolModel, TraderGroupModel, TraderModel, UpdateTraderBalanceRequest, UpdateTraderBalanceResponse, UpdateTraderRequest};
 use error_chain::bail;
 use http::{Method, StatusCode};
 use reqwest::header::{HeaderMap, HeaderValue};
@@ -35,12 +35,23 @@ impl WebservicesRestClient {
         }
     }
 
+    /// Gets the list of all available symbols on the server.
+    pub async fn get_symbols(
+        &self,
+        request: &GetTradersRequestQuery,
+    ) -> Result<Vec<SymbolModel>, Error> {
+        let endpoint = WebservicesApiEndpoint::GetSymbols;
+        let resp: GetSymbolsResponse = self.send(endpoint, request).await?;
+
+        Ok(resp.items)
+    }
+
     /// Gets a list of all trader groups.
     pub async fn get_trader_groups(
         &self,
         request: &GetTradersRequestQuery,
     ) -> Result<Vec<TraderGroupModel>, Error> {
-        let endpoint = WebservicesApiEndpoint::GetTraders;
+        let endpoint = WebservicesApiEndpoint::GetTraderGroups;
         let resp: GetTraderGroupsResponse = self.send(endpoint, request).await?;
 
         Ok(resp.items)
