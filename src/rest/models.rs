@@ -381,7 +381,7 @@ mod string_date_format {
     use chrono::{DateTime, NaiveDateTime, Utc};
     use serde::{self, Deserialize, Deserializer, Serializer};
 
-    const FORMAT: &'static str = "%Y-%m-%dT%H:%M:%S.000"; // yyyy-MM-ddTHH:mm:ss.SSS e.g., 2018-01-01T12:12:12.000
+    const FORMAT: &'static str = "%Y-%m-%dT%H:%M:%S%.f"; // yyyy-MM-ddTHH:mm:ss.SSS e.g., 2018-01-01T12:12:12.000
 
     pub fn serialize<S>(date: &DateTime<Utc>, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -414,15 +414,17 @@ pub struct GetClosedPositionsRequestQuery {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ClosedPositionModel {
     #[serde(rename = "login")]
-    pub login: u64,
+    pub login: i64,
     #[serde(rename = "positionId")]
-    pub position_id: u32,
+    pub position_id: i64,
     #[serde(rename = "dealId")]
-    pub deal_id: u32,
+    pub deal_id: i64,
+    #[serde(with = "string_date_format")]
     #[serde(rename = "openTimestamp")]
-    pub open_timestamp: String,
+    pub open_timestamp: DateTime<Utc>,
+    #[serde(with = "string_date_format")]
     #[serde(rename = "closeTimestamp")]
-    pub close_timestamp: String,
+    pub close_timestamp: DateTime<Utc>,
     #[serde(rename = "entryPrice")]
     pub entry_price: f64,
     #[serde(rename = "closePrice")]

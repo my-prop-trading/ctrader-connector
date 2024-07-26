@@ -53,7 +53,7 @@ impl WebservicesRestClient {
     ) -> Result<Vec<ClosedPositionModel>, Error> {
         let endpoint = WebservicesApiEndpoint::GetClosedPositions;
         let data: String = self.send(endpoint, request).await?;
-        
+
         parse_closed_positions(&data)
     }
 
@@ -263,4 +263,23 @@ pub fn parse_closed_positions(data: &str) -> Result<Vec<ClosedPositionModel>, Er
     }
 
     Ok(positions)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::rest::rest_client::parse_closed_positions;
+
+    #[test]
+    fn parses_closed_positions() {
+        let data = r#"login,positionId,dealId,openTimestamp,closeTimestamp,entryPrice,closePrice,direction,volume,symbol,commission,swap,pnl,depositConversionRate,usdConversionRate,bookType,stake,spreadBetting
+9013206,6101,4690813,2018-03-19T13:44:21.224,2020-01-02T09:01:53.613,0.69999,0.70132,BUY,1000.00,AUD/USD,0.01,142.74,76.17,0.96911,0.70132,BOOK_B,0.00,false
+9013197,13313,5690189,2018-08-30T12:15:29.154,2020-01-02T09:01:54.748,1.32315,1.32214,BUY,1000.00,GBPUSD,0.00,25.83,44.79,0.96911,1.32214,BOOK_B,0.00,false"#;
+
+        let result = parse_closed_positions(data);
+
+        println!("{:?}", result);
+
+        let positions = result.unwrap();
+        assert_eq!(positions.len(), 2);
+    }
 }
