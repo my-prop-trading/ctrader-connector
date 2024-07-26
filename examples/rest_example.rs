@@ -84,7 +84,7 @@ pub async fn create_trader(rest_client: &WebservicesRestClient) {
         send_statement_to_broker: None,
         swap_free: None,
     };
-    let resp = rest_client.create_trader(request).await;
+    let resp = rest_client.create_trader(&request).await;
 
     println!("{:?}", resp)
 }

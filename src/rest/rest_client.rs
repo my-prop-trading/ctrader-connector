@@ -6,11 +6,13 @@ use crate::rest::models::{
     CreateCtraderManagerTokenResponse, CreateTraderRequest,
 };
 use crate::rest::utils::generate_password_hash;
-use crate::rest::{LinkCtidRequest, LinkCtidResponse, TraderModel, UpdateTraderBalanceRequest, UpdateTraderBalanceResponse, UpdateTraderRequest};
+use crate::rest::{
+    LinkCtidRequest, LinkCtidResponse, TraderModel, UpdateTraderBalanceRequest,
+    UpdateTraderBalanceResponse, UpdateTraderRequest,
+};
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use std::collections::HashMap;
 
 /// A simple yet powerful RESTful API, designed to cover the basic integration requirements for CRM
 /// systems. It offers the capability to handle common CRM related tasks, such as the creation and
@@ -57,7 +59,10 @@ impl WebservicesRestClient {
             return format!("{}{}", self.url, String::from(endpoint));
         };
 
-        format!("{}{}?token={}", self.url, String::from(endpoint), token)
+        let query_params: Vec<(&str, &str)> = vec![("token", token)];
+        let query_string = self.build_query_string(&query_params);
+
+        format!("{}{}?{}", self.url, String::from(endpoint), query_string)
     }
 
     /// Links a trader entity to a user entity.
@@ -67,10 +72,7 @@ impl WebservicesRestClient {
     }
 
     /// Creates a new trader (e.g. account)entity.
-    pub async fn create_trader(
-        &self,
-        request: &CreateTraderRequest,
-    ) -> Result<TraderModel, Error> {
+    pub async fn create_trader(&self, request: &CreateTraderRequest) -> Result<TraderModel, Error> {
         let endpoint = WebservicesApiEndpoint::CreateTrader;
         self.send(endpoint, request).await
     }
@@ -131,14 +133,16 @@ impl WebservicesRestClient {
         custom_headers
     }
 
-    pub fn build_query(&self, parameters: HashMap<String, String>) -> String {
-        let mut request = String::new();
-        for (key, value) in parameters {
-            let param = format!("{key}={value}&");
-            request.push_str(param.as_ref());
-        }
-        request.pop();
+    pub fn build_query_string(&self, params: &Vec<(&str, &str)>) -> String {
+        let mut query_string = String::new();
 
-        request
+        for (key, value) in params {
+            let param = format!("{key}={value}&");
+            query_string.push_str(&param);
+        }
+
+        query_string.pop(); // remove last & symbol
+
+        query_string
     }
 }
