@@ -206,38 +206,6 @@ pub enum TraderAccessRights {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct CreateTraderResponse {
-    pub bonus: i64,
-    pub equity: i64,
-    #[serde(rename = "freeMargin")]
-    pub free_margin: i64,
-    /// The current amount of funds that the account can withdraw.
-    // It is calculated via the following formula: cashEquity = balance + unrealized P&L - management fees,
-    // where management fees are all management fees charged by the providers of strategies that the
-    // account owner has invested in. Subject to moneyDigits.
-    #[serde(rename = "cashEquity")]
-    pub cash_equity: i64,
-    #[serde(rename = "lastUpdateTimestamp")]
-    pub last_update_timestamp: i64,
-    pub login: i64,
-    /// The number that determines how finance-related values are defined for the account. E.g.,
-    /// if moneyDigits=2 and balance=1234512, the account balance is 12345.12 in the account deposit currency.
-    /// Additional details are given in Section 3.
-    #[serde(rename = "moneyDigits")]
-    pub money_digits: i64,
-    #[serde(rename = "nonWithdrawableBonus")]
-    pub non_withdrawal_bonus: i64,
-    #[serde(rename = "registrationTimestamp")]
-    pub registration_timestamp: i64,
-    /// If this parameter equals true, rollover commissions are applied to the account instead of swaps.
-    /// The reverse applies if the parameter is false. This field is useful for ensuring compliance with Sharia law.
-    #[serde(rename = "swapFree")]
-    pub swap_free: bool,
-    #[serde(rename = "usedMargin")]
-    pub used_margin: i64,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LinkCtidRequest {
     #[serde(rename = "traderLogin")]
     pub trader_login: i64,
@@ -312,7 +280,7 @@ pub struct UpdateTraderRequest {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct UpdateTraderBalanceRequest {    
+pub struct UpdateTraderBalanceRequest {
     /// A short note that can be attached to any balance change. This note is not shown to retail clients.
     pub comment: Option<String>,
     /// A number that matches an external identifier of the broker’s choosing. For instance, the value of externalId could be equal to the number of the bank transfer order through which the user chose to make a deposit.
@@ -359,4 +327,41 @@ pub struct UpdateTraderBalanceResponse {
     /// Note that bonus and credit are not included in balanceHistoryId.
     #[serde(rename = "balanceHistoryId")]
     pub balance_history_id: i64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct GetTradersResponse {
+    pub trader: Vec<TraderModel>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TraderModel {
+    pub bonus: i64,
+    pub equity: i64,
+    #[serde(rename = "freeMargin")]
+    pub free_margin: i64,
+    /// The current amount of funds that the account can withdraw.
+    // It is calculated via the following formula: cashEquity = balance + unrealized P&L - management fees,
+    // where management fees are all management fees charged by the providers of strategies that the
+    // account owner has invested in. Subject to moneyDigits.
+    #[serde(rename = "cashEquity")]
+    pub cash_equity: i64,
+    #[serde(rename = "lastUpdateTimestamp")]
+    pub last_update_timestamp: i64,
+    pub login: i64,
+    /// The number that determines how finance-related values are defined for the account. E.g.,
+    /// if moneyDigits=2 and balance=1234512, the account balance is 12345.12 in the account deposit currency.
+    /// Additional details are given in Section 3.
+    #[serde(rename = "moneyDigits")]
+    pub money_digits: i64,
+    #[serde(rename = "nonWithdrawableBonus")]
+    pub non_withdrawal_bonus: i64,
+    #[serde(rename = "registrationTimestamp")]
+    pub registration_timestamp: i64,
+    /// If this parameter equals true, rollover commissions are applied to the account instead of swaps.
+    /// The reverse applies if the parameter is false. This field is useful for ensuring compliance with Sharia law.
+    #[serde(rename = "swapFree")]
+    pub swap_free: bool,
+    #[serde(rename = "usedMargin")]
+    pub used_margin: i64,
 }

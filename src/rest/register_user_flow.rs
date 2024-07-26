@@ -1,7 +1,7 @@
 use crate::rest::errors::Error;
 use crate::rest::rest_client::WebservicesRestClient;
 use crate::rest::utils::generate_password_hash;
-use crate::rest::{CreateCtidRequest, CreateCtidResponse, CreateTraderRequest, CreateTraderResponse, LinkCtidRequest, LinkCtidResponse, TotalMarginCalculationType, TraderAccessRights, TraderAccountType};
+use crate::rest::{CreateCtidRequest, CreateCtidResponse, CreateTraderRequest, LinkCtidRequest, LinkCtidResponse, TotalMarginCalculationType, TraderAccessRights, TraderAccountType, TraderModel};
 
 /// A wrapper for needed operations for a full user registration
 #[derive(Debug, Clone)]
@@ -22,10 +22,7 @@ impl RegisterUserFlow {
     /// 1. Create a new cTID (API call 5.1.).
     /// 2. Create a new account (API call 4.1.).
     /// 3. Link the new account to the cTID (API call 5.2).
-    pub async fn execute(
-        self,
-        rest_client: &WebservicesRestClient,
-    ) -> Result<RegisterData, Error> {
+    pub async fn execute(self, rest_client: &WebservicesRestClient) -> Result<RegisterData, Error> {
         let create_ctid_resp = rest_client
             .create_ctid(&CreateCtidRequest {
                 email: self.user_email,
@@ -72,7 +69,7 @@ impl RegisterUserFlow {
 
         Ok(RegisterData {
             create_ctid_resp,
-            create_trader_resp,
+            trader: create_trader_resp,
             link_ctid_resp,
         })
     }
@@ -81,6 +78,6 @@ impl RegisterUserFlow {
 #[derive(Debug, Clone)]
 pub struct RegisterData {
     pub create_ctid_resp: CreateCtidResponse,
-    pub create_trader_resp: CreateTraderResponse,
+    pub trader: TraderModel,
     pub link_ctid_resp: LinkCtidResponse,
 }

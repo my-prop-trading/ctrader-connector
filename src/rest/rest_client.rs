@@ -3,13 +3,10 @@ use crate::rest::endpoints::WebservicesApiEndpoint;
 use crate::rest::errors::Error;
 use crate::rest::models::{
     CreateCtidRequest, CreateCtidResponse, CreateCtraderManagerTokenRequest,
-    CreateCtraderManagerTokenResponse, CreateTraderRequest, CreateTraderResponse,
+    CreateCtraderManagerTokenResponse, CreateTraderRequest,
 };
 use crate::rest::utils::generate_password_hash;
-use crate::rest::{
-    LinkCtidRequest, LinkCtidResponse, UpdateTraderBalanceRequest, UpdateTraderBalanceResponse,
-    UpdateTraderRequest,
-};
+use crate::rest::{LinkCtidRequest, LinkCtidResponse, TraderModel, UpdateTraderBalanceRequest, UpdateTraderBalanceResponse, UpdateTraderRequest};
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -73,7 +70,7 @@ impl WebservicesRestClient {
     pub async fn create_trader(
         &self,
         request: &CreateTraderRequest,
-    ) -> Result<CreateTraderResponse, Error> {
+    ) -> Result<TraderModel, Error> {
         let endpoint = WebservicesApiEndpoint::CreateTrader;
         self.send(endpoint, request).await
     }
