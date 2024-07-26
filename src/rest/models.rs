@@ -381,7 +381,7 @@ mod string_date_format {
     use chrono::{DateTime, NaiveDateTime, Utc};
     use serde::{self, Deserialize, Deserializer, Serializer};
 
-    const FORMAT: &'static str = "%Y-%m-%d %H:%M:%S";
+    const FORMAT: &'static str = "%Y-%m-%dT%H:%M:%S.000"; // yyyy-MM-ddTHH:mm:ss.SSS e.g., 2018-01-01T12:12:12.000
 
     pub fn serialize<S>(date: &DateTime<Utc>, serializer: S) -> Result<S::Ok, S::Error>
     where
