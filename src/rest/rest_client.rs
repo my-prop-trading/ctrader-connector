@@ -48,7 +48,7 @@ impl WebservicesRestClient {
     /// Updates a trader entity.
     pub async fn update_trader(
         &self,
-        login: i32,
+        login: i64,
         request: UpdateTraderRequest,
     ) -> Result<(), Error> {
         let endpoint = WebservicesApiEndpoint::UpdateTrader(login.to_string());
