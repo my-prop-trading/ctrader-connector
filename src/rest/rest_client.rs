@@ -53,23 +53,8 @@ impl WebservicesRestClient {
     ) -> Result<Vec<ClosedPositionModel>, Error> {
         let endpoint = WebservicesApiEndpoint::GetClosedPositions;
         let data: String = self.send(endpoint, request).await?;
-        let mut reader = csv::ReaderBuilder::new()
-            .has_headers(true)
-            .from_reader(data.as_bytes());
-        let mut positions = Vec::with_capacity(20);
-
-        for result in reader.deserialize() {
-            let result: Result<ClosedPositionModel, _> = result;
-
-            let Ok(position) = result else {
-                let msg = format!("Failed to parse: {:?}. Resp: {data}", result.unwrap_err());
-                return Err(msg.into());
-            };
-
-            positions.push(position)
-        }
-
-        Ok(positions)
+        
+        parse_closed_positions(&data)
     }
 
     /// Changes the balance of a trader entity (including allocating/removing credit).
@@ -258,4 +243,24 @@ async fn handle<T: DeserializeOwned>(
             bail!(format!("Received response code: {s:?} error: {error:?}"));
         }
     }
+}
+
+pub fn parse_closed_positions(data: &str) -> Result<Vec<ClosedPositionModel>, Error> {
+    let mut reader = csv::ReaderBuilder::new()
+        .has_headers(true)
+        .from_reader(data.as_bytes());
+    let mut positions = Vec::with_capacity(20);
+
+    for result in reader.deserialize() {
+        let result: Result<ClosedPositionModel, _> = result;
+
+        let Ok(position) = result else {
+            let msg = format!("Failed to parse: {:?}. Resp: {data}", result.unwrap_err());
+            return Err(msg.into());
+        };
+
+        positions.push(position)
+    }
+
+    Ok(positions)
 }
