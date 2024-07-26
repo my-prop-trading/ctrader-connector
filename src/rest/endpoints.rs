@@ -11,6 +11,7 @@ pub enum WebservicesApiEndpoint {
     /// Changes the balance of a trader entity (including allocating/removing credit).
     /// Requires {login}
     UpdateTraderBalance(String),
+    GetTraders,
 }
 
 impl From<&WebservicesApiEndpoint> for String {
@@ -30,6 +31,9 @@ impl From<&WebservicesApiEndpoint> for String {
             WebservicesApiEndpoint::UpdateTraderBalance(login) => {
                 format!("/{api_version}/webserv/traders/{login}/changebalance")
             }
+            WebservicesApiEndpoint::GetTraders => {
+                format!("/{api_version}/webserv/traders/")
+            }
         }
     }
 }
@@ -43,6 +47,7 @@ impl WebservicesApiEndpoint {
             WebservicesApiEndpoint::LinkCtid => Method::POST,
             WebservicesApiEndpoint::UpdateTrader(_) => Method::PATCH,
             WebservicesApiEndpoint::UpdateTraderBalance(_) => Method::POST,
+            WebservicesApiEndpoint::GetTraders => Method::GET,
         }
     }
 }
