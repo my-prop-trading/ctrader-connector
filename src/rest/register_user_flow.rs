@@ -1,10 +1,7 @@
 use crate::rest::errors::Error;
 use crate::rest::rest_client::WebservicesRestClient;
 use crate::rest::utils::generate_password_hash;
-use crate::rest::{
-    CreateCtidRequest, CreateTraderRequest, LinkCtidRequest, TotalMarginCalculationType,
-    TraderAccessRights, TraderAccountType,
-};
+use crate::rest::{CreateCtidRequest, CreateCtidResponse, CreateTraderRequest, CreateTraderResponse, LinkCtidRequest, LinkCtidResponse, TotalMarginCalculationType, TraderAccessRights, TraderAccountType};
 
 /// A wrapper for needed operations for a full user registration
 #[derive(Debug, Clone)]
@@ -74,21 +71,16 @@ impl RegisterUserFlow {
             .await?;
 
         Ok(RegisterData {
-            trader_login: create_trader_resp.login,
-            user_id: create_ctid_resp.user_id,
-            account_id: link_ctid_resp
-                .ctid_trader_account_id
-                .expect("return_account_details is true"),
+            create_ctid_resp,
+            create_trader_resp,
+            link_ctid_resp,
         })
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct RegisterData {
-    /// The number of a specific trading account. Linked to the user id
-    pub trader_login: i64,
-    /// The unique identifier of the user entity. Linked to specified email
-    pub user_id: i64,
-    /// The unique identifier of the linkage between a specific user and one of their trading accounts.
-    pub account_id: i64,
+    pub create_ctid_resp: CreateCtidResponse,
+    pub create_trader_resp: CreateTraderResponse,
+    pub link_ctid_resp: LinkCtidResponse,
 }
