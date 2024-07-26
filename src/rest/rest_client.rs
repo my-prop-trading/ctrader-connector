@@ -7,8 +7,9 @@ use crate::rest::models::{
 };
 use crate::rest::utils::generate_password_hash;
 use crate::rest::{
-    GetTradersRequestQuery, GetTradersResponse, LinkCtidRequest, LinkCtidResponse, TraderModel,
-    UpdateTraderBalanceRequest, UpdateTraderBalanceResponse, UpdateTraderRequest,
+    GetClosedPositionsRequestQuery, GetTradersRequestQuery, GetTradersResponse, LinkCtidRequest,
+    LinkCtidResponse, TraderModel, UpdateTraderBalanceRequest, UpdateTraderBalanceResponse,
+    UpdateTraderRequest,
 };
 use error_chain::bail;
 use http::{Method, StatusCode};
@@ -38,12 +39,19 @@ impl WebservicesRestClient {
         }
     }
 
-    /// Changes the balance of a trader entity (including allocating/removing credit).
     pub async fn get_traders(
         &self,
         request: &GetTradersRequestQuery,
     ) -> Result<GetTradersResponse, Error> {
         let endpoint = WebservicesApiEndpoint::GetTraders;
+        self.send(endpoint, request).await
+    }
+
+    pub async fn get_closed_positions(
+        &self,
+        request: &GetClosedPositionsRequestQuery,
+    ) -> Result<GetTradersResponse, Error> {
+        let endpoint = WebservicesApiEndpoint::GetClosedPositions;
         self.send(endpoint, request).await
     }
 

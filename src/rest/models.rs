@@ -400,3 +400,16 @@ mod string_date_format {
         Ok(DateTime::<Utc>::from_naive_utc_and_offset(dt, Utc))
     }
 }
+
+/// The difference between the timestamps specified in the from and to parameters must be equal to two days or less.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct GetClosedPositionsRequestQuery {
+    #[serde(with = "string_date_format")]
+    pub from: DateTime<Utc>,
+    #[serde(with = "string_date_format")]
+    pub to: DateTime<Utc>,
+    pub login: Option<i64>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct GetClosedPositionsResponse {}
