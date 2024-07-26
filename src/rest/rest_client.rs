@@ -41,7 +41,7 @@ impl WebservicesRestClient {
         request: &UpdateTraderBalanceRequest,
     ) -> Result<UpdateTraderBalanceResponse, Error> {
         let endpoint = WebservicesApiEndpoint::UpdateTraderBalance(request.login.to_string());
-        self.send(endpoint, request).await
+        self.send(endpoint, request, None).await
     }
 
     /// Updates a trader entity.
@@ -51,30 +51,49 @@ impl WebservicesRestClient {
         request: &UpdateTraderRequest,
     ) -> Result<(), Error> {
         let endpoint = WebservicesApiEndpoint::UpdateTrader(login.to_string());
-        self.send(endpoint, request).await
+        self.send(endpoint, request, None).await
     }
 
-    fn generate_full_url(&self, endpoint: &WebservicesApiEndpoint) -> String {
+    fn build_full_url(
+        &self,
+        endpoint: &WebservicesApiEndpoint,
+        query_params: Option<Vec<(&str, &str)>>,
+    ) -> String {
         let Some(token) = self.current_token.as_ref() else {
-            return format!("{}{}", self.url, String::from(endpoint));
+            return format!(
+                "{}{}?{}",
+                self.url,
+                String::from(endpoint),
+                self.build_query_string(query_params.unwrap_or(Vec::with_capacity(0)))
+            );
         };
 
-        let query_params: Vec<(&str, &str)> = vec![("token", token)];
-        let query_string = self.build_query_string(&query_params);
+        let query_params: Vec<(&str, &str)> = if let Some(mut query_params) = query_params {
+            query_params.push(("token", token));
 
-        format!("{}{}?{}", self.url, String::from(endpoint), query_string)
+            query_params
+        } else {
+            vec![("token", token)]
+        };
+
+        format!(
+            "{}{}?{}",
+            self.url,
+            String::from(endpoint),
+            self.build_query_string(query_params)
+        )
     }
 
     /// Links a trader entity to a user entity.
     pub async fn link_ctid(&self, request: &LinkCtidRequest) -> Result<LinkCtidResponse, Error> {
         let endpoint = WebservicesApiEndpoint::LinkCtid;
-        self.send(endpoint, request).await
+        self.send(endpoint, request, None).await
     }
 
     /// Creates a new trader (e.g. account)entity.
     pub async fn create_trader(&self, request: &CreateTraderRequest) -> Result<TraderModel, Error> {
         let endpoint = WebservicesApiEndpoint::CreateTrader;
-        self.send(endpoint, request).await
+        self.send(endpoint, request, None).await
     }
 
     /// Creates a new user entity. The cTID is used to authorize end users in the trading application(s) of their choice
@@ -83,7 +102,7 @@ impl WebservicesRestClient {
         request: &CreateCtidRequest,
     ) -> Result<CreateCtidResponse, Error> {
         let endpoint = WebservicesApiEndpoint::CreateCtid;
-        self.send(endpoint, request).await
+        self.send(endpoint, request, None).await
     }
 
     pub async fn authorize(&mut self) -> Result<(), Error> {
@@ -93,7 +112,8 @@ impl WebservicesRestClient {
         };
         let endpoint = WebservicesApiEndpoint::CreateManagerToken;
 
-        let response: CreateCtraderManagerTokenResponse = self.send(endpoint, &request).await?;
+        let response: CreateCtraderManagerTokenResponse =
+            self.send(endpoint, &request, None).await?;
 
         self.current_token = Some(response.token);
 
@@ -104,8 +124,9 @@ impl WebservicesRestClient {
         &self,
         endpoint: WebservicesApiEndpoint,
         request: &R,
+        query_params: Option<Vec<(&str, &str)>>,
     ) -> Result<T, Error> {
-        let url = self.generate_full_url(&endpoint);
+        let url = self.build_full_url(&endpoint, query_params);
         let headers = self.build_headers();
         let request_json = serde_json::to_string(request)?;
 
@@ -133,7 +154,7 @@ impl WebservicesRestClient {
         custom_headers
     }
 
-    pub fn build_query_string(&self, params: &Vec<(&str, &str)>) -> String {
+    pub fn build_query_string(&self, params: Vec<(&str, &str)>) -> String {
         let mut query_string = String::new();
 
         for (key, value) in params {
