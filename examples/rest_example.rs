@@ -20,7 +20,7 @@ async fn main() {
 }
 
 pub async fn deposit(rest_client: &WebservicesRestClient) {
-    let result = rest_client.update_trader_balance(UpdateTraderBalanceRequest {
+    let result = rest_client.update_trader_balance(&UpdateTraderBalanceRequest {
         comment: None,
         external_id: None,
         external_note: None,
@@ -57,7 +57,7 @@ pub async fn create_ctid(rest_client: &WebservicesRestClient) {
         broker_name: std::env::var("CTRADER_BROKER_NAME").unwrap(),
         preferred_lang: None,
     };
-    let resp = rest_client.create_ctid(request).await;
+    let resp = rest_client.create_ctid(&request).await;
 
     println!("{:?}", resp)
 }
@@ -98,7 +98,7 @@ pub async fn link_ctid(rest_client: &WebservicesRestClient) {
         environment_name: "demo".to_string(),
         return_account_details: Some(true),
     };
-    let resp = rest_client.link_ctid(request).await;
+    let resp = rest_client.link_ctid(&request).await;
 
     println!("{:?}", resp)
 }

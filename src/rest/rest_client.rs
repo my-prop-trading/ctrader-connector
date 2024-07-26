@@ -39,7 +39,7 @@ impl WebservicesRestClient {
     /// Changes the balance of a trader entity (including allocating/removing credit).
     pub async fn update_trader_balance(
         &self,
-        request: UpdateTraderBalanceRequest,
+        request: &UpdateTraderBalanceRequest,
     ) -> Result<UpdateTraderBalanceResponse, Error> {
         let endpoint = WebservicesApiEndpoint::UpdateTraderBalance(request.login.to_string());
         self.send(endpoint, request).await
@@ -49,7 +49,7 @@ impl WebservicesRestClient {
     pub async fn update_trader(
         &self,
         login: i64,
-        request: UpdateTraderRequest,
+        request: &UpdateTraderRequest,
     ) -> Result<(), Error> {
         let endpoint = WebservicesApiEndpoint::UpdateTrader(login.to_string());
         self.send(endpoint, request).await
@@ -64,7 +64,7 @@ impl WebservicesRestClient {
     }
 
     /// Links a trader entity to a user entity.
-    pub async fn link_ctid(&self, request: LinkCtidRequest) -> Result<LinkCtidResponse, Error> {
+    pub async fn link_ctid(&self, request: &LinkCtidRequest) -> Result<LinkCtidResponse, Error> {
         let endpoint = WebservicesApiEndpoint::LinkCtid;
         self.send(endpoint, request).await
     }
@@ -72,7 +72,7 @@ impl WebservicesRestClient {
     /// Creates a new trader (e.g. account)entity.
     pub async fn create_trader(
         &self,
-        request: CreateTraderRequest,
+        request: &CreateTraderRequest,
     ) -> Result<CreateTraderResponse, Error> {
         let endpoint = WebservicesApiEndpoint::CreateTrader;
         self.send(endpoint, request).await
@@ -81,7 +81,7 @@ impl WebservicesRestClient {
     /// Creates a new user entity. The cTID is used to authorize end users in the trading application(s) of their choice
     pub async fn create_ctid(
         &self,
-        request: CreateCtidRequest,
+        request: &CreateCtidRequest,
     ) -> Result<CreateCtidResponse, Error> {
         let endpoint = WebservicesApiEndpoint::CreateCtid;
         self.send(endpoint, request).await
@@ -94,7 +94,7 @@ impl WebservicesRestClient {
         };
         let endpoint = WebservicesApiEndpoint::CreateManagerToken;
 
-        let response: CreateCtraderManagerTokenResponse = self.send(endpoint, request).await?;
+        let response: CreateCtraderManagerTokenResponse = self.send(endpoint, &request).await?;
 
         self.current_token = Some(response.token);
 
@@ -104,11 +104,11 @@ impl WebservicesRestClient {
     pub async fn send<R: Serialize, T: DeserializeOwned>(
         &self,
         endpoint: WebservicesApiEndpoint,
-        request: R,
+        request: &R,
     ) -> Result<T, Error> {
         let url = self.generate_full_url(&endpoint);
         let headers = self.build_headers();
-        let request_json = serde_json::to_string(&request)?;
+        let request_json = serde_json::to_string(request)?;
 
         let response = self
             .inner_client

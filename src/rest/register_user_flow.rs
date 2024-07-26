@@ -27,7 +27,7 @@ impl RegisterUserFlow {
         rest_client: &WebservicesRestClient,
     ) -> Result<RegisterData, Error> {
         let create_ctid_resp = rest_client
-            .create_ctid(CreateCtidRequest {
+            .create_ctid(&CreateCtidRequest {
                 email: self.user_email,
                 broker_name: self.broker_name.clone(),
                 preferred_lang: None,
@@ -36,7 +36,7 @@ impl RegisterUserFlow {
         let password_hash = generate_password_hash(&self.user_password);
 
         let create_trader_resp = rest_client
-            .create_trader(CreateTraderRequest {
+            .create_trader(&CreateTraderRequest {
                 access_rights: TraderAccessRights::FullAccess,
                 account_type: TraderAccountType::Hedged,
                 balance: 0,
@@ -60,7 +60,7 @@ impl RegisterUserFlow {
             .await?;
 
         let link_ctid_resp = rest_client
-            .link_ctid(LinkCtidRequest {
+            .link_ctid(&LinkCtidRequest {
                 trader_login: create_trader_resp.login,
                 trader_password_hash: password_hash,
                 user_id: create_ctid_resp.user_id,
