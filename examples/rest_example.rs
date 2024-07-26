@@ -16,7 +16,7 @@ async fn main() {
 
     let mut rest_client = WebservicesRestClient::new(url, creds);
     rest_client.authorize().await.unwrap();
-    deposit(&rest_client).await;
+    register(&rest_client).await;
 }
 
 pub async fn deposit(rest_client: &WebservicesRestClient) {
@@ -35,7 +35,7 @@ pub async fn deposit(rest_client: &WebservicesRestClient) {
 
 pub async fn register(rest_client: &WebservicesRestClient) {
     let flow = RegisterUserFlow {
-        user_email: "ctrader-test-3@mailinator.com".to_string(),
+        user_email: generate_test_email(),
         broker_name: std::env::var("CTRADER_BROKER_NAME").unwrap(),
         user_password: "qwerty123".to_string(),
         deposit_currency: "USD".to_string(),
@@ -52,9 +52,8 @@ pub async fn register(rest_client: &WebservicesRestClient) {
 }
 
 pub async fn create_ctid(rest_client: &WebservicesRestClient) {
-    let uuid = &Uuid::new_v4().to_string()[..6];
     let request = CreateCtidRequest {
-        email: format!("{}@mailinator.com", uuid),
+        email: generate_test_email(),
         broker_name: std::env::var("CTRADER_BROKER_NAME").unwrap(),
         preferred_lang: None,
     };
@@ -106,4 +105,10 @@ pub async fn link_ctid(rest_client: &WebservicesRestClient) {
 
 fn generate_test_password_hash() -> String {
     generate_password_hash("qwerty123")
+}
+
+fn generate_test_email() -> String {
+    let uuid = &Uuid::new_v4().to_string()[..6];
+    
+    format!("{}@mailinator.com", uuid)
 }
