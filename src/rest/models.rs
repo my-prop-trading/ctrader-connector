@@ -284,7 +284,7 @@ pub struct UpdateTraderRequest {
     /// "SUM". The total margin requirements per symbol are equal to the sum of all margin requirements of all positions opened for this symbol.
     /// "NET". The total margin requirements per symbol are equal to the difference between the margin requirements for all long positions and all short positions opened for this symbol.
     #[serde(rename = "totalMarginCalculationType")]
-    pub total_margin_calculation_type: TotalMarginCalculationType,
+    pub total_margin_calculation_type: Option<TotalMarginCalculationType>,
     #[serde(rename = "contactDetails")]
     pub contact_details: Option<TraderContactDetails>,
     pub description: Option<String>,
