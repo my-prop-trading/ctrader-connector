@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use serde::Serialize;
 use serde_derive::Deserialize;
 
@@ -330,6 +331,16 @@ pub struct UpdateTraderBalanceResponse {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct GetTradersRequestQuery {
+    #[serde(with = "string_date_format")]
+    pub from: DateTime<Utc>,
+    #[serde(with = "string_date_format")]
+    pub to: DateTime<Utc>,
+    #[serde(rename = "groupId")]
+    pub group_id: Option<i64>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GetTradersResponse {
     pub trader: Vec<TraderModel>,
 }
@@ -364,4 +375,28 @@ pub struct TraderModel {
     pub swap_free: bool,
     #[serde(rename = "usedMargin")]
     pub used_margin: i64,
+}
+
+mod string_date_format {
+    use chrono::{DateTime, NaiveDateTime, Utc};
+    use serde::{self, Deserialize, Deserializer, Serializer};
+
+    const FORMAT: &'static str = "%Y-%m-%d %H:%M:%S";
+
+    pub fn serialize<S>(date: &DateTime<Utc>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let s = format!("{}", date.format(FORMAT));
+        serializer.serialize_str(&s)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<DateTime<Utc>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        let dt = NaiveDateTime::parse_from_str(&s, FORMAT).map_err(serde::de::Error::custom)?;
+        Ok(DateTime::<Utc>::from_naive_utc_and_offset(dt, Utc))
+    }
 }

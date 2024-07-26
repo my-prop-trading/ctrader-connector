@@ -7,10 +7,13 @@ use crate::rest::models::{
 };
 use crate::rest::utils::generate_password_hash;
 use crate::rest::{
-    LinkCtidRequest, LinkCtidResponse, TraderModel, UpdateTraderBalanceRequest,
-    UpdateTraderBalanceResponse, UpdateTraderRequest,
+    GetTradersRequestQuery, GetTradersResponse, LinkCtidRequest, LinkCtidResponse, TraderModel,
+    UpdateTraderBalanceRequest, UpdateTraderBalanceResponse, UpdateTraderRequest,
 };
+use error_chain::bail;
+use http::{Method, StatusCode};
 use reqwest::header::{HeaderMap, HeaderValue};
+use reqwest::Response;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
@@ -36,12 +39,21 @@ impl WebservicesRestClient {
     }
 
     /// Changes the balance of a trader entity (including allocating/removing credit).
+    pub async fn get_traders(
+        &self,
+        request: &GetTradersRequestQuery,
+    ) -> Result<GetTradersResponse, Error> {
+        let endpoint = WebservicesApiEndpoint::GetTraders;
+        self.send(endpoint, request).await
+    }
+
+    /// Changes the balance of a trader entity (including allocating/removing credit).
     pub async fn update_trader_balance(
         &self,
         request: &UpdateTraderBalanceRequest,
     ) -> Result<UpdateTraderBalanceResponse, Error> {
         let endpoint = WebservicesApiEndpoint::UpdateTraderBalance(request.login.to_string());
-        self.send(endpoint, request, None).await
+        self.send(endpoint, request).await
     }
 
     /// Updates a trader entity.
@@ -51,49 +63,19 @@ impl WebservicesRestClient {
         request: &UpdateTraderRequest,
     ) -> Result<(), Error> {
         let endpoint = WebservicesApiEndpoint::UpdateTrader(login.to_string());
-        self.send(endpoint, request, None).await
-    }
-
-    fn build_full_url(
-        &self,
-        endpoint: &WebservicesApiEndpoint,
-        query_params: Option<Vec<(&str, &str)>>,
-    ) -> String {
-        let Some(token) = self.current_token.as_ref() else {
-            return format!(
-                "{}{}?{}",
-                self.url,
-                String::from(endpoint),
-                self.build_query_string(query_params.unwrap_or(Vec::with_capacity(0)))
-            );
-        };
-
-        let query_params: Vec<(&str, &str)> = if let Some(mut query_params) = query_params {
-            query_params.push(("token", token));
-
-            query_params
-        } else {
-            vec![("token", token)]
-        };
-
-        format!(
-            "{}{}?{}",
-            self.url,
-            String::from(endpoint),
-            self.build_query_string(query_params)
-        )
+        self.send(endpoint, request).await
     }
 
     /// Links a trader entity to a user entity.
     pub async fn link_ctid(&self, request: &LinkCtidRequest) -> Result<LinkCtidResponse, Error> {
         let endpoint = WebservicesApiEndpoint::LinkCtid;
-        self.send(endpoint, request, None).await
+        self.send(endpoint, request).await
     }
 
     /// Creates a new trader (e.g. account)entity.
     pub async fn create_trader(&self, request: &CreateTraderRequest) -> Result<TraderModel, Error> {
         let endpoint = WebservicesApiEndpoint::CreateTrader;
-        self.send(endpoint, request, None).await
+        self.send(endpoint, request).await
     }
 
     /// Creates a new user entity. The cTID is used to authorize end users in the trading application(s) of their choice
@@ -102,7 +84,7 @@ impl WebservicesRestClient {
         request: &CreateCtidRequest,
     ) -> Result<CreateCtidResponse, Error> {
         let endpoint = WebservicesApiEndpoint::CreateCtid;
-        self.send(endpoint, request, None).await
+        self.send(endpoint, request).await
     }
 
     pub async fn authorize(&mut self) -> Result<(), Error> {
@@ -112,8 +94,7 @@ impl WebservicesRestClient {
         };
         let endpoint = WebservicesApiEndpoint::CreateManagerToken;
 
-        let response: CreateCtraderManagerTokenResponse =
-            self.send(endpoint, &request, None).await?;
+        let response: CreateCtraderManagerTokenResponse = self.send(endpoint, &request).await?;
 
         self.current_token = Some(response.token);
 
@@ -124,21 +105,26 @@ impl WebservicesRestClient {
         &self,
         endpoint: WebservicesApiEndpoint,
         request: &R,
-        query_params: Option<Vec<(&str, &str)>>,
     ) -> Result<T, Error> {
-        let url = self.build_full_url(&endpoint, query_params);
         let headers = self.build_headers();
-        let request_json = serde_json::to_string(request)?;
+        let http_method = endpoint.get_http_method();
+        let mut request_json = None;
+        let url: String;
 
-        let response = self
-            .inner_client
-            .request(endpoint.get_http_method(), &url)
-            .body(request_json.clone())
-            .headers(headers)
-            .send()
-            .await;
+        let builder = if http_method == Method::GET {
+            let query_string = serde_qs::to_string(&request).expect("must be valid model");
+            url = self.build_full_url(&endpoint, Some(query_string));
+            self.inner_client.request(http_method, &url)
+        } else {
+            let body = serde_json::to_string(request)?;
+            request_json = Some(body.clone());
+            url = self.build_full_url(&endpoint, None);
+            self.inner_client.request(http_method, &url).body(body)
+        };
 
-        crate::rest::response_handler::handle(response?, Some(request_json), &url).await
+        let response = builder.headers(headers).send().await;
+
+        handle(response?, request_json, &url).await
     }
 
     fn build_headers(&self) -> HeaderMap {
@@ -165,5 +151,86 @@ impl WebservicesRestClient {
         query_string.pop(); // remove last & symbol
 
         query_string
+    }
+
+    fn build_full_url(
+        &self,
+        endpoint: &WebservicesApiEndpoint,
+        query_string: Option<String>,
+    ) -> String {
+        let url = &self.url;
+        let endpoint_str = String::from(endpoint);
+
+        if let Some(token) = self.current_token.as_ref() {
+            let token_param_name = "token";
+
+            if let Some(query_string) = query_string {
+                format!("{url}{endpoint_str}?{query_string}&{token_param_name}={token}")
+            } else {
+                format!("{url}{endpoint_str}?{token_param_name}={token}")
+            }
+        } else {
+            format!("{url}{endpoint_str}")
+        }
+    }
+}
+
+async fn handle<T: DeserializeOwned>(
+    response: Response,
+    request_json: Option<String>,
+    request_url: &str,
+) -> Result<T, Error> {
+    match response.status() {
+        StatusCode::OK => {
+            let json: Result<String, _> = response.text().await;
+            let Ok(json) = json else {
+                bail!("Failed to read response body. Url {}", request_url);
+            };
+
+            let body: Result<T, _> = serde_json::from_str(&json);
+            if let Err(err) = body {
+                bail!(
+                    "Url {}. Failed to deserialize body {:?}: {}",
+                    request_url,
+                    err,
+                    json
+                );
+            }
+
+            Ok(body.unwrap())
+        }
+        StatusCode::CREATED => {
+            let json: Result<String, _> = response.text().await;
+            let Ok(json) = json else {
+                bail!("Failed to read response body");
+            };
+            let body: Result<T, _> = serde_json::from_str(&json);
+            if let Err(err) = body {
+                bail!("Failed to deserialize body {:?}: {}", err, json);
+            }
+
+            Ok(body.unwrap())
+        }
+        StatusCode::INTERNAL_SERVER_ERROR => {
+            bail!("Internal Server Error {}", request_url,);
+        }
+        StatusCode::SERVICE_UNAVAILABLE => {
+            bail!("Service Unavailable {}", request_url,);
+        }
+        StatusCode::UNAUTHORIZED => {
+            bail!("Unauthorized {}", request_url);
+        }
+        StatusCode::BAD_REQUEST => {
+            let error = response.text().await?;
+            bail!(format!(
+                "Received bad request status. Url: {}. Request: {:?}. Response: {:?}",
+                request_url, request_json, error
+            ));
+        }
+        s => {
+            let error = response.text().await?;
+
+            bail!(format!("Received response code: {s:?} error: {error:?}"));
+        }
     }
 }
