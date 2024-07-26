@@ -342,7 +342,7 @@ pub struct GetTradersRequestQuery {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GetTradersResponse {
-    pub trader: Vec<TraderModel>,
+    pub items: Vec<TraderModel>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -452,3 +452,17 @@ pub struct ClosedPositionModel {
     #[serde(rename = "spreadBetting")]
     pub spread_betting: bool,
 }
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct GetTraderGroupsResponse {
+    #[serde(rename = "traderGroup")]
+    pub items: Vec<TraderGroupModel>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TraderGroupModel {
+    pub id: i64,
+    pub name: String,
+    pub description: String,
+}
+

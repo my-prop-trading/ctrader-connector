@@ -13,6 +13,7 @@ pub enum WebservicesApiEndpoint {
     UpdateTraderBalance(String),
     GetTraders,
     GetClosedPositions,
+    GetTraderGroups,
 }
 
 impl From<&WebservicesApiEndpoint> for String {
@@ -38,6 +39,9 @@ impl From<&WebservicesApiEndpoint> for String {
             WebservicesApiEndpoint::GetClosedPositions => {
                 format!("/{api_version}/webserv/closedPositions")
             }
+            WebservicesApiEndpoint::GetTraderGroups => {
+                format!("/{api_version}/webserv/tradergroups")
+            }
         }
     }
 }
@@ -53,6 +57,7 @@ impl WebservicesApiEndpoint {
             WebservicesApiEndpoint::UpdateTraderBalance(_) => Method::POST,
             WebservicesApiEndpoint::GetTraders => Method::GET,
             WebservicesApiEndpoint::GetClosedPositions => Method::GET,
+            WebservicesApiEndpoint::GetTraderGroups => Method::GET,
         }
     }
 }

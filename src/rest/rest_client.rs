@@ -6,11 +6,7 @@ use crate::rest::models::{
     CreateCtraderManagerTokenResponse, CreateTraderRequest,
 };
 use crate::rest::utils::generate_password_hash;
-use crate::rest::{
-    ClosedPositionModel, GetClosedPositionsRequestQuery, GetTradersRequestQuery,
-    GetTradersResponse, LinkCtidRequest, LinkCtidResponse, TraderModel, UpdateTraderBalanceRequest,
-    UpdateTraderBalanceResponse, UpdateTraderRequest,
-};
+use crate::rest::{ClosedPositionModel, GetClosedPositionsRequestQuery, GetTraderGroupsResponse, GetTradersRequestQuery, GetTradersResponse, LinkCtidRequest, LinkCtidResponse, TraderGroupModel, TraderModel, UpdateTraderBalanceRequest, UpdateTraderBalanceResponse, UpdateTraderRequest};
 use error_chain::bail;
 use http::{Method, StatusCode};
 use reqwest::header::{HeaderMap, HeaderValue};
@@ -39,6 +35,17 @@ impl WebservicesRestClient {
         }
     }
 
+    /// Gets a list of all trader groups.
+    pub async fn get_trader_groups(
+        &self,
+        request: &GetTradersRequestQuery,
+    ) -> Result<Vec<TraderGroupModel>, Error> {
+        let endpoint = WebservicesApiEndpoint::GetTraders;
+        let resp: GetTraderGroupsResponse = self.send(endpoint, request).await?;
+
+        Ok(resp.items)
+    }
+
     pub async fn get_traders(
         &self,
         request: &GetTradersRequestQuery,
@@ -46,7 +53,7 @@ impl WebservicesRestClient {
         let endpoint = WebservicesApiEndpoint::GetTraders;
         let resp: GetTradersResponse = self.send(endpoint, request).await?;
         
-        Ok(resp.trader)
+        Ok(resp.items)
     }
 
     pub async fn get_closed_positions(
