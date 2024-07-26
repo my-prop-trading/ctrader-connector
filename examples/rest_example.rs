@@ -1,10 +1,14 @@
+use chrono::{Utc};
 use ctrader_connector::rest::creds::ManagerCreds;
 use ctrader_connector::rest::models::CreateCtidRequest;
-use ctrader_connector::rest::rest_client::WebservicesRestClient;
-use ctrader_connector::rest::{BalanceChangeType, CreateTraderRequest, LinkCtidRequest, TotalMarginCalculationType, TraderAccessRights, TraderAccountType, UpdateTraderBalanceRequest};
-use uuid::Uuid;
 use ctrader_connector::rest::register_user_flow::RegisterUserFlow;
+use ctrader_connector::rest::rest_client::WebservicesRestClient;
 use ctrader_connector::rest::utils::generate_password_hash;
+use ctrader_connector::rest::{
+    BalanceChangeType, CreateTraderRequest, GetTradersRequestQuery, LinkCtidRequest,
+    TotalMarginCalculationType, TraderAccessRights, TraderAccountType, UpdateTraderBalanceRequest,
+};
+use uuid::Uuid;
 
 #[tokio::main]
 async fn main() {
@@ -17,18 +21,32 @@ async fn main() {
     let mut rest_client = WebservicesRestClient::new(url, creds);
     rest_client.authorize().await.unwrap();
     //register(&rest_client).await;
+    //get_traders(&rest_client).await;
+}
+
+pub async fn get_traders(rest_client: &WebservicesRestClient) {
+    let request = GetTradersRequestQuery {
+        from: Default::default(),
+        to: Utc::now(),
+        group_id: None,
+    };
+    let resp = rest_client.get_traders(&request).await;
+
+    println!("{:?}", resp)
 }
 
 pub async fn deposit(rest_client: &WebservicesRestClient) {
-    let result = rest_client.update_trader_balance(&UpdateTraderBalanceRequest {
-        comment: None,
-        external_id: None,
-        external_note: None,
-        login: 3238402,
-        precise_amount: 1.0,
-        source: None,
-        change_type: BalanceChangeType::Deposit,
-    }).await;
+    let result = rest_client
+        .update_trader_balance(&UpdateTraderBalanceRequest {
+            comment: None,
+            external_id: None,
+            external_note: None,
+            login: 3238402,
+            precise_amount: 1.0,
+            source: None,
+            change_type: BalanceChangeType::Deposit,
+        })
+        .await;
 
     println!("{:?}", result)
 }
@@ -109,6 +127,6 @@ fn generate_test_password_hash() -> String {
 
 fn generate_test_email() -> String {
     let uuid = &Uuid::new_v4().to_string()[..6];
-    
+
     format!("{}@mailinator.com", uuid)
 }
