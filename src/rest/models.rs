@@ -352,9 +352,9 @@ pub struct TraderModel {
     #[serde(rename = "freeMargin")]
     pub free_margin: i64,
     /// The current amount of funds that the account can withdraw.
-    // It is calculated via the following formula: cashEquity = balance + unrealized P&L - management fees,
-    // where management fees are all management fees charged by the providers of strategies that the
-    // account owner has invested in. Subject to moneyDigits.
+    /// It is calculated via the following formula: cashEquity = balance + unrealized P&L - management fees,
+    /// where management fees are all management fees charged by the providers of strategies that the
+    /// account owner has invested in. Subject to moneyDigits.
     #[serde(rename = "cashEquity")]
     pub cash_equity: i64,
     #[serde(rename = "lastUpdateTimestamp")]
