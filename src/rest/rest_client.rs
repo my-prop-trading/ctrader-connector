@@ -6,7 +6,12 @@ use crate::rest::models::{
     CreateCtraderManagerTokenResponse, CreateTraderRequest,
 };
 use crate::rest::utils::generate_password_hash;
-use crate::rest::{ClosedPositionModel, GetClosedPositionsRequestQuery, GetSymbolsResponse, GetTraderGroupsResponse, GetTradersRequestQuery, GetTradersResponse, LinkCtidRequest, LinkCtidResponse, SymbolModel, TraderGroupModel, TraderModel, UpdateTraderBalanceRequest, UpdateTraderBalanceResponse, UpdateTraderRequest};
+use crate::rest::{
+    ClosedPositionModel, GetClosedPositionsRequest, GetSymbolsResponse, GetTraderGroupsResponse,
+    GetTradersRequest, GetTradersResponse, LinkCtidRequest, LinkCtidResponse, SymbolModel,
+    TraderGroupModel, TraderModel, UpdateTraderBalanceRequest, UpdateTraderBalanceResponse,
+    UpdateTraderRequest,
+};
 use error_chain::bail;
 use http::{Method, StatusCode};
 use reqwest::header::{HeaderMap, HeaderValue};
@@ -22,7 +27,7 @@ pub struct WebservicesRestClient {
     url: String,
     inner_client: reqwest::Client,
     creds: ManagerCreds,
-    current_token: Option<String>,
+    auth_token: Option<String>,
 }
 
 impl WebservicesRestClient {
@@ -31,15 +36,13 @@ impl WebservicesRestClient {
             url: url.into(),
             inner_client: reqwest::Client::new(),
             creds,
-            current_token: None,
+            auth_token: None,
         }
     }
 
     /// Gets the list of all available symbols on the server.
-    pub async fn get_symbols(
-        &self,
-        request: &GetTradersRequestQuery,
-    ) -> Result<Vec<SymbolModel>, Error> {
+    pub async fn get_symbols(&self) -> Result<Vec<SymbolModel>, Error> {
+        let request: Option<&String> = None;
         let endpoint = WebservicesApiEndpoint::GetSymbols;
         let resp: GetSymbolsResponse = self.send(endpoint, request).await?;
 
@@ -49,30 +52,30 @@ impl WebservicesRestClient {
     /// Gets a list of all trader groups.
     pub async fn get_trader_groups(
         &self,
-        request: &GetTradersRequestQuery,
+        request: &GetTradersRequest,
     ) -> Result<Vec<TraderGroupModel>, Error> {
         let endpoint = WebservicesApiEndpoint::GetTraderGroups;
-        let resp: GetTraderGroupsResponse = self.send(endpoint, request).await?;
+        let resp: GetTraderGroupsResponse = self.send(endpoint, Some(request)).await?;
 
         Ok(resp.items)
     }
 
     pub async fn get_traders(
         &self,
-        request: &GetTradersRequestQuery,
+        request: &GetTradersRequest,
     ) -> Result<Vec<TraderModel>, Error> {
         let endpoint = WebservicesApiEndpoint::GetTraders;
-        let resp: GetTradersResponse = self.send(endpoint, request).await?;
-        
+        let resp: GetTradersResponse = self.send(endpoint, Some(request)).await?;
+
         Ok(resp.items)
     }
 
     pub async fn get_closed_positions(
         &self,
-        request: &GetClosedPositionsRequestQuery,
+        request: &GetClosedPositionsRequest,
     ) -> Result<Vec<ClosedPositionModel>, Error> {
         let endpoint = WebservicesApiEndpoint::GetClosedPositions;
-        let data: String = self.send(endpoint, request).await?;
+        let data: String = self.send(endpoint, Some(request)).await?;
 
         parse_closed_positions(&data)
     }
@@ -83,7 +86,7 @@ impl WebservicesRestClient {
         request: &UpdateTraderBalanceRequest,
     ) -> Result<UpdateTraderBalanceResponse, Error> {
         let endpoint = WebservicesApiEndpoint::UpdateTraderBalance(request.login.to_string());
-        self.send(endpoint, request).await
+        self.send(endpoint, Some(request)).await
     }
 
     /// Updates a trader entity.
@@ -93,19 +96,19 @@ impl WebservicesRestClient {
         request: &UpdateTraderRequest,
     ) -> Result<(), Error> {
         let endpoint = WebservicesApiEndpoint::UpdateTrader(login.to_string());
-        self.send(endpoint, request).await
+        self.send(endpoint, Some(request)).await
     }
 
     /// Links a trader entity to a user entity.
     pub async fn link_ctid(&self, request: &LinkCtidRequest) -> Result<LinkCtidResponse, Error> {
         let endpoint = WebservicesApiEndpoint::LinkCtid;
-        self.send(endpoint, request).await
+        self.send(endpoint, Some(request)).await
     }
 
     /// Creates a new trader (e.g. account)entity.
     pub async fn create_trader(&self, request: &CreateTraderRequest) -> Result<TraderModel, Error> {
         let endpoint = WebservicesApiEndpoint::CreateTrader;
-        self.send(endpoint, request).await
+        self.send(endpoint, Some(request)).await
     }
 
     /// Creates a new user entity. The cTID is used to authorize end users in the trading application(s) of their choice
@@ -114,43 +117,49 @@ impl WebservicesRestClient {
         request: &CreateCtidRequest,
     ) -> Result<CreateCtidResponse, Error> {
         let endpoint = WebservicesApiEndpoint::CreateCtid;
-        self.send(endpoint, request).await
+        self.send(endpoint, Some(request)).await
     }
 
     pub async fn authorize(&mut self) -> Result<(), Error> {
+        let resp = self.create_token().await?;
+        self.auth_token = Some(resp.token);
+
+        Ok(())
+    }
+
+    pub async fn create_token(&self) -> Result<CreateCtraderManagerTokenResponse, Error> {
         let request = CreateCtraderManagerTokenRequest {
             login: self.creds.login.clone(),
             hashed_password: generate_password_hash(&self.creds.password),
         };
         let endpoint = WebservicesApiEndpoint::CreateManagerToken;
 
-        let response: CreateCtraderManagerTokenResponse = self.send(endpoint, &request).await?;
-
-        self.current_token = Some(response.token);
-
-        Ok(())
+        self.send(endpoint, Some(&request)).await
     }
 
     pub async fn send<R: Serialize, T: DeserializeOwned>(
         &self,
         endpoint: WebservicesApiEndpoint,
-        request: &R,
+        request: Option<&R>,
     ) -> Result<T, Error> {
         let headers = self.build_headers();
         let http_method = endpoint.get_http_method();
         let mut request_json = None;
-        let url: String;
 
-        let builder = if http_method == Method::GET {
+        let url = if http_method == Method::GET {
             let query_string = serde_qs::to_string(&request).expect("must be valid model");
-            url = self.build_full_url(&endpoint, Some(query_string));
-            self.inner_client.request(http_method, &url)
+            self.build_full_url(&endpoint, Some(query_string))
         } else {
+            self.build_full_url(&endpoint, None)
+        };
+
+        let mut builder = self.inner_client.request(http_method, &url);
+
+        if let Some(request) = request {
             let body = serde_json::to_string(request)?;
             request_json = Some(body.clone());
-            url = self.build_full_url(&endpoint, None);
-            self.inner_client.request(http_method, &url).body(body)
-        };
+            builder = builder.body(body);
+        }
 
         let response = builder.headers(headers).send().await;
 
@@ -191,7 +200,7 @@ impl WebservicesRestClient {
         let url = &self.url;
         let endpoint_str = String::from(endpoint);
 
-        if let Some(token) = self.current_token.as_ref() {
+        if let Some(token) = self.auth_token.as_ref() {
             let token_param_name = "token";
 
             if let Some(query_string) = query_string {

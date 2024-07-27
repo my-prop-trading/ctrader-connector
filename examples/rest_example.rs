@@ -4,7 +4,7 @@ use ctrader_connector::rest::models::CreateCtidRequest;
 use ctrader_connector::rest::register_user_flow::RegisterUserFlow;
 use ctrader_connector::rest::rest_client::WebservicesRestClient;
 use ctrader_connector::rest::utils::generate_password_hash;
-use ctrader_connector::rest::{BalanceChangeType, CreateTraderRequest, GetClosedPositionsRequestQuery, GetTradersRequestQuery, LinkCtidRequest, TotalMarginCalculationType, TraderAccessRights, TraderAccountType, UpdateTraderBalanceRequest};
+use ctrader_connector::rest::{BalanceChangeType, CreateTraderRequest, GetClosedPositionsRequest, GetTradersRequest, LinkCtidRequest, TotalMarginCalculationType, TraderAccessRights, TraderAccountType, UpdateTraderBalanceRequest};
 use uuid::Uuid;
 
 #[tokio::main]
@@ -22,7 +22,7 @@ async fn main() {
 }
 
 pub async fn get_closed_positions(rest_client: &WebservicesRestClient) {
-    let request = GetClosedPositionsRequestQuery {
+    let request = GetClosedPositionsRequest {
         from: Default::default(),
         to: Utc::now(),
         login: None,
@@ -33,7 +33,7 @@ pub async fn get_closed_positions(rest_client: &WebservicesRestClient) {
 }
 
 pub async fn get_traders(rest_client: &WebservicesRestClient) {
-    let request = GetTradersRequestQuery {
+    let request = GetTradersRequest {
         from: Default::default(),
         to: Utc::now(),
         group_id: None,

@@ -331,7 +331,7 @@ pub struct UpdateTraderBalanceResponse {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct GetTradersRequestQuery {
+pub struct GetTradersRequest {
     #[serde(with = "string_date_format")]
     pub from: DateTime<Utc>,
     #[serde(with = "string_date_format")]
@@ -403,7 +403,7 @@ mod string_date_format {
 
 /// The difference between the timestamps specified in the from and to parameters must be equal to two days or less.
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct GetClosedPositionsRequestQuery {
+pub struct GetClosedPositionsRequest {
     #[serde(with = "string_date_format")]
     pub from: DateTime<Utc>,
     #[serde(with = "string_date_format")]
