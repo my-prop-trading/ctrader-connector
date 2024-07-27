@@ -70,6 +70,13 @@ impl WebservicesRestClient {
         Ok(resp.items)
     }
 
+    pub async fn get_trader(&self, login: i64) -> Result<TraderModel, Error> {
+        let request: Option<&String> = None;
+        let endpoint = WebservicesApiEndpoint::GetTrader(login);
+
+        self.send(endpoint, request).await
+    }
+
     pub async fn get_closed_positions(
         &self,
         request: &GetClosedPositionsRequest,
@@ -85,7 +92,7 @@ impl WebservicesRestClient {
         &self,
         request: &UpdateTraderBalanceRequest,
     ) -> Result<UpdateTraderBalanceResponse, Error> {
-        let endpoint = WebservicesApiEndpoint::UpdateTraderBalance(request.login.to_string());
+        let endpoint = WebservicesApiEndpoint::UpdateTraderBalance(request.login);
         self.send(endpoint, Some(request)).await
     }
 
@@ -95,7 +102,7 @@ impl WebservicesRestClient {
         login: i64,
         request: &UpdateTraderRequest,
     ) -> Result<(), Error> {
-        let endpoint = WebservicesApiEndpoint::UpdateTrader(login.to_string());
+        let endpoint = WebservicesApiEndpoint::UpdateTrader(login);
         self.send(endpoint, Some(request)).await
     }
 

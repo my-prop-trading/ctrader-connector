@@ -6,12 +6,15 @@ pub enum WebservicesApiEndpoint {
     CreateTrader,
     LinkCtid,
     /// Changes of a trader entity (including allocating/removing credit).
-    /// Requires {login}
-    UpdateTrader(String),
+    /// Requires trader {login}
+    UpdateTrader(i64),
     /// Changes the balance of a trader entity (including allocating/removing credit).
-    /// Requires {login}
-    UpdateTraderBalance(String),
+    /// Requires trader {login}
+    UpdateTraderBalance(i64),
     GetTraders,
+    /// Reads the details of an existing trader entity.
+    /// Requires trader {login}
+    GetTrader(i64),
     GetClosedPositions,
     GetTraderGroups,
     GetSymbols,
@@ -46,6 +49,10 @@ impl From<&WebservicesApiEndpoint> for String {
             WebservicesApiEndpoint::GetSymbols => {
                 format!("/{api_version}/webserv/symbols")
             }
+            WebservicesApiEndpoint::GetTrader(login) => {
+                format!("/{api_version}/webserv/traders/{login}")
+
+            }
         }
     }
 }
@@ -62,7 +69,8 @@ impl WebservicesApiEndpoint {
             WebservicesApiEndpoint::GetTraders => Method::GET,
             WebservicesApiEndpoint::GetClosedPositions => Method::GET,
             WebservicesApiEndpoint::GetTraderGroups => Method::GET,
-            WebservicesApiEndpoint::GetSymbols => Method::GET
+            WebservicesApiEndpoint::GetSymbols => Method::GET,
+            WebservicesApiEndpoint::GetTrader(_) => Method::GET,
         }
     }
 }
