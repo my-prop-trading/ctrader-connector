@@ -51,13 +51,10 @@ impl WebservicesRestClient {
     }
 
     /// Gets a list of all trader groups.
-    pub async fn get_trader_groups(
-        &self,
-        request: &GetTradersRequest,
-    ) -> Result<Vec<TraderGroupModel>, Error> {
+    pub async fn get_trader_groups(&self) -> Result<Vec<TraderGroupModel>, Error> {
+        let request: Option<&String> = None;
         let endpoint = WebservicesApiEndpoint::GetTraderGroups;
-        let resp: GetTraderGroupsResponse =
-            self.send_deserializable(endpoint, Some(request)).await?;
+        let resp: GetTraderGroupsResponse = self.send_deserializable(endpoint, request).await?;
 
         Ok(resp.items)
     }

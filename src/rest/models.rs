@@ -522,7 +522,7 @@ pub struct GetTraderGroupsResponse {
 pub struct TraderGroupModel {
     pub id: i64,
     pub name: String,
-    pub description: String,
+    pub description: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
