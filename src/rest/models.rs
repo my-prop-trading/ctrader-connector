@@ -364,9 +364,7 @@ pub struct TraderModel {
     /// if moneyDigits=2 and balance=1234512, the account balance is 12345.12 in the account deposit currency.
     /// Additional details are given in Section 3.
     #[serde(rename = "moneyDigits")]
-    pub money_digits: i64,
-    #[serde(rename = "nonWithdrawableBonus")]
-    pub non_withdrawal_bonus: i64,
+    pub money_digits: u32,
     #[serde(rename = "registrationTimestamp")]
     pub registration_timestamp: i64,
     /// If this parameter equals true, rollover commissions are applied to the account instead of swaps.
@@ -375,6 +373,64 @@ pub struct TraderModel {
     pub swap_free: bool,
     #[serde(rename = "usedMargin")]
     pub used_margin: i64,
+    #[serde(rename = "groupName")]
+    pub group_name: String,
+    #[serde(rename = "depositCurrency")]
+    pub deposit_currency: String,
+    #[serde(rename = "accessRights")]
+    pub access_rights: TraderAccessRights,
+    #[serde(rename = "balance")]
+    pub balance: f64,
+    #[serde(rename = "nonWithdrawableBonus")]
+    pub non_withdrawable_bonus: f64,
+    #[serde(rename = "leverageInCents")]
+    pub leverage_in_cents: u32,
+    #[serde(rename = "contactDetails")]
+    pub contact_details: TraderContactDetails,
+    #[serde(rename = "lastConnectionTimestamp")]
+    pub last_connection_timestamp: u64,
+    #[serde(rename = "accountType")]
+    pub account_type: String,
+    #[serde(rename = "introducingBroker")]
+    pub introducing_broker: bool,
+    #[serde(rename = "introducingBrokerCommissionRate")]
+    pub introducing_broker_commission_rate: f64,
+    #[serde(rename = "pocketCommissionRate")]
+    pub pocket_commission_rate: f64,
+    #[serde(rename = "pocketMarkupRate")]
+    pub pocket_markup_rate: f64,
+    #[serde(rename = "rebateRate")]
+    pub rebate_rate: f64,
+    #[serde(rename = "defaultIntroducingBrokerCommissionRate")]
+    pub default_introducing_broker_commission_rate: f64,
+    #[serde(rename = "defaultPocketCommissionRate")]
+    pub default_pocket_commission_rate: f64,
+    #[serde(rename = "defaultPocketMarkupRate")]
+    pub default_pocket_markup_rate: f64,
+    #[serde(rename = "defaultRebateRate")]
+    pub default_rebate_rate: f64,
+    #[serde(rename = "defaultSplitRevenue")]
+    pub default_split_revenue: bool,
+    #[serde(rename = "limitedRisk")]
+    pub limited_risk: bool,
+    #[serde(rename = "sendOwnStatement")]
+    pub send_own_statement: bool,
+    #[serde(rename = "splitRevenue")]
+    pub split_revenue: bool,
+    //#[serde(rename = "ranks")]
+    //pub ranks: Ranks,
+    #[serde(rename = "totalMarginCalculationType")]
+    pub total_margin_calculation_type: String,
+    #[serde(rename = "brokerName")]
+    pub broker_name: String,
+    #[serde(rename = "frenchRisk")]
+    pub french_risk: bool,
+    #[serde(rename = "isLimitedRisk")]
+    pub is_limited_risk: bool,
+    #[serde(rename = "defaultIbCommissionsType")]
+    pub default_ib_commissions_type: String,
+    #[serde(rename = "ibCommissionsType")]
+    pub ib_commissions_type: String,
 }
 
 mod string_date_format {
@@ -455,8 +511,6 @@ pub struct ClosedPositionModel {
     #[serde(rename = "spreadBetting")]
     pub spread_betting: bool,
 }
-
-
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GetTraderGroupsResponse {
@@ -546,5 +600,4 @@ pub enum PositionDirection {
     #[strum(to_string = "SELL")]
     #[serde(rename = "SELL")]
     Sell,
-
 }

@@ -22,10 +22,10 @@ async fn main() {
     //let data = register(&rest_client).await.unwrap();
     //make_deposit(&rest_client, data.trader.login, 1000.0).await;
     //get_opened_positions(&rest_client, Some(3238431)).await;
-    get_closed_positions(&rest_client, Some(3238431)).await;
+    //get_closed_positions(&rest_client, Some(3238431)).await;
     //update_group(&rest_client, 3238431, "enabled_accounts").await;
     //update_access_rights(&rest_client, 3238431, TraderAccessRights::FullAccess).await;
-    //get_trader(&rest_client, 3238431).await;
+    get_trader(&rest_client, 3238431).await;
 
     //get_traders(&rest_client).await;
 }
