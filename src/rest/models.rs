@@ -488,3 +488,37 @@ pub struct SymbolModel {
     pub show_in_ctrader: bool,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct GetOpenedPositionsRequest {
+    pub login: Option<i64>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct OpenedPositionModel {
+    #[serde(rename = "login")]
+    pub login: i64,
+    #[serde(rename = "positionId")]
+    pub position_id: i64,
+    #[serde(rename = "openTimestamp", with = "string_date_format")]
+    pub open_timestamp: DateTime<Utc>,
+    #[serde(rename = "entryPrice")]
+    pub entry_price: f64,
+    #[serde(rename = "direction")]
+    pub direction: String,
+    #[serde(rename = "volume")]
+    pub volume: f64,
+    #[serde(rename = "symbol")]
+    pub symbol: String,
+    #[serde(rename = "commission")]
+    pub commission: f64,
+    #[serde(rename = "swap")]
+    pub swap: f64,
+    #[serde(rename = "bookType")]
+    pub book_type: String,
+    #[serde(rename = "stake")]
+    pub stake: f64,
+    #[serde(rename = "spreadBetting")]
+    pub spread_betting: bool,
+    #[serde(rename = "usedMargin")]
+    pub used_margin: f64,
+}

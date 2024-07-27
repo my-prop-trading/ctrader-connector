@@ -7,10 +7,10 @@ use crate::rest::models::{
 };
 use crate::rest::utils::generate_password_hash;
 use crate::rest::{
-    ClosedPositionModel, GetClosedPositionsRequest, GetSymbolsResponse, GetTraderGroupsResponse,
-    GetTradersRequest, GetTradersResponse, LinkCtidRequest, LinkCtidResponse, SymbolModel,
-    TraderGroupModel, TraderModel, UpdateTraderBalanceRequest, UpdateTraderBalanceResponse,
-    UpdateTraderRequest,
+    ClosedPositionModel, GetClosedPositionsRequest, GetOpenedPositionsRequest, GetSymbolsResponse,
+    GetTraderGroupsResponse, GetTradersRequest, GetTradersResponse, LinkCtidRequest,
+    LinkCtidResponse, OpenedPositionModel, SymbolModel, TraderGroupModel, TraderModel,
+    UpdateTraderBalanceRequest, UpdateTraderBalanceResponse, UpdateTraderRequest,
 };
 use error_chain::bail;
 use http::{Method, StatusCode};
@@ -18,6 +18,7 @@ use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::Response;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+use std::fmt::Debug;
 
 /// A simple yet powerful RESTful API, designed to cover the basic integration requirements for CRM
 /// systems. It offers the capability to handle common CRM related tasks, such as the creation and
@@ -84,7 +85,17 @@ impl WebservicesRestClient {
         let endpoint = WebservicesApiEndpoint::GetClosedPositions;
         let data: String = self.send(endpoint, Some(request)).await?;
 
-        parse_closed_positions(&data)
+        parse_positions(&data)
+    }
+
+    pub async fn get_opened_positions(
+        &self,
+        request: &GetOpenedPositionsRequest,
+    ) -> Result<Vec<OpenedPositionModel>, Error> {
+        let endpoint = WebservicesApiEndpoint::GetOpenedPositions;
+        let data: String = self.send(endpoint, Some(request)).await?;
+
+        parse_positions(&data)
     }
 
     /// Changes the balance of a trader entity (including allocating/removing credit).
@@ -281,14 +292,14 @@ async fn handle<T: DeserializeOwned>(
     }
 }
 
-pub fn parse_closed_positions(data: &str) -> Result<Vec<ClosedPositionModel>, Error> {
+pub fn parse_positions<T: DeserializeOwned + Debug>(data: &str) -> Result<Vec<T>, Error> {
     let mut reader = csv::ReaderBuilder::new()
         .has_headers(true)
         .from_reader(data.as_bytes());
     let mut positions = Vec::with_capacity(20);
 
     for result in reader.deserialize() {
-        let result: Result<ClosedPositionModel, _> = result;
+        let result: Result<T, _> = result;
 
         let Ok(position) = result else {
             let msg = format!("Failed to parse: {:?}. Resp: {data}", result.unwrap_err());
@@ -303,7 +314,8 @@ pub fn parse_closed_positions(data: &str) -> Result<Vec<ClosedPositionModel>, Er
 
 #[cfg(test)]
 mod tests {
-    use crate::rest::rest_client::parse_closed_positions;
+    use crate::rest::rest_client::parse_positions;
+    use crate::rest::{ClosedPositionModel, OpenedPositionModel};
 
     #[test]
     fn parses_closed_positions() {
@@ -311,7 +323,21 @@ mod tests {
 9013206,6101,4690813,2018-03-19T13:44:21.224,2020-01-02T09:01:53.613,0.69999,0.70132,BUY,1000.00,AUD/USD,0.01,142.74,76.17,0.96911,0.70132,BOOK_B,0.00,false
 9013197,13313,5690189,2018-08-30T12:15:29.154,2020-01-02T09:01:54.748,1.32315,1.32214,BUY,1000.00,GBPUSD,0.00,25.83,44.79,0.96911,1.32214,BOOK_B,0.00,false"#;
 
-        let result = parse_closed_positions(data);
+        let result: Result<Vec<ClosedPositionModel>, _> = parse_positions(data);
+
+        println!("{:?}", result);
+
+        let positions = result.unwrap();
+        assert_eq!(positions.len(), 2);
+    }
+
+    #[test]
+    fn parses_opened_positions() {
+        let data = r#"login,positionId,openTimestamp,entryPrice,direction,volume,symbol,commission,swap,bookType,stake,spreadBetting,usedMargin
+9013206,4325443,2020-08-28T05:35:37.682,1.18657,BUY,1000.00,EURUSD,1.69,2.54,BOOK_B,0.00,false,0.01
+9013197,4325446,2020-08-28T05:35:38.015,1.18656,BUY,1000.00,EURUSD,1.69,2.54,BOOK_B,0.00,false,0.01"#;
+
+        let result: Result<Vec<OpenedPositionModel>, _> = parse_positions(data);
 
         println!("{:?}", result);
 

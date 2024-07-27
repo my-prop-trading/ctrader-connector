@@ -16,6 +16,7 @@ pub enum WebservicesApiEndpoint {
     /// Requires trader {login}
     GetTrader(i64),
     GetClosedPositions,
+    GetOpenedPositions,
     GetTraderGroups,
     GetSymbols,
 }
@@ -51,7 +52,9 @@ impl From<&WebservicesApiEndpoint> for String {
             }
             WebservicesApiEndpoint::GetTrader(login) => {
                 format!("/{api_version}/webserv/traders/{login}")
-
+            }
+            WebservicesApiEndpoint::GetOpenedPositions => {
+                format!("/{api_version}/webserv/openPositions")
             }
         }
     }
@@ -71,6 +74,7 @@ impl WebservicesApiEndpoint {
             WebservicesApiEndpoint::GetTraderGroups => Method::GET,
             WebservicesApiEndpoint::GetSymbols => Method::GET,
             WebservicesApiEndpoint::GetTrader(_) => Method::GET,
+            WebservicesApiEndpoint::GetOpenedPositions => Method::GET,
         }
     }
 }
