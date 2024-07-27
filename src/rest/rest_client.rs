@@ -15,7 +15,7 @@ use crate::rest::{
 use error_chain::bail;
 use http::{Method, StatusCode};
 use reqwest::header::{HeaderMap, HeaderValue};
-use reqwest::Response;
+use reqwest::{RequestBuilder, Response};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::fmt::Debug;
@@ -45,7 +45,7 @@ impl WebservicesRestClient {
     pub async fn get_symbols(&self) -> Result<Vec<SymbolModel>, Error> {
         let request: Option<&String> = None;
         let endpoint = WebservicesApiEndpoint::GetSymbols;
-        let resp: GetSymbolsResponse = self.send(endpoint, request).await?;
+        let resp: GetSymbolsResponse = self.send_deserializable(endpoint, request).await?;
 
         Ok(resp.items)
     }
@@ -56,7 +56,8 @@ impl WebservicesRestClient {
         request: &GetTradersRequest,
     ) -> Result<Vec<TraderGroupModel>, Error> {
         let endpoint = WebservicesApiEndpoint::GetTraderGroups;
-        let resp: GetTraderGroupsResponse = self.send(endpoint, Some(request)).await?;
+        let resp: GetTraderGroupsResponse =
+            self.send_deserializable(endpoint, Some(request)).await?;
 
         Ok(resp.items)
     }
@@ -66,7 +67,7 @@ impl WebservicesRestClient {
         request: &GetTradersRequest,
     ) -> Result<Vec<TraderModel>, Error> {
         let endpoint = WebservicesApiEndpoint::GetTraders;
-        let resp: GetTradersResponse = self.send(endpoint, Some(request)).await?;
+        let resp: GetTradersResponse = self.send_deserializable(endpoint, Some(request)).await?;
 
         Ok(resp.items)
     }
@@ -75,7 +76,7 @@ impl WebservicesRestClient {
         let request: Option<&String> = None;
         let endpoint = WebservicesApiEndpoint::GetTrader(login);
 
-        self.send(endpoint, request).await
+        self.send_deserializable(endpoint, request).await
     }
 
     /// Gets either a list of all closed positions or a list of closed positions originated
@@ -87,7 +88,7 @@ impl WebservicesRestClient {
         request: &GetClosedPositionsRequest,
     ) -> Result<Vec<ClosedPositionModel>, Error> {
         let endpoint = WebservicesApiEndpoint::GetClosedPositions;
-        let data: String = self.send(endpoint, Some(request)).await?;
+        let data = self.send(endpoint, Some(request)).await?;
 
         parse_positions(&data)
     }
@@ -104,7 +105,7 @@ impl WebservicesRestClient {
         request: &GetOpenedPositionsRequest,
     ) -> Result<Vec<OpenedPositionModel>, Error> {
         let endpoint = WebservicesApiEndpoint::GetOpenedPositions;
-        let data: String = self.send(endpoint, Some(request)).await?;
+        let data = self.send(endpoint, Some(request)).await?;
 
         parse_positions(&data)
     }
@@ -115,7 +116,7 @@ impl WebservicesRestClient {
         request: &UpdateTraderBalanceRequest,
     ) -> Result<UpdateTraderBalanceResponse, Error> {
         let endpoint = WebservicesApiEndpoint::UpdateTraderBalance(request.login);
-        self.send(endpoint, Some(request)).await
+        self.send_deserializable(endpoint, Some(request)).await
     }
 
     /// Updates a trader entity.
@@ -125,19 +126,19 @@ impl WebservicesRestClient {
         request: &UpdateTraderRequest,
     ) -> Result<(), Error> {
         let endpoint = WebservicesApiEndpoint::UpdateTrader(login);
-        self.send(endpoint, Some(request)).await
+        self.send_deserializable(endpoint, Some(request)).await
     }
 
     /// Links a trader entity to a user entity.
     pub async fn link_ctid(&self, request: &LinkCtidRequest) -> Result<LinkCtidResponse, Error> {
         let endpoint = WebservicesApiEndpoint::LinkCtid;
-        self.send(endpoint, Some(request)).await
+        self.send_deserializable(endpoint, Some(request)).await
     }
 
     /// Creates a new trader (e.g. account)entity.
     pub async fn create_trader(&self, request: &CreateTraderRequest) -> Result<TraderModel, Error> {
         let endpoint = WebservicesApiEndpoint::CreateTrader;
-        self.send(endpoint, Some(request)).await
+        self.send_deserializable(endpoint, Some(request)).await
     }
 
     /// Creates a new user entity. The cTID is used to authorize end users in the trading application(s) of their choice
@@ -146,7 +147,7 @@ impl WebservicesRestClient {
         request: &CreateCtidRequest,
     ) -> Result<CreateCtidResponse, Error> {
         let endpoint = WebservicesApiEndpoint::CreateCtid;
-        self.send(endpoint, Some(request)).await
+        self.send_deserializable(endpoint, Some(request)).await
     }
 
     pub async fn authorize(&mut self) -> Result<(), Error> {
@@ -163,14 +164,36 @@ impl WebservicesRestClient {
         };
         let endpoint = WebservicesApiEndpoint::CreateManagerToken;
 
-        self.send(endpoint, Some(&request)).await
+        self.send_deserializable(endpoint, Some(&request)).await
     }
 
-    pub async fn send<R: Serialize, T: DeserializeOwned>(
+    pub async fn send_deserializable<R: Serialize, T: DeserializeOwned + Debug>(
         &self,
         endpoint: WebservicesApiEndpoint,
         request: Option<&R>,
     ) -> Result<T, Error> {
+        let (builder, url, request) = self.get_builder(endpoint, request)?;
+        let response = builder.send().await;
+
+        handle_json(response?, request, &url).await
+    }
+
+    pub async fn send<R: Serialize>(
+        &self,
+        endpoint: WebservicesApiEndpoint,
+        request: Option<&R>,
+    ) -> Result<String, Error> {
+        let (builder, url, request) = self.get_builder(endpoint, request)?;
+        let response = builder.send().await;
+
+        handle_text(response?, &request, &url).await
+    }
+
+    fn get_builder<R: Serialize>(
+        &self,
+        endpoint: WebservicesApiEndpoint,
+        request: Option<&R>,
+    ) -> Result<(RequestBuilder, String, Option<String>), Error> {
         let headers = self.build_headers();
         let http_method = endpoint.get_http_method();
         let mut request_json = None;
@@ -190,9 +213,7 @@ impl WebservicesRestClient {
             builder = builder.body(body);
         }
 
-        let response = builder.headers(headers).send().await;
-
-        handle(response?, request_json, &url).await
+        Ok((builder.headers(headers), url, request_json))
     }
 
     fn build_headers(&self) -> HeaderMap {
@@ -243,50 +264,49 @@ impl WebservicesRestClient {
     }
 }
 
-async fn handle<T: DeserializeOwned>(
+async fn handle_json<T: DeserializeOwned + Debug>(
     response: Response,
     request_json: Option<String>,
     request_url: &str,
 ) -> Result<T, Error> {
+    let text = handle_text(response, &request_json, request_url).await?;
+    let result: Result<T, _> = serde_json::from_str(&text);
+
+    let Ok(body) = result else {
+        bail!(
+            "Failed to deserialize body. Url: {}.  Error: {:?}. Body: {}",
+            request_url,
+            result.unwrap_err(),
+            text
+        );
+    };
+
+    Ok(body)
+}
+
+async fn handle_text(
+    response: Response,
+    request_json: &Option<String>,
+    request_url: &str,
+) -> Result<String, Error> {
     match response.status() {
-        StatusCode::OK => {
-            let json: Result<String, _> = response.text().await;
-            let Ok(json) = json else {
+        StatusCode::OK | StatusCode::CREATED => {
+            let result: Result<String, _> = response.text().await;
+
+            let Ok(text) = result else {
                 bail!("Failed to read response body. Url {}", request_url);
             };
 
-            let body: Result<T, _> = serde_json::from_str(&json);
-            if let Err(err) = body {
-                bail!(
-                    "Url {}. Failed to deserialize body {:?}: {}",
-                    request_url,
-                    err,
-                    json
-                );
-            }
-
-            Ok(body.unwrap())
-        }
-        StatusCode::CREATED => {
-            let json: Result<String, _> = response.text().await;
-            let Ok(json) = json else {
-                bail!("Failed to read response body");
-            };
-            let body: Result<T, _> = serde_json::from_str(&json);
-            if let Err(err) = body {
-                bail!("Failed to deserialize body. {:?}. Body: {}", err, json);
-            }
-
-            Ok(body.unwrap())
+            Ok(text)
         }
         StatusCode::INTERNAL_SERVER_ERROR => {
-            bail!("Internal Server Error {}", request_url,);
+            bail!("Internal Server Error. Url: {}", request_url,);
         }
         StatusCode::SERVICE_UNAVAILABLE => {
-            bail!("Service Unavailable {}", request_url,);
+            bail!("Service Unavailable. Url: {}", request_url,);
         }
         StatusCode::UNAUTHORIZED => {
-            bail!("Unauthorized {}", request_url);
+            bail!("Unauthorized. Url: {}", request_url);
         }
         StatusCode::BAD_REQUEST => {
             let error = response.text().await?;
@@ -297,7 +317,6 @@ async fn handle<T: DeserializeOwned>(
         }
         s => {
             let error = response.text().await?;
-
             bail!(format!("Received response code: {s:?}. Error: {error:?}"));
         }
     }

@@ -20,7 +20,9 @@ async fn main() {
     rest_client.authorize().await.unwrap();
     //let data = register(&rest_client).await.unwrap();
     //make_deposit(&rest_client, data.trader.login, 1000.0).await;
-    get_opened_positions(&rest_client, Some(3238431)).await;
+    //get_opened_positions(&rest_client, Some(3238431)).await;
+    get_closed_positions(&rest_client, Some(3238431)).await;
+
     //get_traders(&rest_client).await;
 }
 
@@ -33,11 +35,11 @@ pub async fn get_opened_positions(rest_client: &WebservicesRestClient, login: Op
     println!("{:?}", resp)
 }
 
-pub async fn get_closed_positions(rest_client: &WebservicesRestClient) {
+pub async fn get_closed_positions(rest_client: &WebservicesRestClient, login: Option<i64>) {
     let request = GetClosedPositionsRequest {
         from: Default::default(),
         to: Utc::now(),
-        login: None,
+        login,
     };
     let resp = rest_client.get_closed_positions(&request).await;
 
