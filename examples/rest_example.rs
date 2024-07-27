@@ -1,4 +1,5 @@
-use chrono::Utc;
+use std::ops::{Sub};
+use chrono::{TimeDelta, Utc};
 use ctrader_connector::rest::creds::ManagerCreds;
 use ctrader_connector::rest::errors::Error;
 use ctrader_connector::rest::models::CreateCtidRequest;
@@ -37,8 +38,8 @@ pub async fn get_opened_positions(rest_client: &WebservicesRestClient, login: Op
 
 pub async fn get_closed_positions(rest_client: &WebservicesRestClient, login: Option<i64>) {
     let request = GetClosedPositionsRequest {
-        from: Default::default(),
-        to: Utc::now(),
+        from: Utc::now(),
+        to: Utc::now().sub(TimeDelta::try_days(1).unwrap()),
         login,
     };
     let resp = rest_client.get_closed_positions(&request).await;
