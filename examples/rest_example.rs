@@ -25,11 +25,10 @@ async fn main() {
     //get_closed_positions(&rest_client, Some(3238431)).await;
     //update_group(&rest_client, 3238431, "enabled_accounts").await;
     //update_access_rights(&rest_client, 3238431, TraderAccessRights::FullAccess).await;
-    //get_trader(&rest_client, 3238431).await;
+    get_trader(&rest_client, 3238431).await;
     //get_groups(&rest_client).await;
-    get_symbols(&rest_client).await;
-
-    //get_traders(&rest_client).await;
+    //get_symbols(&rest_client).await;
+    get_traders(&rest_client).await;
 }
 
 pub async fn get_symbols(rest_client: &WebservicesRestClient) {
@@ -124,7 +123,7 @@ pub async fn get_closed_positions(rest_client: &WebservicesRestClient, login: Op
 
 pub async fn get_traders(rest_client: &WebservicesRestClient) {
     let request = GetTradersRequest {
-        from: Default::default(),
+        from: Utc::now().sub(TimeDelta::try_days(20).unwrap()),
         to: Utc::now(),
         group_id: None,
     };

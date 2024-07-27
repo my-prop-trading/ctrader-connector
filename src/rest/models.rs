@@ -342,6 +342,7 @@ pub struct GetTradersRequest {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GetTradersResponse {
+    #[serde(rename = "trader")]
     pub items: Vec<TraderModel>,
 }
 
@@ -388,7 +389,7 @@ pub struct TraderModel {
     #[serde(rename = "contactDetails")]
     pub contact_details: TraderContactDetails,
     #[serde(rename = "lastConnectionTimestamp")]
-    pub last_connection_timestamp: u64,
+    pub last_connection_timestamp: Option<i64>,
     #[serde(rename = "accountType")]
     pub account_type: String,
     #[serde(rename = "introducingBroker")]
