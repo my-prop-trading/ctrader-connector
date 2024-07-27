@@ -446,7 +446,7 @@ pub struct ClosedPositionModel {
     #[serde(rename = "usdConversionRate")]
     pub usd_conversion_rate: f64,
     #[serde(rename = "bookType")]
-    pub book_type: String,
+    pub book_type: BookType,
     #[serde(rename = "stake")]
     pub stake: f64,
     #[serde(rename = "spreadBetting")]
@@ -514,11 +514,21 @@ pub struct OpenedPositionModel {
     #[serde(rename = "swap")]
     pub swap: f64,
     #[serde(rename = "bookType")]
-    pub book_type: String,
+    pub book_type: BookType,
     #[serde(rename = "stake")]
     pub stake: f64,
     #[serde(rename = "spreadBetting")]
     pub spread_betting: bool,
     #[serde(rename = "usedMargin")]
     pub used_margin: f64,
+}
+
+#[derive(strum::Display, Debug, Clone, Serialize, Deserialize)]
+pub enum BookType {
+    #[strum(to_string = "BOOK_A")]
+    #[serde(rename = "BOOK_A")]
+    BookA,
+    #[strum(to_string = "BOOK_B")]
+    #[serde(rename = "BOOK_B")]
+    BookB,
 }
