@@ -535,7 +535,7 @@ pub struct GetSymbolsResponse {
 pub struct SymbolModel {
     pub id: i64,
     pub name: String,
-    pub description: String,
+    pub description: Option<String>,
     #[serde(rename = "assetClass")]
     pub asset_class: String,
     pub category: String,
