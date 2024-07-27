@@ -274,7 +274,7 @@ async fn handle<T: DeserializeOwned>(
             };
             let body: Result<T, _> = serde_json::from_str(&json);
             if let Err(err) = body {
-                bail!("Failed to deserialize body {:?}: {}", err, json);
+                bail!("Failed to deserialize body. {:?}. Body: {}", err, json);
             }
 
             Ok(body.unwrap())
@@ -298,7 +298,7 @@ async fn handle<T: DeserializeOwned>(
         s => {
             let error = response.text().await?;
 
-            bail!(format!("Received response code: {s:?} error: {error:?}"));
+            bail!(format!("Received response code: {s:?}. Error: {error:?}"));
         }
     }
 }

@@ -18,8 +18,8 @@ async fn main() {
 
     let mut rest_client = WebservicesRestClient::new(url, creds);
     rest_client.authorize().await.unwrap();
-    let data = register(&rest_client).await.unwrap();
-    make_deposit(&rest_client, data.trader.login, 1000.0).await;
+    //let data = register(&rest_client).await.unwrap();
+    //make_deposit(&rest_client, data.trader.login, 1000.0).await;
     get_opened_positions(&rest_client, Some(3238431)).await;
     //get_traders(&rest_client).await;
 }
