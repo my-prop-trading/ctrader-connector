@@ -126,7 +126,9 @@ impl WebservicesRestClient {
         request: &UpdateTraderRequest,
     ) -> Result<(), Error> {
         let endpoint = WebservicesApiEndpoint::UpdateTrader(login);
-        self.send_deserializable(endpoint, Some(request)).await
+        let _ = self.send(endpoint, Some(request)).await?;
+
+        Ok(())
     }
 
     /// Links a trader entity to a user entity.
@@ -290,7 +292,7 @@ async fn handle_text(
     request_url: &str,
 ) -> Result<String, Error> {
     match response.status() {
-        StatusCode::OK | StatusCode::CREATED => {
+        StatusCode::OK | StatusCode::CREATED | StatusCode::NO_CONTENT => {
             let result: Result<String, _> = response.text().await;
 
             let Ok(text) = result else {

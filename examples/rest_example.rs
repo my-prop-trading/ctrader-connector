@@ -6,7 +6,7 @@ use ctrader_connector::rest::models::CreateCtidRequest;
 use ctrader_connector::rest::register_user_flow::{RegisterData, RegisterUserFlow};
 use ctrader_connector::rest::rest_client::WebservicesRestClient;
 use ctrader_connector::rest::utils::generate_password_hash;
-use ctrader_connector::rest::{BalanceChangeType, CreateTraderRequest, GetClosedPositionsRequest, GetOpenedPositionsRequest, GetTradersRequest, LinkCtidRequest, TotalMarginCalculationType, TraderAccessRights, TraderAccountType, UpdateTraderBalanceRequest};
+use ctrader_connector::rest::{BalanceChangeType, CreateTraderRequest, GetClosedPositionsRequest, GetOpenedPositionsRequest, GetTradersRequest, LinkCtidRequest, TotalMarginCalculationType, TraderAccessRights, TraderAccountType, UpdateTraderBalanceRequest, UpdateTraderRequest};
 use uuid::Uuid;
 
 #[tokio::main]
@@ -22,9 +22,36 @@ async fn main() {
     //let data = register(&rest_client).await.unwrap();
     //make_deposit(&rest_client, data.trader.login, 1000.0).await;
     //get_opened_positions(&rest_client, Some(3238431)).await;
-    get_closed_positions(&rest_client, Some(3238431)).await;
+    //get_closed_positions(&rest_client, Some(3238431)).await;
+    update_group(&rest_client, 3238431, "enabled_accounts").await;
 
     //get_traders(&rest_client).await;
+}
+
+pub async fn update_group(rest_client: &WebservicesRestClient, login: i64, group_name: impl Into<String>) {
+    let request = UpdateTraderRequest {
+        access_rights: None,
+        account_type: None,
+        broker_name: None,
+        deposit_currency: None,
+        group_name: Some(group_name.into()),
+        hashed_password: None,
+        leverage_in_cents: None,
+        total_margin_calculation_type: None,
+        contact_details: None,
+        description: None,
+        is_limited_risk: None,
+        last_name: None,
+        limited_risk_margin_calculation_strategy: None,
+        max_leverage: None,
+        name: None,
+        send_own_statement: None,
+        send_statement_to_broker: None,
+        swap_free: None,
+    };
+    let resp = rest_client.update_trader(login, &request).await;
+
+    println!("{:?}", resp)
 }
 
 pub async fn get_opened_positions(rest_client: &WebservicesRestClient, login: Option<i64>) {
