@@ -23,7 +23,8 @@ async fn main() {
     //make_deposit(&rest_client, data.trader.login, 1000.0).await;
     //get_opened_positions(&rest_client, Some(3238431)).await;
     //get_closed_positions(&rest_client, Some(3238431)).await;
-    update_group(&rest_client, 3238431, "enabled_accounts").await;
+    //update_group(&rest_client, 3238431, "enabled_accounts").await;
+    update_access_rights(&rest_client, 3238431, TraderAccessRights::FullAccess).await;
 
     //get_traders(&rest_client).await;
 }
@@ -35,6 +36,32 @@ pub async fn update_group(rest_client: &WebservicesRestClient, login: i64, group
         broker_name: None,
         deposit_currency: None,
         group_name: Some(group_name.into()),
+        hashed_password: None,
+        leverage_in_cents: None,
+        total_margin_calculation_type: None,
+        contact_details: None,
+        description: None,
+        is_limited_risk: None,
+        last_name: None,
+        limited_risk_margin_calculation_strategy: None,
+        max_leverage: None,
+        name: None,
+        send_own_statement: None,
+        send_statement_to_broker: None,
+        swap_free: None,
+    };
+    let resp = rest_client.update_trader(login, &request).await;
+
+    println!("{:?}", resp)
+}
+
+pub async fn update_access_rights(rest_client: &WebservicesRestClient, login: i64, access_rights: TraderAccessRights) {
+    let request = UpdateTraderRequest {
+        access_rights: Some(access_rights),
+        account_type: None,
+        broker_name: None,
+        deposit_currency: None,
+        group_name: None,
         hashed_password: None,
         leverage_in_cents: None,
         total_margin_calculation_type: None,
@@ -103,7 +130,7 @@ pub async fn deposit(rest_client: &WebservicesRestClient) {
 
 pub async fn register(rest_client: &WebservicesRestClient) -> Result<RegisterData, Error> {
     let flow = RegisterUserFlow {
-        user_email: generate_test_email(),
+        user_email: get_test_email(),
         broker_name: std::env::var("CTRADER_BROKER_NAME").unwrap(),
         user_password: "qwerty123".to_string(),
         deposit_currency: "USD".to_string(),
@@ -123,7 +150,7 @@ pub async fn register(rest_client: &WebservicesRestClient) -> Result<RegisterDat
 
 pub async fn create_ctid(rest_client: &WebservicesRestClient) {
     let request = CreateCtidRequest {
-        email: generate_test_email(),
+        email: get_test_email(),
         broker_name: std::env::var("CTRADER_BROKER_NAME").unwrap(),
         preferred_lang: None,
     };
@@ -192,8 +219,12 @@ fn generate_test_password_hash() -> String {
     generate_password_hash("qwerty123")
 }
 
-fn generate_test_email() -> String {
+pub fn generate_test_email() -> String {
     let uuid = &Uuid::new_v4().to_string()[..6];
 
     format!("{}@mailinator.com", uuid)
+}
+
+pub fn get_test_email() -> String {
+    "1a351423c@mailinator.com".to_string()
 }
