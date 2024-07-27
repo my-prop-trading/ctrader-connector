@@ -429,8 +429,11 @@ pub struct ClosedPositionModel {
     pub entry_price: f64,
     #[serde(rename = "closePrice")]
     pub close_price: f64,
+    /// The position direction. The following values are permitted.
+    /// "BUY". Denotes a long position.
+    /// "SELL". Denotes a short position.
     #[serde(rename = "direction")]
-    pub direction: String,
+    pub direction: PositionDirection,
     #[serde(rename = "volume")]
     pub volume: f64,
     #[serde(rename = "symbol")]
@@ -452,6 +455,8 @@ pub struct ClosedPositionModel {
     #[serde(rename = "spreadBetting")]
     pub spread_betting: bool,
 }
+
+
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GetTraderGroupsResponse {
@@ -504,7 +509,7 @@ pub struct OpenedPositionModel {
     #[serde(rename = "entryPrice")]
     pub entry_price: f64,
     #[serde(rename = "direction")]
-    pub direction: String,
+    pub direction: PositionDirection,
     #[serde(rename = "volume")]
     pub volume: f64,
     #[serde(rename = "symbol")]
@@ -531,4 +536,15 @@ pub enum BookType {
     #[strum(to_string = "BOOK_B")]
     #[serde(rename = "BOOK_B")]
     BookB,
+}
+
+#[derive(strum::Display, Debug, Clone, Serialize, Deserialize)]
+pub enum PositionDirection {
+    #[strum(to_string = "BUY")]
+    #[serde(rename = "BUY")]
+    Buy,
+    #[strum(to_string = "SELL")]
+    #[serde(rename = "SELL")]
+    Sell,
+
 }
