@@ -1,10 +1,11 @@
-use chrono::{Utc};
+use chrono::Utc;
 use ctrader_connector::rest::creds::ManagerCreds;
+use ctrader_connector::rest::errors::Error;
 use ctrader_connector::rest::models::CreateCtidRequest;
-use ctrader_connector::rest::register_user_flow::RegisterUserFlow;
+use ctrader_connector::rest::register_user_flow::{RegisterData, RegisterUserFlow};
 use ctrader_connector::rest::rest_client::WebservicesRestClient;
 use ctrader_connector::rest::utils::generate_password_hash;
-use ctrader_connector::rest::{BalanceChangeType, CreateTraderRequest, GetClosedPositionsRequest, GetTradersRequest, LinkCtidRequest, TotalMarginCalculationType, TraderAccessRights, TraderAccountType, UpdateTraderBalanceRequest};
+use ctrader_connector::rest::{BalanceChangeType, CreateTraderRequest, GetClosedPositionsRequest, GetOpenedPositionsRequest, GetTradersRequest, LinkCtidRequest, TotalMarginCalculationType, TraderAccessRights, TraderAccountType, UpdateTraderBalanceRequest};
 use uuid::Uuid;
 
 #[tokio::main]
@@ -17,8 +18,19 @@ async fn main() {
 
     let mut rest_client = WebservicesRestClient::new(url, creds);
     rest_client.authorize().await.unwrap();
-    //register(&rest_client).await;
+    let data = register(&rest_client).await.unwrap();
+    make_deposit(&rest_client, data.trader.login, 1000.0).await;
+    get_opened_positions(&rest_client, Some(3238431)).await;
     //get_traders(&rest_client).await;
+}
+
+pub async fn get_opened_positions(rest_client: &WebservicesRestClient, login: Option<i64>) {
+    let request = GetOpenedPositionsRequest {
+        login,
+    };
+    let resp = rest_client.get_opened_positions(&request).await;
+
+    println!("{:?}", resp)
 }
 
 pub async fn get_closed_positions(rest_client: &WebservicesRestClient) {
@@ -59,7 +71,7 @@ pub async fn deposit(rest_client: &WebservicesRestClient) {
     println!("{:?}", result)
 }
 
-pub async fn register(rest_client: &WebservicesRestClient) {
+pub async fn register(rest_client: &WebservicesRestClient) -> Result<RegisterData, Error> {
     let flow = RegisterUserFlow {
         user_email: generate_test_email(),
         broker_name: std::env::var("CTRADER_BROKER_NAME").unwrap(),
@@ -74,7 +86,9 @@ pub async fn register(rest_client: &WebservicesRestClient) {
     };
     let result = flow.execute(rest_client).await;
 
-    println!("{:?}", result)
+    println!("{:?}", result);
+
+    result
 }
 
 pub async fn create_ctid(rest_client: &WebservicesRestClient) {
@@ -125,6 +139,21 @@ pub async fn link_ctid(rest_client: &WebservicesRestClient) {
         return_account_details: Some(true),
     };
     let resp = rest_client.link_ctid(&request).await;
+
+    println!("{:?}", resp)
+}
+
+pub async fn make_deposit(rest_client: &WebservicesRestClient, login: i64, precise_amount: f64) {
+    let request = UpdateTraderBalanceRequest {
+        comment: None,
+        external_id: None,
+        external_note: None,
+        login,
+        precise_amount,
+        source: None,
+        change_type: BalanceChangeType::Deposit,
+    };
+    let resp = rest_client.update_trader_balance(&request).await;
 
     println!("{:?}", resp)
 }
