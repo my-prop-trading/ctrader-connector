@@ -24,9 +24,16 @@ async fn main() {
     //get_opened_positions(&rest_client, Some(3238431)).await;
     //get_closed_positions(&rest_client, Some(3238431)).await;
     //update_group(&rest_client, 3238431, "enabled_accounts").await;
-    update_access_rights(&rest_client, 3238431, TraderAccessRights::FullAccess).await;
+    //update_access_rights(&rest_client, 3238431, TraderAccessRights::FullAccess).await;
+    get_trader(&rest_client, 3238431).await;
 
     //get_traders(&rest_client).await;
+}
+
+pub async fn get_trader(rest_client: &WebservicesRestClient, login: i64) {
+    let resp = rest_client.get_trader(login).await;
+
+    println!("{:?}", resp)
 }
 
 pub async fn update_group(rest_client: &WebservicesRestClient, login: i64, group_name: impl Into<String>) {
