@@ -81,8 +81,13 @@ impl WebservicesRestClient {
 
     /// Gets either a list of all closed positions or a list of closed positions originated
     /// by a specific trader entity (if the login parameter is specified).
-    /// Note:
+    /// Note 1:
     /// The difference between the timestamps specified in the from and to parameters must be equal to two days or less.
+    /// Note 2:
+    /// Each row in the output represents one specific result of closing a position,
+    /// be it wholly or partially. As a result, you may see cases where positionId is repeated
+    /// across several rows. This is intended behavior as it represents positions that were
+    /// closed via multiple deals.
     pub async fn get_closed_positions(
         &self,
         request: &GetClosedPositionsRequest,
@@ -95,11 +100,6 @@ impl WebservicesRestClient {
 
     /// Gets either a list of all open positions or a list of open positions originated by
     /// a specific trader entity (if the login parameter is specified).
-    /// Note:
-    /// that each row in the output represents one specific result of closing a position,
-    /// be it wholly or partially. As a result, you may see cases where positionId is repeated
-    /// across several rows. This is intended behavior as it represents positions that were
-    /// closed via multiple deals.
     pub async fn get_opened_positions(
         &self,
         request: &GetOpenedPositionsRequest,

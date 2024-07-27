@@ -22,10 +22,10 @@ async fn main() {
     //let data = register(&rest_client).await.unwrap();
     //make_deposit(&rest_client, data.trader.login, 1000.0).await;
     //get_opened_positions(&rest_client, Some(3238431)).await;
-    //get_closed_positions(&rest_client, Some(3238431)).await;
+    get_closed_positions(&rest_client, Some(3238431)).await;
     //update_group(&rest_client, 3238431, "enabled_accounts").await;
     //update_access_rights(&rest_client, 3238431, TraderAccessRights::FullAccess).await;
-    get_trader(&rest_client, 3238431).await;
+    //get_trader(&rest_client, 3238431).await;
 
     //get_traders(&rest_client).await;
 }
@@ -99,8 +99,8 @@ pub async fn get_opened_positions(rest_client: &WebservicesRestClient, login: Op
 
 pub async fn get_closed_positions(rest_client: &WebservicesRestClient, login: Option<i64>) {
     let request = GetClosedPositionsRequest {
-        from: Utc::now(),
-        to: Utc::now().sub(TimeDelta::try_days(1).unwrap()),
+        from: Utc::now().sub(TimeDelta::try_days(2).unwrap()),
+        to: Utc::now(),
         login,
     };
     let resp = rest_client.get_closed_positions(&request).await;
