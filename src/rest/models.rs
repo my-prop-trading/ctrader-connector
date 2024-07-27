@@ -380,9 +380,9 @@ pub struct TraderModel {
     #[serde(rename = "accessRights")]
     pub access_rights: TraderAccessRights,
     #[serde(rename = "balance")]
-    pub balance: f64,
+    pub balance: i64,
     #[serde(rename = "nonWithdrawableBonus")]
-    pub non_withdrawable_bonus: f64,
+    pub non_withdrawable_bonus: i64,
     #[serde(rename = "leverageInCents")]
     pub leverage_in_cents: u32,
     #[serde(rename = "contactDetails")]
