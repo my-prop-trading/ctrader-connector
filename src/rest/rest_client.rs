@@ -45,7 +45,7 @@ impl WebservicesRestClient {
     pub async fn get_symbols(&self) -> Result<Vec<SymbolModel>, Error> {
         let request: Option<&String> = None;
         let endpoint = WebservicesApiEndpoint::GetSymbols;
-        let resp: GetSymbolsResponse = self.send_deserializable(endpoint, request).await?;
+        let resp: GetSymbolsResponse = self.send_deserialized(endpoint, request).await?;
 
         Ok(resp.items)
     }
@@ -54,7 +54,7 @@ impl WebservicesRestClient {
     pub async fn get_trader_groups(&self) -> Result<Vec<TraderGroupModel>, Error> {
         let request: Option<&String> = None;
         let endpoint = WebservicesApiEndpoint::GetTraderGroups;
-        let resp: GetTraderGroupsResponse = self.send_deserializable(endpoint, request).await?;
+        let resp: GetTraderGroupsResponse = self.send_deserialized(endpoint, request).await?;
 
         Ok(resp.items)
     }
@@ -64,7 +64,7 @@ impl WebservicesRestClient {
         request: &GetTradersRequest,
     ) -> Result<Vec<TraderModel>, Error> {
         let endpoint = WebservicesApiEndpoint::GetTraders;
-        let resp: GetTradersResponse = self.send_deserializable(endpoint, Some(request)).await?;
+        let resp: GetTradersResponse = self.send_deserialized(endpoint, Some(request)).await?;
 
         Ok(resp.items)
     }
@@ -73,7 +73,7 @@ impl WebservicesRestClient {
         let request: Option<&String> = None;
         let endpoint = WebservicesApiEndpoint::GetTrader(login);
 
-        self.send_deserializable(endpoint, request).await
+        self.send_deserialized(endpoint, request).await
     }
 
     /// Gets either a list of all closed positions or a list of closed positions originated
@@ -113,7 +113,7 @@ impl WebservicesRestClient {
         request: &UpdateTraderBalanceRequest,
     ) -> Result<UpdateTraderBalanceResponse, Error> {
         let endpoint = WebservicesApiEndpoint::UpdateTraderBalance(request.login);
-        self.send_deserializable(endpoint, Some(request)).await
+        self.send_deserialized(endpoint, Some(request)).await
     }
 
     /// Updates a trader entity.
@@ -131,13 +131,13 @@ impl WebservicesRestClient {
     /// Links a trader entity to a user entity.
     pub async fn link_ctid(&self, request: &LinkCtidRequest) -> Result<LinkCtidResponse, Error> {
         let endpoint = WebservicesApiEndpoint::LinkCtid;
-        self.send_deserializable(endpoint, Some(request)).await
+        self.send_deserialized(endpoint, Some(request)).await
     }
 
     /// Creates a new trader (e.g. account)entity.
     pub async fn create_trader(&self, request: &CreateTraderRequest) -> Result<TraderModel, Error> {
         let endpoint = WebservicesApiEndpoint::CreateTrader;
-        self.send_deserializable(endpoint, Some(request)).await
+        self.send_deserialized(endpoint, Some(request)).await
     }
 
     /// Creates a new user entity. The cTID is used to authorize end users in the trading application(s) of their choice
@@ -146,7 +146,7 @@ impl WebservicesRestClient {
         request: &CreateCtidRequest,
     ) -> Result<CreateCtidResponse, Error> {
         let endpoint = WebservicesApiEndpoint::CreateCtid;
-        self.send_deserializable(endpoint, Some(request)).await
+        self.send_deserialized(endpoint, Some(request)).await
     }
 
     pub async fn authorize(&mut self) -> Result<(), Error> {
@@ -163,10 +163,10 @@ impl WebservicesRestClient {
         };
         let endpoint = WebservicesApiEndpoint::CreateManagerToken;
 
-        self.send_deserializable(endpoint, Some(&request)).await
+        self.send_deserialized(endpoint, Some(&request)).await
     }
 
-    pub async fn send_deserializable<R: Serialize, T: DeserializeOwned + Debug>(
+    pub async fn send_deserialized<R: Serialize, T: DeserializeOwned + Debug>(
         &self,
         endpoint: WebservicesApiEndpoint,
         request: Option<&R>,

@@ -1,12 +1,20 @@
-use std::ops::{Sub};
-use chrono::{TimeDelta, Utc};
+use chrono::{Duration, TimeDelta, Utc};
 use ctrader_connector::rest::creds::ManagerCreds;
 use ctrader_connector::rest::errors::Error;
 use ctrader_connector::rest::models::CreateCtidRequest;
 use ctrader_connector::rest::register_user_flow::{RegisterData, RegisterUserFlow};
 use ctrader_connector::rest::rest_client::WebservicesRestClient;
 use ctrader_connector::rest::utils::generate_password_hash;
-use ctrader_connector::rest::{BalanceChangeType, CreateTraderRequest, GetClosedPositionsRequest, GetOpenedPositionsRequest, GetTradersRequest, LinkCtidRequest, TotalMarginCalculationType, TraderAccessRights, TraderAccountType, UpdateTraderBalanceRequest, UpdateTraderRequest};
+use ctrader_connector::rest::{
+    BalanceChangeType, CreateTraderRequest, GetClosedPositionsRequest, GetOpenedPositionsRequest,
+    GetTradersRequest, LinkCtidRequest, TotalMarginCalculationType, TraderAccessRights,
+    TraderAccountType, UpdateTraderBalanceRequest, UpdateTraderRequest,
+};
+use std::ops::Sub;
+use std::sync::Arc;
+use futures_util::future::join_all;
+use tokio::sync::Semaphore;
+use tokio::time::sleep;
 use uuid::Uuid;
 
 #[tokio::main]
@@ -25,10 +33,11 @@ async fn main() {
     //get_closed_positions(&rest_client, Some(3238431)).await;
     //update_group(&rest_client, 3238431, "enabled_accounts").await;
     //update_access_rights(&rest_client, 3238431, TraderAccessRights::FullAccess).await;
-    get_trader(&rest_client, 3238431).await;
+    //get_trader(&rest_client, 3238431).await;
     //get_groups(&rest_client).await;
-    //get_symbols(&rest_client).await;
-    get_traders(&rest_client).await;
+    get_symbols(&rest_client).await;
+    //get_traders(&rest_client).await;
+    //get_parallel().await;    
 }
 
 pub async fn get_symbols(rest_client: &WebservicesRestClient) {
@@ -49,7 +58,11 @@ pub async fn get_trader(rest_client: &WebservicesRestClient, login: i64) {
     println!("{:?}", resp)
 }
 
-pub async fn update_group(rest_client: &WebservicesRestClient, login: i64, group_name: impl Into<String>) {
+pub async fn update_group(
+    rest_client: &WebservicesRestClient,
+    login: i64,
+    group_name: impl Into<String>,
+) {
     let request = UpdateTraderRequest {
         access_rights: None,
         account_type: None,
@@ -75,7 +88,11 @@ pub async fn update_group(rest_client: &WebservicesRestClient, login: i64, group
     println!("{:?}", resp)
 }
 
-pub async fn update_access_rights(rest_client: &WebservicesRestClient, login: i64, access_rights: TraderAccessRights) {
+pub async fn update_access_rights(
+    rest_client: &WebservicesRestClient,
+    login: i64,
+    access_rights: TraderAccessRights,
+) {
     let request = UpdateTraderRequest {
         access_rights: Some(access_rights),
         account_type: None,
@@ -102,9 +119,7 @@ pub async fn update_access_rights(rest_client: &WebservicesRestClient, login: i6
 }
 
 pub async fn get_opened_positions(rest_client: &WebservicesRestClient, login: Option<i64>) {
-    let request = GetOpenedPositionsRequest {
-        login,
-    };
+    let request = GetOpenedPositionsRequest { login };
     let resp = rest_client.get_opened_positions(&request).await;
 
     println!("{:?}", resp)
@@ -123,7 +138,7 @@ pub async fn get_closed_positions(rest_client: &WebservicesRestClient, login: Op
 
 pub async fn get_traders(rest_client: &WebservicesRestClient) {
     let request = GetTradersRequest {
-        from: Utc::now().sub(TimeDelta::try_days(20).unwrap()),
+        from: Utc::now().sub(TimeDelta::try_days(600).unwrap()),
         to: Utc::now(),
         group_id: None,
     };
@@ -247,4 +262,49 @@ pub fn generate_test_email() -> String {
 
 pub fn get_test_email() -> String {
     "1a351423c@mailinator.com".to_string()
+}
+
+struct IntegrationClient;
+impl IntegrationClient {
+    async fn get_closed_positions(&self, request: &TestRequest) -> Result<(), ()> {
+        sleep(core::time::Duration::from_millis(1000)).await;
+        println!("Request: from {} to {}", request.from, request.to);
+        Ok(())
+    }
+}
+
+struct TestRequest {
+    from: chrono::DateTime<Utc>,
+    to: chrono::DateTime<Utc>,
+    login: Option<u64>,
+}
+
+pub async fn get_parallel() {
+    let integration_client = IntegrationClient;
+    let login_id = 1;
+    let num_requests = 1000;
+    let max_concurrent_requests = 10;
+    let semaphore = Arc::new(Semaphore::new(max_concurrent_requests));
+
+    let futures = (0..num_requests).map(|i| {
+        let semaphore = Arc::clone(&semaphore);
+
+        let client = &integration_client;
+        let now = Utc::now();
+        let from = now - Duration::days((i + 1) * 2);
+        let to = now - Duration::days(i * 2);
+        async move {
+            let _permit = semaphore.acquire().await.expect("Semaphore wasn't been closed");
+
+            client
+                .get_closed_positions(&TestRequest {
+                    from,
+                    to,
+                    login: Some(login_id),
+                })
+                .await
+        }
+    });
+
+    let _: Vec<_> = join_all(futures).await;
 }
