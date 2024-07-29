@@ -28,6 +28,38 @@ pub struct CreateCtidRequest {
     pub preferred_lang: Option<String>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct CreateTraderResponse {
+    pub bonus: i64,
+    pub equity: i64,
+    #[serde(rename = "freeMargin")]
+    pub free_margin: i64,
+    /// The current amount of funds that the account can withdraw.
+    /// It is calculated via the following formula: cashEquity = balance + unrealized P&L - management fees,
+    /// where management fees are all management fees charged by the providers of strategies that the
+    /// account owner has invested in. Subject to moneyDigits.
+    #[serde(rename = "cashEquity")]
+    pub cash_equity: i64,
+    #[serde(rename = "lastUpdateTimestamp")]
+    pub last_update_timestamp: i64,
+    pub login: i64,
+    /// The number that determines how finance-related values are defined for the account. E.g.,
+    /// if moneyDigits=2 and balance=1234512, the account balance is 12345.12 in the account deposit currency.
+    /// Additional details are given in Section 3.
+    #[serde(rename = "moneyDigits")]
+    pub money_digits: u32,
+    #[serde(rename = "registrationTimestamp")]
+    pub registration_timestamp: i64,
+    /// If this parameter equals true, rollover commissions are applied to the account instead of swaps.
+    /// The reverse applies if the parameter is false. This field is useful for ensuring compliance with Sharia law.
+    #[serde(rename = "swapFree")]
+    pub swap_free: bool,
+    #[serde(rename = "usedMargin")]
+    pub used_margin: i64,
+    #[serde(rename = "balance")]
+    pub balance: i64,
+}
+
 /// Note that there are two possible outputs depending on whether you specify a unique email
 /// in the request body (an email that is not used by any of the users registered on your server).
 /// If email is unique, the response will include all parameters from the below table.
@@ -400,8 +432,6 @@ pub struct TraderModel {
     pub pocket_commission_rate: f64,
     #[serde(rename = "pocketMarkupRate")]
     pub pocket_markup_rate: f64,
-    #[serde(rename = "rebateRate")]
-    pub rebate_rate: f64,
     #[serde(rename = "defaultIntroducingBrokerCommissionRate")]
     pub default_introducing_broker_commission_rate: f64,
     #[serde(rename = "defaultPocketCommissionRate")]

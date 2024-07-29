@@ -7,10 +7,11 @@ use crate::rest::models::{
 };
 use crate::rest::utils::generate_password_hash;
 use crate::rest::{
-    ClosedPositionModel, GetClosedPositionsRequest, GetOpenedPositionsRequest, GetSymbolsResponse,
-    GetTraderGroupsResponse, GetTradersRequest, GetTradersResponse, LinkCtidRequest,
-    LinkCtidResponse, OpenedPositionModel, SymbolModel, TraderGroupModel, TraderModel,
-    UpdateTraderBalanceRequest, UpdateTraderBalanceResponse, UpdateTraderRequest,
+    ClosedPositionModel, CreateTraderResponse, GetClosedPositionsRequest,
+    GetOpenedPositionsRequest, GetSymbolsResponse, GetTraderGroupsResponse, GetTradersRequest,
+    GetTradersResponse, LinkCtidRequest, LinkCtidResponse, OpenedPositionModel, SymbolModel,
+    TraderGroupModel, TraderModel, UpdateTraderBalanceRequest, UpdateTraderBalanceResponse,
+    UpdateTraderRequest,
 };
 use error_chain::bail;
 use http::{Method, StatusCode};
@@ -139,7 +140,10 @@ impl WebservicesRestClient {
     }
 
     /// Creates a new trader (e.g. account)entity.
-    pub async fn create_trader(&self, request: &CreateTraderRequest) -> Result<TraderModel, Error> {
+    pub async fn create_trader(
+        &self,
+        request: &CreateTraderRequest,
+    ) -> Result<CreateTraderResponse, Error> {
         let endpoint = WebservicesApiEndpoint::CreateTrader;
         self.send_deserialized(endpoint, Some(request)).await
     }

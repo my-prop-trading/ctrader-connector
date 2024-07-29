@@ -1,7 +1,11 @@
 use crate::rest::errors::Error;
 use crate::rest::rest_client::WebservicesRestClient;
 use crate::rest::utils::generate_password_hash;
-use crate::rest::{CreateCtidRequest, CreateCtidResponse, CreateTraderRequest, LinkCtidRequest, LinkCtidResponse, TotalMarginCalculationType, TraderAccessRights, TraderAccountType, TraderModel};
+use crate::rest::{
+    CreateCtidRequest, CreateCtidResponse, CreateTraderRequest, CreateTraderResponse,
+    LinkCtidRequest, LinkCtidResponse, TotalMarginCalculationType, TraderAccessRights,
+    TraderAccountType,
+};
 
 /// A wrapper for needed operations for a full user registration
 #[derive(Debug, Clone)]
@@ -78,6 +82,6 @@ impl RegisterUserFlow {
 #[derive(Debug, Clone)]
 pub struct RegisterData {
     pub create_ctid_resp: CreateCtidResponse,
-    pub trader: TraderModel,
+    pub trader: CreateTraderResponse,
     pub link_ctid_resp: LinkCtidResponse,
 }
