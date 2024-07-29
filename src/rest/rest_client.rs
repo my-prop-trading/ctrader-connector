@@ -299,30 +299,29 @@ async fn handle_text(
             let result: Result<String, _> = response.text().await;
 
             let Ok(text) = result else {
-                bail!("Failed to read response body. Url {}", request_url);
+                bail!(format!("Failed to read response body. Url {request_url}"));
             };
 
             Ok(text)
         }
         StatusCode::INTERNAL_SERVER_ERROR => {
-            bail!("Internal Server Error. Url: {}", request_url,);
+            bail!(format!("Internal Server Error. Url: {request_url}"));
         }
         StatusCode::SERVICE_UNAVAILABLE => {
-            bail!("Service Unavailable. Url: {}", request_url,);
+            bail!(format!("Service Unavailable. Url: {request_url}"));
         }
-        StatusCode::UNAUTHORIZED => {
-            bail!("Unauthorized. Url: {}", request_url);
+        StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
+            bail!(format!("Unauthorized or forbidden. Url: {request_url}"));
         }
         StatusCode::BAD_REQUEST => {
             let error = response.text().await?;
             bail!(format!(
-                "Received bad request status. Url: {}. Request: {:?}. Response: {:?}",
-                request_url, request_json, error
+                "Received bad request status. Url: {request_url}. Request: {request_json:?}. Response: {error:?}"
             ));
         }
-        s => {
+        code => {
             let error = response.text().await?;
-            bail!(format!("Received response code: {s:?}. Error: {error:?}"));
+            bail!(format!("Received response code: {code:?}. Url: {request_url}. Request: {request_json:?} Error: {error:?}"));
         }
     }
 }
