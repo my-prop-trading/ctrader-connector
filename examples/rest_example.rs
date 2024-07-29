@@ -25,7 +25,7 @@ async fn main() {
     };
     let url = std::env::var("CTRADER_URL").unwrap();
 
-    let mut rest_client = WebservicesRestClient::new(url, creds);
+    let rest_client = WebservicesRestClient::new(url, creds);
     rest_client.authorize().await.unwrap();
     //let data = register(&rest_client).await.unwrap();
     //make_deposit(&rest_client, data.trader.login, 1000.0).await;
@@ -291,8 +291,8 @@ pub async fn get_parallel() {
 
         let client = &integration_client;
         let now = Utc::now();
-        let from = now - Duration::days((i + 1) * 2);
-        let to = now - Duration::days(i * 2);
+        let from = now - Duration::try_days((i + 1) * 2).unwrap();
+        let to = now - Duration::try_days(i * 2).unwrap();
         async move {
             let _permit = semaphore.acquire().await.expect("Semaphore wasn't been closed");
 

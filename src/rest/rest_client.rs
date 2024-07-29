@@ -19,16 +19,16 @@ use reqwest::{RequestBuilder, Response};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::fmt::Debug;
+use tokio::sync::RwLock;
 
 /// A simple yet powerful RESTful API, designed to cover the basic integration requirements for CRM
 /// systems. It offers the capability to handle common CRM related tasks, such as the creation and
 /// updates of users and trading accounts, and performing deposits and withdrawals to those accounts.
-#[derive(Clone)]
 pub struct WebservicesRestClient {
     url: String,
     inner_client: reqwest::Client,
     creds: ManagerCreds,
-    auth_token: Option<String>,
+    auth_token: RwLock<Option<String>>,
 }
 
 impl WebservicesRestClient {
@@ -37,7 +37,7 @@ impl WebservicesRestClient {
             url: url.into(),
             inner_client: reqwest::Client::new(),
             creds,
-            auth_token: None,
+            auth_token: RwLock::new(None),
         }
     }
 
@@ -149,9 +149,11 @@ impl WebservicesRestClient {
         self.send_deserialized(endpoint, Some(request)).await
     }
 
-    pub async fn authorize(&mut self) -> Result<(), Error> {
+    /// Creates a token and stores it internally for the next requests
+    pub async fn authorize(&self) -> Result<(), Error> {
         let resp = self.create_token().await?;
-        self.auth_token = Some(resp.token);
+        let mut token_lock = self.auth_token.write().await;
+        *token_lock = Some(resp.token);
 
         Ok(())
     }
@@ -171,7 +173,8 @@ impl WebservicesRestClient {
         endpoint: WebservicesApiEndpoint,
         request: Option<&R>,
     ) -> Result<T, Error> {
-        let (builder, url, request) = self.get_builder(endpoint, request)?;
+        let token = &*self.auth_token.read().await;
+        let (builder, url, request) = self.get_builder(endpoint, request, token)?;
         let response = builder.send().await;
 
         handle_json(response?, request, &url).await
@@ -182,7 +185,8 @@ impl WebservicesRestClient {
         endpoint: WebservicesApiEndpoint,
         request: Option<&R>,
     ) -> Result<String, Error> {
-        let (builder, url, request) = self.get_builder(endpoint, request)?;
+        let token = &*self.auth_token.read().await;
+        let (builder, url, request) = self.get_builder(endpoint, request, token)?;
         let response = builder.send().await;
 
         handle_text(response?, &request, &url).await
@@ -192,6 +196,7 @@ impl WebservicesRestClient {
         &self,
         endpoint: WebservicesApiEndpoint,
         request: Option<&R>,
+        token: &Option<String>,
     ) -> Result<(RequestBuilder, String, Option<String>), Error> {
         let headers = self.build_headers();
         let http_method = endpoint.get_http_method();
@@ -199,9 +204,9 @@ impl WebservicesRestClient {
 
         let url = if http_method == Method::GET {
             let query_string = serde_qs::to_string(&request).expect("must be valid model");
-            self.build_full_url(&endpoint, Some(query_string))
+            self.build_full_url(&endpoint, Some(query_string), token)
         } else {
-            self.build_full_url(&endpoint, None)
+            self.build_full_url(&endpoint, None, token)
         };
 
         let mut builder = self.inner_client.request(http_method, &url);
@@ -245,11 +250,12 @@ impl WebservicesRestClient {
         &self,
         endpoint: &WebservicesApiEndpoint,
         query_string: Option<String>,
+        token: &Option<String>,
     ) -> String {
         let url = &self.url;
         let endpoint_str = String::from(endpoint);
 
-        if let Some(token) = self.auth_token.as_ref() {
+        if let Some(token) = token {
             let token_param_name = "token";
 
             if let Some(query_string) = query_string {
