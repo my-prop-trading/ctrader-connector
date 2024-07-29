@@ -10,9 +10,9 @@ use ctrader_connector::rest::{
     GetTradersRequest, LinkCtidRequest, TotalMarginCalculationType, TraderAccessRights,
     TraderAccountType, UpdateTraderBalanceRequest, UpdateTraderRequest,
 };
+use futures_util::future::{try_join_all};
 use std::ops::Sub;
 use std::sync::Arc;
-use futures_util::future::join_all;
 use tokio::sync::Semaphore;
 use tokio::time::sleep;
 use uuid::Uuid;
@@ -35,9 +35,10 @@ async fn main() {
     //update_access_rights(&rest_client, 3238431, TraderAccessRights::FullAccess).await;
     //get_trader(&rest_client, 3238431).await;
     //get_groups(&rest_client).await;
-    get_symbols(&rest_client).await;
+    //get_symbols(&rest_client).await;
     //get_traders(&rest_client).await;
-    //get_parallel().await;    
+    get_closed_parallel(&rest_client, 3238431, 300).await;
+    
 }
 
 pub async fn get_symbols(rest_client: &WebservicesRestClient) {
@@ -264,47 +265,50 @@ pub fn get_test_email() -> String {
     "1a351423c@mailinator.com".to_string()
 }
 
-struct IntegrationClient;
-impl IntegrationClient {
-    async fn get_closed_positions(&self, request: &TestRequest) -> Result<(), ()> {
+struct MockRestClient;
+impl MockRestClient {
+    async fn get_closed_positions(&self, request: &MockRequest) -> Result<(), ()> {
         sleep(core::time::Duration::from_millis(1000)).await;
         println!("Request: from {} to {}", request.from, request.to);
         Ok(())
     }
 }
 
-struct TestRequest {
+struct MockRequest {
     from: chrono::DateTime<Utc>,
     to: chrono::DateTime<Utc>,
     login: Option<u64>,
 }
 
-pub async fn get_parallel() {
-    let integration_client = IntegrationClient;
-    let login_id = 1;
-    let num_requests = 1000;
+pub async fn get_closed_parallel(rest_client: &WebservicesRestClient, login: i64, days: i64) {
+    let days_period = 1;
+    let num_requests = days / days_period;
     let max_concurrent_requests = 10;
     let semaphore = Arc::new(Semaphore::new(max_concurrent_requests));
 
     let futures = (0..num_requests).map(|i| {
         let semaphore = Arc::clone(&semaphore);
 
-        let client = &integration_client;
+        let client = &rest_client;
         let now = Utc::now();
-        let from = now - Duration::try_days((i + 1) * 2).unwrap();
-        let to = now - Duration::try_days(i * 2).unwrap();
+        let from = now - Duration::try_days((i + 1) * days_period).unwrap();
+        let to = now - Duration::try_days(i * days_period).unwrap();
         async move {
-            let _permit = semaphore.acquire().await.expect("Semaphore wasn't been closed");
+            let _permit = semaphore
+                .acquire()
+                .await
+                .expect("Semaphore wasn't been closed");
 
             client
-                .get_closed_positions(&TestRequest {
+                .get_closed_positions(&GetClosedPositionsRequest {
                     from,
                     to,
-                    login: Some(login_id),
+                    login: Some(login),
                 })
                 .await
         }
     });
 
-    let _: Vec<_> = join_all(futures).await;
+    let result: Result<_, _> = try_join_all(futures).await;
+    println!("{:?}", result);
 }
