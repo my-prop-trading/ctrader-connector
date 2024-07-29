@@ -41,6 +41,10 @@ impl WebservicesRestClient {
         }
     }
 
+    pub async fn is_authorized(&self) -> bool {
+        self.auth_token.read().await.is_some()
+    }
+
     /// Gets the list of all available symbols on the server.
     pub async fn get_symbols(&self) -> Result<Vec<SymbolModel>, Error> {
         let request: Option<&String> = None;
