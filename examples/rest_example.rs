@@ -27,18 +27,17 @@ async fn main() {
 
     let rest_client = WebservicesRestClient::new(url, creds);
     rest_client.authorize().await.unwrap();
-    let data = register(&rest_client).await.unwrap();
+    //let data = register(&rest_client).await.unwrap();
     //make_deposit(&rest_client, data.trader.login, 1000.0).await;
     //get_opened_positions(&rest_client, Some(3238431)).await;
-    //get_closed_positions(&rest_client, Some(3238431)).await;
+    //get_closed_positions(&rest_client, Some(3238483)).await;
     //update_group(&rest_client, 3238431, "enabled_accounts").await;
     //update_access_rights(&rest_client, 3238431, TraderAccessRights::FullAccess).await;
-    //get_trader(&rest_client, 3238431).await;
+    //get_trader(&rest_client, 3238483).await;
     //get_groups(&rest_client).await;
     //get_symbols(&rest_client).await;
     //get_traders(&rest_client).await;
     //get_closed_parallel(&rest_client, 3238431, 300).await;
-    
 }
 
 pub async fn get_symbols(rest_client: &WebservicesRestClient) {
@@ -55,8 +54,9 @@ pub async fn get_groups(rest_client: &WebservicesRestClient) {
 
 pub async fn get_trader(rest_client: &WebservicesRestClient, login: i64) {
     let resp = rest_client.get_trader(login).await;
-
-    println!("{:?}", resp)
+    
+    println!("{:?}", resp);
+    println!("profit: {}", resp.as_ref().unwrap().equity - resp.as_ref().unwrap().balance);
 }
 
 pub async fn update_group(
@@ -171,7 +171,7 @@ pub async fn register(rest_client: &WebservicesRestClient) -> Result<RegisterDat
         user_password: "qwerty123".to_string(),
         deposit_currency: "USD".to_string(),
         group_name: "default".to_string(),
-        environment_name: "demo".to_string(),
+        environment_name: "live".to_string(),
         leverage_in_cents: 1000,
         first_name: None,
         last_name: None,
@@ -262,7 +262,7 @@ pub fn generate_test_email() -> String {
 }
 
 pub fn get_test_email() -> String {
-    "maksim.g@mailinator.com".to_string()
+    "122432@mailinator.com".to_string()
 }
 
 pub struct MockRestClient;
@@ -276,9 +276,9 @@ impl MockRestClient {
 }
 
 pub struct MockRequest {
-    from: chrono::DateTime<Utc>,
-    to: chrono::DateTime<Utc>,
-    login: Option<u64>,
+    pub from: chrono::DateTime<Utc>,
+    pub to: chrono::DateTime<Utc>,
+    pub login: Option<u64>,
 }
 
 pub async fn get_closed_parallel(rest_client: &WebservicesRestClient, login: i64, days: i64) {
