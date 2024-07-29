@@ -329,7 +329,7 @@ async fn handle_text(
         }
         code => {
             let error = response.text().await?;
-            bail!(format!("Received response code: {code:?}. Url: {request_url}. Request: {request_json:?} Error: {error:?}"));
+            bail!(format!("Received response code: {code:?}. Url: {request_url}. Request: {request_json:?} Response: {error:?}"));
         }
     }
 }
