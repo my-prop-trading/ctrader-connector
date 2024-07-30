@@ -25,14 +25,14 @@ use tokio::sync::RwLock;
 /// A simple yet powerful RESTful API, designed to cover the basic integration requirements for CRM
 /// systems. It offers the capability to handle common CRM related tasks, such as the creation and
 /// updates of users and trading accounts, and performing deposits and withdrawals to those accounts.
-pub struct WebservicesRestClient {
+pub struct WebservicesClient {
     url: String,
     inner_client: reqwest::Client,
     creds: ManagerCreds,
     auth_token: RwLock<Option<String>>,
 }
 
-impl WebservicesRestClient {
+impl WebservicesClient {
     pub fn new(url: impl Into<String>, creds: ManagerCreds) -> Self {
         Self {
             url: url.into(),
