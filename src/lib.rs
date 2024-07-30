@@ -1,2 +1,2 @@
-pub mod rest;
-mod manager;
+pub mod webservices;
+pub mod manager;

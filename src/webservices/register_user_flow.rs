@@ -1,7 +1,7 @@
-use crate::rest::errors::Error;
-use crate::rest::rest_client::WebservicesRestClient;
-use crate::rest::utils::generate_password_hash;
-use crate::rest::{
+use crate::webservices::errors::Error;
+use crate::webservices::api_client::WebservicesRestClient;
+use crate::webservices::utils::generate_password_hash;
+use crate::webservices::{
     CreateCtidRequest, CreateCtidResponse, CreateTraderRequest, CreateTraderResponse,
     LinkCtidRequest, LinkCtidResponse, TotalMarginCalculationType, TraderAccessRights,
     TraderAccountType,

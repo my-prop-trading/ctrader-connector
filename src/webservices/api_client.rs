@@ -1,12 +1,12 @@
-use crate::rest::creds::ManagerCreds;
-use crate::rest::endpoints::WebservicesApiEndpoint;
-use crate::rest::errors::Error;
-use crate::rest::models::{
+use crate::webservices::creds::ManagerCreds;
+use crate::webservices::endpoints::WebservicesApiEndpoint;
+use crate::webservices::errors::Error;
+use crate::webservices::models::{
     CreateCtidRequest, CreateCtidResponse, CreateCtraderManagerTokenRequest,
     CreateCtraderManagerTokenResponse, CreateTraderRequest,
 };
-use crate::rest::utils::generate_password_hash;
-use crate::rest::{
+use crate::webservices::utils::generate_password_hash;
+use crate::webservices::{
     ClosedPositionModel, CreateTraderResponse, GetClosedPositionsRequest,
     GetOpenedPositionsRequest, GetSymbolsResponse, GetTraderGroupsResponse, GetTradersRequest,
     GetTradersResponse, LinkCtidRequest, LinkCtidResponse, OpenedPositionModel, SymbolModel,
@@ -356,8 +356,8 @@ pub fn parse_positions<T: DeserializeOwned + Debug>(data: &str) -> Result<Vec<T>
 
 #[cfg(test)]
 mod tests {
-    use crate::rest::rest_client::parse_positions;
-    use crate::rest::{ClosedPositionModel, OpenedPositionModel};
+    use crate::webservices::api_client::parse_positions;
+    use crate::webservices::{ClosedPositionModel, OpenedPositionModel};
 
     #[test]
     fn parses_closed_positions() {
