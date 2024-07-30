@@ -21,7 +21,7 @@ error_chain! {
 }
 
 #[derive(strum::Display, Debug, Clone, Serialize, Deserialize)]
-pub enum RestApiErrorCode {
+pub enum WebservicesErrorCode {
     #[strum(to_string = "TRADER_NOT_FOUND")]
     #[serde(rename = "TRADER_NOT_FOUND")]
     TraderNotFound,
