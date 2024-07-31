@@ -7,6 +7,7 @@ pub enum ManagerApiMessage {
     ErrorRes(ProtoErrorRes),
     HelloEvent,
     ManagerAuthRes(ProtoManagerAuthRes),
+    HeartbeatEvent
 }
 
 impl ManagerApiMessage {
@@ -27,7 +28,7 @@ impl ManagerApiMessage {
                         prost::Message::decode(&payload[..]).unwrap(),
                     ));
                 }
-                ProtoPayloadType::HeartbeatEvent => {}
+                ProtoPayloadType::HeartbeatEvent => return Some(ManagerApiMessage::HeartbeatEvent),
                 ProtoPayloadType::RegisterCserverConnectionReq => {}
                 ProtoPayloadType::RegisterCserverConnectionRes => {}
                 ProtoPayloadType::UnregisterCserverConnectionReq => {}

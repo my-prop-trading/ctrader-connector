@@ -4,6 +4,7 @@ use crate::webservices::creds::ManagerCreds;
 use my_tcp_sockets::{TcpClient, TcpClientSocketSettings, TlsSettings};
 use rust_extensions::Logger;
 use std::sync::Arc;
+use std::time::Duration;
 
 pub struct ManagerApiClient<T: ManagerApiCallbackHandler + Send + Sync + 'static> {
     tcp_client: TcpClient,
@@ -18,8 +19,12 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
         config: Arc<ManagerApiConfig>,
         logger: Arc<dyn Logger + Send + Sync + 'static>,
     ) -> Self {
+        let tcp_client = TcpClient::new(config.server_name.clone(), config.clone())
+            .set_disconnect_timeout(Duration::from_secs(60))
+            .set_reconnect_timeout(Duration::from_secs(20));
+
         Self {
-            tcp_client: TcpClient::new(config.server_name.clone(), config.clone()),
+            tcp_client,
             logger,
             handler,
             config,
@@ -52,7 +57,6 @@ pub struct ManagerApiConfig {
 }
 
 #[async_trait::async_trait]
-
 impl TcpClientSocketSettings for ManagerApiConfig {
     async fn get_host_port(&self) -> Option<String> {
         Some(self.host_port.clone())
