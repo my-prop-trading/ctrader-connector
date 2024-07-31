@@ -4,7 +4,7 @@ use ctrader_connector::manager::callback::ManagerApiCallbackHandler;
 use rust_extensions::Logger;
 use std::sync::Arc;
 use std::time::Duration;
-use ctrader_connector::manager::common_messages_external::ProtoMessage;
+use ctrader_connector::manager::models::ManagerApiMessage;
 
 #[tokio::main]
 async fn main() {
@@ -39,7 +39,7 @@ impl ManagerApiCallbackHandler for ExampleHandler {
         println!("on_disconnected");
     }
 
-    async fn on_event(&self, event: ProtoMessage) {
+    async fn on_event(&self, event: ManagerApiMessage) {
         println!("event: {:?}", event);
     }
 }

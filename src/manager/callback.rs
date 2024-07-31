@@ -3,12 +3,13 @@ use crate::manager::serialization::{ManagerApiSerializer, ManagerApiSerializerSt
 use my_tcp_sockets::tcp_connection::TcpSocketConnection;
 use my_tcp_sockets::SocketEventCallback;
 use std::sync::Arc;
+use crate::manager::models::ManagerApiMessage;
 
 #[async_trait::async_trait]
 pub trait ManagerApiCallbackHandler {
     async fn on_connected(&self);
     async fn on_disconnected(&self);
-    async fn on_event(&self, event: ProtoMessage);
+    async fn on_event(&self, event: ManagerApiMessage);
 }
 
 pub struct ManagerApiCallback<T: ManagerApiCallbackHandler + Send + Sync + 'static> {
@@ -23,8 +24,8 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T>
 
 #[async_trait::async_trait]
 impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
-    SocketEventCallback<ProtoMessage, ManagerApiSerializer, ManagerApiSerializerState>
-    for ManagerApiCallback<T>
+SocketEventCallback<ProtoMessage, ManagerApiSerializer, ManagerApiSerializerState>
+for ManagerApiCallback<T>
 {
     async fn connected(
         &self,
@@ -51,6 +52,23 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
         >,
         contract: ProtoMessage,
     ) {
-        self.handler.on_event(contract).await;
+        self.handler.on_event(contract.into()).await;
+    }
+}
+
+impl From<ProtoMessage> for ManagerApiMessage {
+    fn from(value: ProtoMessage) -> Self {
+        let payload_type = value.payload_type as i32;
+
+        if let Some(event) = ManagerApiMessage::try_from_common(payload_type, &value.payload) {
+            return event;
+        }
+
+        if let Some(event) = ManagerApiMessage::try_from_cs(payload_type, &value.payload) {
+            return event;
+        }
+        
+        println!("{:?}", value);        
+        panic!("failed to parse");
     }
 }
