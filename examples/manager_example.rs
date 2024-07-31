@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use ctrader_connector::manager::api_client::{ManagerApiClient, ManagerApiConfig};
 use ctrader_connector::manager::callback::ManagerApiCallbackHandler;
-use ctrader_connector::manager::serialization::ManagerApiEvent;
+use ctrader_connector::manager::serialization::ManagerApiMessage;
 use rust_extensions::Logger;
 use std::sync::Arc;
 use std::time::Duration;
@@ -39,7 +39,7 @@ impl ManagerApiCallbackHandler for ExampleHandler {
         println!("on_disconnected");
     }
 
-    async fn on_event(&self, event: ManagerApiEvent) {
+    async fn on_event(&self, event: ManagerApiMessage) {
         println!("event: {:?}", event);
     }
 }
@@ -53,8 +53,9 @@ impl Logger for ConsoleLogger {
         message: String,
         _ctx: Option<std::collections::HashMap<String, String>>,
     ) {
+        println!("INFO:");
         println!("{}", message);
-    }
+        println!("===========================");    }
 
     fn write_warning(
         &self,
@@ -62,8 +63,9 @@ impl Logger for ConsoleLogger {
         message: String,
         _ctx: Option<std::collections::HashMap<String, String>>,
     ) {
+        println!("WARNING:");
         println!("{}", message);
-    }
+        println!("===========================");    }
 
     fn write_error(
         &self,
@@ -71,8 +73,9 @@ impl Logger for ConsoleLogger {
         message: String,
         _ctx: Option<std::collections::HashMap<String, String>>,
     ) {
+        println!("ERROR:");
         println!("{}", message);
-    }
+        println!("===========================");    }
 
     fn write_fatal_error(
         &self,
@@ -80,7 +83,9 @@ impl Logger for ConsoleLogger {
         message: String,
         _ctx: Option<std::collections::HashMap<String, String>>,
     ) {
+        println!("FATAL ERROR:");
         println!("{}", message);
+        println!("===========================");
     }
 
     fn write_debug_info(
@@ -89,6 +94,7 @@ impl Logger for ConsoleLogger {
         message: String,
         _ctx: Option<HashMap<String, String>>,
     ) {
+        println!("DEBUG:");
         println!("{}", message);
-    }
+        println!("===========================");    }
 }

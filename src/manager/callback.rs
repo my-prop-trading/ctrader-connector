@@ -1,5 +1,5 @@
 use crate::manager::serialization::{
-    ManagerApiEvent, ManagerApiSerializer, ManagerApiSerializerState,
+    ManagerApiMessage, ManagerApiSerializer, ManagerApiSerializerState,
 };
 use my_tcp_sockets::tcp_connection::TcpSocketConnection;
 use my_tcp_sockets::SocketEventCallback;
@@ -9,7 +9,7 @@ use std::sync::Arc;
 pub trait ManagerApiCallbackHandler {
     async fn on_connected(&self);
     async fn on_disconnected(&self);
-    async fn on_event(&self, event: ManagerApiEvent);
+    async fn on_event(&self, event: ManagerApiMessage);
 }
 
 pub struct ManagerApiCallback<T: ManagerApiCallbackHandler + Send + Sync + 'static> {
@@ -24,13 +24,13 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T>
 
 #[async_trait::async_trait]
 impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
-    SocketEventCallback<ManagerApiEvent, ManagerApiSerializer, ManagerApiSerializerState>
+    SocketEventCallback<ManagerApiMessage, ManagerApiSerializer, ManagerApiSerializerState>
     for ManagerApiCallback<T>
 {
     async fn connected(
         &self,
         _connection: Arc<
-            TcpSocketConnection<ManagerApiEvent, ManagerApiSerializer, ManagerApiSerializerState>,
+            TcpSocketConnection<ManagerApiMessage, ManagerApiSerializer, ManagerApiSerializerState>,
         >,
     ) {
         self.handler.on_connected().await;
@@ -39,7 +39,7 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
     async fn disconnected(
         &self,
         _connection: Arc<
-            TcpSocketConnection<ManagerApiEvent, ManagerApiSerializer, ManagerApiSerializerState>,
+            TcpSocketConnection<ManagerApiMessage, ManagerApiSerializer, ManagerApiSerializerState>,
         >,
     ) {
         self.handler.on_disconnected().await;
@@ -48,9 +48,9 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
     async fn payload(
         &self,
         _connection: &Arc<
-            TcpSocketConnection<ManagerApiEvent, ManagerApiSerializer, ManagerApiSerializerState>,
+            TcpSocketConnection<ManagerApiMessage, ManagerApiSerializer, ManagerApiSerializerState>,
         >,
-        contract: ManagerApiEvent,
+        contract: ManagerApiMessage,
     ) {
         self.handler.on_event(contract).await;
     }
