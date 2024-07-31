@@ -1,5 +1,6 @@
 use crate::manager::callback::{ManagerApiCallback, ManagerApiCallbackHandler};
 use crate::manager::serialization::ManagerApiSerializerFactory;
+use crate::webservices::creds::ManagerCreds;
 use my_tcp_sockets::{TcpClient, TcpClientSocketSettings, TlsSettings};
 use rust_extensions::Logger;
 use std::sync::Arc;
@@ -8,18 +9,20 @@ pub struct ManagerApiClient<T: ManagerApiCallbackHandler + Send + Sync + 'static
     tcp_client: TcpClient,
     logger: Arc<dyn Logger + Send + Sync + 'static>,
     handler: Arc<T>,
+    config: Arc<ManagerApiConfig>,
 }
 
 impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
     pub fn new(
         handler: Arc<T>,
-        config: ManagerApiConfig,
+        config: Arc<ManagerApiConfig>,
         logger: Arc<dyn Logger + Send + Sync + 'static>,
     ) -> Self {
         Self {
-            tcp_client: TcpClient::new(config.server_name.clone(), Arc::new(config)),
+            tcp_client: TcpClient::new(config.server_name.clone(), config.clone()),
             logger,
             handler,
+            config,
         }
     }
 
@@ -27,10 +30,14 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
         self.tcp_client
             .start(
                 Arc::new(ManagerApiSerializerFactory::default()),
-                Arc::new(ManagerApiCallback::new(Arc::clone(&self.handler))),
+                Arc::new(ManagerApiCallback::new(
+                    Arc::clone(&self.handler),
+                    Arc::clone(&self.config),
+                )),
                 Arc::clone(&self.logger),
             )
             .await;
+
         Ok(())
     }
 }
@@ -39,6 +46,9 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
 pub struct ManagerApiConfig {
     pub server_name: String,
     pub host_port: String,
+    pub creds: ManagerCreds,
+    pub plant_id: String,
+    pub env_name: String,
 }
 
 #[async_trait::async_trait]

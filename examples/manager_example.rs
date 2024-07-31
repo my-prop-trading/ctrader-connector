@@ -5,17 +5,25 @@ use rust_extensions::Logger;
 use std::sync::Arc;
 use std::time::Duration;
 use ctrader_connector::manager::models::ManagerApiMessage;
+use ctrader_connector::webservices::creds::ManagerCreds;
 
 #[tokio::main]
 async fn main() {
+    let creds = ManagerCreds {
+        password: std::env::var("CTRADER_PASSWORD").unwrap(),
+        login: std::env::var("CTRADER_LOGIN").unwrap().parse().unwrap(),
+    };
     let handler = Arc::new(ExampleHandler {});
     let url = std::env::var("CTRADER_MANAGER_API_URL").unwrap();
     //let parsed_url = url::Url::parse(&url).unwrap();
     let mut splits = url.split(':').map(|v| v.to_string());
-    let config = ManagerApiConfig {
+    let config = Arc::new(ManagerApiConfig {
         server_name: splits.next().unwrap(),
         host_port: url,
-    };
+        creds,
+        plant_id: std::env::var("CTRADER_PLANT_ID").unwrap(),
+        env_name: "demo".to_string(),
+    });
     let logger = Arc::new(ConsoleLogger {});
     let client = ManagerApiClient::new(handler, config, logger);
     client.connect().await.unwrap();

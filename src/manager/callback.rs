@@ -1,9 +1,12 @@
+use crate::manager::api_client::ManagerApiConfig;
 use crate::manager::common_messages_external::ProtoMessage;
+use crate::manager::cs_messages_external::{ProtoCsPayloadType, ProtoManagerAuthReq};
+use crate::manager::models::ManagerApiMessage;
 use crate::manager::serialization::{ManagerApiSerializer, ManagerApiSerializerState};
 use my_tcp_sockets::tcp_connection::TcpSocketConnection;
 use my_tcp_sockets::SocketEventCallback;
 use std::sync::Arc;
-use crate::manager::models::ManagerApiMessage;
+use crate::webservices::utils::generate_password_hash;
 
 #[async_trait::async_trait]
 pub trait ManagerApiCallbackHandler {
@@ -14,11 +17,12 @@ pub trait ManagerApiCallbackHandler {
 
 pub struct ManagerApiCallback<T: ManagerApiCallbackHandler + Send + Sync + 'static> {
     handler: Arc<T>,
+    config: Arc<ManagerApiConfig>,
 }
 
 impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T> {
-    pub fn new(handler: Arc<T>) -> Self {
-        ManagerApiCallback { handler }
+    pub fn new(handler: Arc<T>, config: Arc<ManagerApiConfig>) -> Self {
+        ManagerApiCallback { handler, config }
     }
 }
 
@@ -29,10 +33,26 @@ for ManagerApiCallback<T>
 {
     async fn connected(
         &self,
-        _connection: Arc<
+        connection: Arc<
             TcpSocketConnection<ProtoMessage, ManagerApiSerializer, ManagerApiSerializerState>,
         >,
     ) {
+        let req = ProtoManagerAuthReq {
+            payload_type: Some(ProtoCsPayloadType::ProtoManagerAuthReq as i32),
+            plant_id: self.config.plant_id.clone(),
+            environment_name: self.config.env_name.clone(),
+            login: self.config.creds.login,
+            password_hash: generate_password_hash(&self.config.creds.password),
+        };
+        println!("{:?}", req);
+        let mut bytes = vec![];
+        prost::Message::encode(&req, &mut bytes).unwrap();
+        let message = ProtoMessage {
+            payload_type: ProtoCsPayloadType::ProtoManagerAuthReq as u32,
+            payload: Some(bytes),
+            client_msg_id: None,
+        };
+        connection.send(&message).await;
         self.handler.on_connected().await;
     }
 
@@ -67,8 +87,8 @@ impl From<ProtoMessage> for ManagerApiMessage {
         if let Some(event) = ManagerApiMessage::try_from_cs(payload_type, &value.payload) {
             return event;
         }
-        
-        println!("{:?}", value);        
+
+        println!("{:?}", value);
         panic!("failed to parse");
     }
 }
