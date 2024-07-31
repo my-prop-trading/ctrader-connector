@@ -88,7 +88,6 @@ impl From<ProtoMessage> for ManagerApiMessage {
             return event;
         }
 
-        println!("{:?}", value);
-        panic!("failed to parse");
+        panic!("failed to parse: {:?}", value);
     }
 }

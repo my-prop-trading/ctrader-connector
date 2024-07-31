@@ -37,7 +37,6 @@ impl TcpSocketSerializer<ProtoMessage, ManagerApiSerializerState> for ManagerApi
         let mut bytes = Vec::with_capacity(len_bytes.len() + data_bytes.len());
         bytes.extend(len_bytes);
         bytes.extend(data_bytes);
-        println!("{:?}", bytes);
         out.write_slice(&bytes[..]);
     }
 

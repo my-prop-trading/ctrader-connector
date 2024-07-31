@@ -1,11 +1,12 @@
 use crate::manager::common_messages_external::ProtoErrorRes;
 use crate::manager::common_model_messages_external::ProtoPayloadType;
-use crate::manager::cs_messages_external::ProtoCsPayloadType;
+use crate::manager::cs_messages_external::{ProtoCsPayloadType, ProtoManagerAuthRes};
 
 #[derive(Debug)]
 pub enum ManagerApiMessage {
     ErrorRes(ProtoErrorRes),
-    ProtoHelloEvent,
+    HelloEvent,
+    ManagerAuthRes(ProtoManagerAuthRes),
 }
 
 impl ManagerApiMessage {
@@ -44,7 +45,7 @@ impl ManagerApiMessage {
         None
     }
 
-    pub fn try_from_cs(payload_type: i32, _payload: &Option<Vec<u8>>) -> Option<Self> {
+    pub fn try_from_cs(payload_type: i32, payload: &Option<Vec<u8>>) -> Option<Self> {
         let cs_type = ProtoCsPayloadType::try_from(payload_type);
 
         if let Ok(cs_type) = cs_type {
@@ -61,7 +62,12 @@ impl ManagerApiMessage {
                 ProtoCsPayloadType::ProtoManagerLightTraderListRes => {}
                 ProtoCsPayloadType::ProtoExecutionEvent => {}
                 ProtoCsPayloadType::ProtoManagerAuthReq => {}
-                ProtoCsPayloadType::ProtoManagerAuthRes => {}
+                ProtoCsPayloadType::ProtoManagerAuthRes => {
+                    let payload = payload.as_ref().unwrap();
+                    return Some(ManagerApiMessage::ManagerAuthRes(
+                        prost::Message::decode(&payload[..]).unwrap(),
+                    ));
+                }
                 ProtoCsPayloadType::ProtoChangeTraderPasswordReq => {}
                 ProtoCsPayloadType::ProtoChangeTraderPasswordRes => {}
                 ProtoCsPayloadType::ProtoChangeManagerPasswordReq => {}
@@ -294,9 +300,7 @@ impl ManagerApiMessage {
                 ProtoCsPayloadType::ProtoCrudMaxAutoExecutionSizeProfileChangedEvent => {}
                 ProtoCsPayloadType::ProtoCrudMaxAutoExecutionSizeProfileListReq => {}
                 ProtoCsPayloadType::ProtoCrudMaxAutoExecutionSizeProfileListRes => {}
-                ProtoCsPayloadType::ProtoHelloEvent => {
-                    return Some(ManagerApiMessage::ProtoHelloEvent)
-                }
+                ProtoCsPayloadType::ProtoHelloEvent => return Some(ManagerApiMessage::HelloEvent),
             }
         }
 
