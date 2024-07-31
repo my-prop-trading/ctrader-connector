@@ -38,13 +38,13 @@ impl TcpSocketSerializer<ProtoMessage, ManagerApiSerializerState> for ManagerApi
         bytes.extend(len_bytes);
         bytes.extend(data_bytes);
         out.write_slice(&bytes[..]);
+
+        println!("serialize: {:?}", bytes);
     }
 
     fn get_ping(&self) -> ProtoMessage {
         let payload_type = ProtoPayloadType::HeartbeatEvent;
-        let req = ProtoHeartbeatEvent {
-            payload_type: None,
-        };
+        let req = ProtoHeartbeatEvent { payload_type: None };
         let mut bytes = vec![];
         prost::Message::encode(&req, &mut bytes).unwrap();
 
@@ -70,6 +70,8 @@ impl TcpSocketSerializer<ProtoMessage, ManagerApiSerializerState> for ManagerApi
         unsafe { data_buf.set_len(len) }
         socket_reader.read_buf(&mut data_buf[..]).await?;
         let message: ProtoMessage = prost::Message::decode(&data_buf[..]).unwrap();
+
+        println!("deserialize: {:?}", message);
 
         Ok(message)
     }

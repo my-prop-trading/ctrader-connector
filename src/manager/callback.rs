@@ -44,7 +44,6 @@ for ManagerApiCallback<T>
             login: self.config.creds.login,
             password_hash: generate_password_hash(&self.config.creds.password),
         };
-        println!("{:?}", req);
         let mut bytes = vec![];
         prost::Message::encode(&req, &mut bytes).unwrap();
         let message = ProtoMessage {
