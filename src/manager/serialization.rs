@@ -60,15 +60,15 @@ impl TcpSocketSerializer<ProtoMessage, ManagerApiSerializerState> for ManagerApi
         socket_reader: &mut TSocketReader,
         _state: &ManagerApiSerializerState,
     ) -> Result<ProtoMessage, ReadingTcpContractFail> {
-        println!("deserialize");
-
         // When reading messages from the stream, the first 4 bytes indicate the length of the actual data.
         // The message which follows is always wrapped within the ProtoMessage structure.
-        let len = socket_reader.read_i32().await;
-        println!("len: {:?}", len);
-        let mut data = Vec::with_capacity(len.unwrap() as usize);
-        socket_reader.read_buf(&mut data[..]).await?;
-        let message: ProtoMessage = prost::Message::decode(&data[..]).unwrap();
+        let mut len_buff = [0; 4];
+        socket_reader.read_buf(&mut len_buff).await?;
+        let len: i32 = i32::from_be_bytes(len_buff);
+        let mut data_buf = Vec::with_capacity(len as usize);
+        socket_reader.read_buf(&mut data_buf[..]).await?;
+        let message: ProtoMessage = prost::Message::decode(&data_buf[..]).unwrap();
+        println!("{:?}", message);
 
         Ok(message)
     }
