@@ -64,9 +64,9 @@ impl TcpSocketSerializer<ProtoMessage, ManagerApiSerializerState> for ManagerApi
 
         // When reading messages from the stream, the first 4 bytes indicate the length of the actual data.
         // The message which follows is always wrapped within the ProtoMessage structure.
-        let len = socket_reader.read_i32().await?;
+        let len = socket_reader.read_i32().await;
         println!("len: {:?}", len);
-        let mut data = Vec::with_capacity(len as usize);
+        let mut data = Vec::with_capacity(len.unwrap() as usize);
         socket_reader.read_buf(&mut data[..]).await?;
         let message: ProtoMessage = prost::Message::decode(&data[..]).unwrap();
 
