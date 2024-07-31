@@ -16,11 +16,9 @@ async fn main() {
         server_name: splits.next().unwrap(),
         host_port: url,
     };
-    println!("{:?}", config);
     let logger = Arc::new(ConsoleLogger {});
     let client = ManagerApiClient::new(handler, config, logger);
-    let result = client.connect().await;
-    println!("{:?}", result);
+    client.connect().await.unwrap();
 
     loop {
         tokio::time::sleep(Duration::from_secs(1)).await;
