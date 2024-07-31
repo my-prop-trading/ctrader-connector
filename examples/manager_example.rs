@@ -26,7 +26,7 @@ async fn main() {
     });
     let logger = Arc::new(ConsoleLogger {});
     let client = ManagerApiClient::new(handler, config, logger);
-    client.connect().await.unwrap();
+    client.connect().await;
 
     loop {
         tokio::time::sleep(Duration::from_secs(1)).await;

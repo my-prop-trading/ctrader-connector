@@ -1,4 +1,4 @@
-use crate::manager::callback::{ManagerApiCallback, ManagerApiCallbackHandler};
+use crate::manager::callback::{ManagerApiClient, ManagerApiCallbackHandler};
 use crate::manager::serialization::ManagerApiSerializerFactory;
 use crate::webservices::creds::ManagerCreds;
 use my_tcp_sockets::{TcpClient, TcpClientSocketSettings, TlsSettings};
@@ -6,14 +6,14 @@ use rust_extensions::Logger;
 use std::sync::Arc;
 use std::time::Duration;
 
-pub struct ManagerApiClient<T: ManagerApiCallbackHandler + Send + Sync + 'static> {
+pub struct ManagerApiBuilder<T: ManagerApiCallbackHandler + Send + Sync + 'static> {
     tcp_client: TcpClient,
     logger: Arc<dyn Logger + Send + Sync + 'static>,
     handler: Arc<T>,
     config: Arc<ManagerApiConfig>,
 }
 
-impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
+impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiBuilder<T> {
     pub fn new(
         handler: Arc<T>,
         config: Arc<ManagerApiConfig>,
@@ -31,19 +31,21 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
         }
     }
 
-    pub async fn connect(&self) -> Result<(), String> {
+    pub async fn build(self) -> Arc<ManagerApiClient<T>> {
+        let client = Arc::new(ManagerApiClient::new(
+            self.handler,
+            self.config,
+        ));
+
         self.tcp_client
             .start(
                 Arc::new(ManagerApiSerializerFactory::default()),
-                Arc::new(ManagerApiCallback::new(
-                    Arc::clone(&self.handler),
-                    Arc::clone(&self.config),
-                )),
+                Arc::clone(&client),
                 Arc::clone(&self.logger),
             )
             .await;
 
-        Ok(())
+        client
     }
 }
 

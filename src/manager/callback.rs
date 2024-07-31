@@ -15,21 +15,21 @@ pub trait ManagerApiCallbackHandler {
     async fn on_event(&self, event: ManagerApiMessage);
 }
 
-pub struct ManagerApiCallback<T: ManagerApiCallbackHandler + Send + Sync + 'static> {
+pub struct ManagerApiClient<T: ManagerApiCallbackHandler + Send + Sync + 'static> {
     handler: Arc<T>,
     config: Arc<ManagerApiConfig>,
 }
 
-impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T> {
+impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
     pub fn new(handler: Arc<T>, config: Arc<ManagerApiConfig>) -> Self {
-        ManagerApiCallback { handler, config }
+        ManagerApiClient { handler, config }
     }
 }
 
 #[async_trait::async_trait]
 impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
 SocketEventCallback<ProtoMessage, ManagerApiSerializer, ManagerApiSerializerState>
-for ManagerApiCallback<T>
+for ManagerApiClient<T>
 {
     async fn connected(
         &self,
