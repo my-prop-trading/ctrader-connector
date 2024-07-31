@@ -3,6 +3,7 @@ use my_tcp_sockets::{
     socket_reader::{ReadBuffer, ReadingTcpContractFail, SocketReader},
     TcpContract, TcpSerializerFactory, TcpSerializerState, TcpSocketSerializer, TcpWriteBuffer,
 };
+use crate::common_messages_external;
 
 pub struct ManagerApiSerializer {
     read_buffer: ReadBuffer,
@@ -60,6 +61,21 @@ impl TcpSocketSerializer<ManagerApiMessage, ManagerApiSerializerState> for Manag
     }
 }
 
+impl ManagerApiMessage {
+    pub fn as_bytes(&self) -> Result<Vec<u8>, prost::EncodeError> {
+        let mut result = vec![];
+        // todo
+        //prost::Message::encode(self, &mut result)?;
+        Ok(result)
+    }
+
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self, prost::DecodeError> {
+        // todo
+        //prost::Message::decode(bytes)
+        Ok(ManagerApiMessage::Empty)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum ManagerApiMessage {
     Empty,
@@ -71,10 +87,7 @@ impl TcpContract for ManagerApiMessage {
     fn is_pong(&self) -> bool {
         println!("is_pong");
 
-        matches!(
-            self,
-            ManagerApiMessage::HeartbeatEvent
-        )
+        matches!(self, ManagerApiMessage::HeartbeatEvent)
     }
 }
 

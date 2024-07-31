@@ -1,4 +1,5 @@
 syntax = "proto2";
+package common_messages_external;
 
 option java_multiple_files = true;
 option java_generate_equals_and_hash = true;
@@ -16,7 +17,7 @@ message ProtoMessage {
 
 // Error response message
 message ProtoErrorRes {
-    optional ProtoPayloadType payloadType = 1 [default = ERROR_RES]; // Type of payload
+    optional common_model_messages_external.ProtoPayloadType payloadType = 1 [default = ERROR_RES]; // Type of payload
     required string errorCode = 2; // Error code
     optional string description = 3; // Error description
     optional uint64 maintenanceEndTimestamp = 4; // UNIX timestamp in milliseconds. If server is under maintenance, this field indicates the estimated time when the server will be operational again
@@ -24,24 +25,24 @@ message ProtoErrorRes {
 
 // Heartbeat used for keeping connection alive
 message ProtoHeartbeatEvent {
-    optional ProtoPayloadType payloadType = 1 [default = HEARTBEAT_EVENT]; // Type of payload
+    optional common_model_messages_external.ProtoPayloadType payloadType = 1 [default = HEARTBEAT_EVENT]; // Type of payload
 }
 
 // Message used for sending a ping request to the server
 message ProtoPingReq {
-    optional ProtoPayloadType payloadType = 1 [default = PING_REQ];
+    optional common_model_messages_external.ProtoPayloadType payloadType = 1 [default = PING_REQ];
     required uint64 timestamp = 2; // UNIX timestamp in milliseconds, you will receive a response with the same timestamp
 }
 
 // Response to a ProtoPingReq message
 message ProtoPingRes {
-    optional ProtoPayloadType payloadType = 1 [default = PING_RES];
+    optional common_model_messages_external.ProtoPayloadType payloadType = 1 [default = PING_RES];
     required uint64 timestamp = 2; // UNIX timestamp in milliseconds, this is the timestamp of the request
 }
 
 // CS-13238. Event that contains backend servises status. Proxy sends it to client when he connects and to all clients sessions when services availability changes. If connection to service not configured - relevant service field doesn't sent.
 message ProtoAvailableServicesEvent {
-	optional ProtoPayloadType payloadType = 1 [default = AVAILABLE_SERVICES_EVENT];
+	optional common_model_messages_external.ProtoPayloadType payloadType = 1 [default = AVAILABLE_SERVICES_EVENT];
 	optional bool socialAvailable = 2;
     optional bool copyAvailable = 3;
     optional bool datastoreAvailable = 4;

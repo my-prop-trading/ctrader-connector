@@ -1,4 +1,5 @@
 syntax = "proto2";
+package cs_model_messages_external;
 
 option java_multiple_files = true;
 
@@ -6,7 +7,7 @@ option java_generate_equals_and_hash = true;
 
 option java_package = "com.xtrader.managerapi.model";
 
-option java_outer_classname = "CSContainerModelMessages";
+option java_outer_classname = "cs_model_messages_external";
 
 import "CommonModelMessages_External.proto";
 
@@ -1476,7 +1477,7 @@ message ProtoTraderSessionInfo {
     required uint64 sessionId = 1; // ID of Trader Session
     required uint64 traderId = 2; // ID of Trader
     required string proxyId = 3; // ID of Proxy
-    optional ProtoGeoInfo geoInfo = 4; // Info about Trader geolocation (based on their ip address)
+    optional common_model_messages_external.ProtoGeoInfo geoInfo = 4; // Info about Trader geolocation (based on their ip address)
     optional string applicationType = 5; // Application used by Trader
 }
 
