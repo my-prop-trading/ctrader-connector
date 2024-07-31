@@ -3,7 +3,6 @@ use my_tcp_sockets::{
     socket_reader::{ReadBuffer, ReadingTcpContractFail, SocketReader},
     TcpContract, TcpSerializerFactory, TcpSerializerState, TcpSocketSerializer, TcpWriteBuffer,
 };
-use crate::common_messages_external;
 
 pub struct ManagerApiSerializer {
     read_buffer: ReadBuffer,
@@ -70,6 +69,11 @@ impl ManagerApiMessage {
     }
 
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, prost::DecodeError> {
+        let s = crate::manager::common_messages_external::ProtoMessage {
+            payload_type: 0,
+            payload: None,
+            client_msg_id: None,
+        };
         // todo
         //prost::Message::decode(bytes)
         Ok(ManagerApiMessage::Empty)
