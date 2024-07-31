@@ -13,6 +13,7 @@ use ctrader_connector::webservices::{
 use futures_util::future::{try_join_all};
 use std::ops::Sub;
 use std::sync::Arc;
+use rust_extensions::date_time::DateTimeAsMicroseconds;
 use tokio::sync::Semaphore;
 use tokio::time::sleep;
 use uuid::Uuid;
@@ -30,10 +31,10 @@ async fn main() {
     //let data = register(&rest_client).await.unwrap();
     //make_deposit(&rest_client, data.trader.login, 1000.0).await;
     //get_opened_positions(&rest_client, Some(3238431)).await;
-    //get_closed_positions(&rest_client, Some(3238483)).await;
+    get_closed_positions(&rest_client, Some(3238505)).await;
     //update_group(&rest_client, 3238431, "enabled_accounts").await;
     //update_access_rights(&rest_client, 3238431, TraderAccessRights::FullAccess).await;
-    get_trader(&rest_client, 12).await;
+    //get_trader(&rest_client, 12).await;
     //get_groups(&rest_client).await;
     //get_symbols(&rest_client).await;
     //get_traders(&rest_client).await;
@@ -127,8 +128,9 @@ pub async fn get_opened_positions(rest_client: &WebservicesClient, login: Option
 }
 
 pub async fn get_closed_positions(rest_client: &WebservicesClient, login: Option<i64>) {
+    let date = DateTimeAsMicroseconds::from_str("2024-07-30T17:47:50.545Z").unwrap().to_chrono_utc();
     let request = GetClosedPositionsRequest {
-        from: Utc::now().sub(TimeDelta::try_days(2).unwrap()),
+        from: date + TimeDelta::microseconds(1),
         to: Utc::now(),
         login,
     };
@@ -268,7 +270,7 @@ pub fn get_test_email() -> String {
 pub struct MockRestClient;
 
 impl MockRestClient {
-    async fn get_closed_positions(&self, request: &MockRequest) -> Result<(), ()> {
+    pub async fn get_closed_positions(&self, request: &MockRequest) -> Result<(), ()> {
         sleep(core::time::Duration::from_millis(1000)).await;
         println!("Request: from {} to {}", request.from, request.to);
         Ok(())

@@ -35,6 +35,7 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct ManagerApiConfig {
     pub server_name: String,
     pub host_port: String,

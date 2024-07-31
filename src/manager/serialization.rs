@@ -54,27 +54,13 @@ impl TcpSocketSerializer<ManagerApiEvent, ManagerApiSerializerState> for Manager
 
 #[derive(Debug, Clone)]
 pub enum ManagerApiEvent {
-    HelloEvent(ManagerApiHelloEvent),
+    HelloEvent,
+    HeartbeatEvent,
 }
 
 impl TcpContract for ManagerApiEvent {
     fn is_pong(&self) -> bool {
         todo!()
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct ManagerApiHelloEvent {}
-
-impl ManagerApiHelloEvent {
-    pub fn serialize(&self) -> Result<Vec<u8>, String> {
-        let result = Vec::new();
-
-        return Ok(result);
-    }
-
-    pub fn deserialize(src: &[u8]) -> Result<Self, String> {
-        Ok(Self {})
     }
 }
 

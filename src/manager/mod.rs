@@ -1,4 +1,4 @@
 pub mod api_client;
 pub mod models;
-mod serialization;
-mod callback;
+pub mod serialization;
+pub mod callback;
