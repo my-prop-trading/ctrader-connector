@@ -26,7 +26,7 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
     pub async fn connect(&self) -> Result<(), String> {
         self.tcp_client
             .start(
-                Arc::new(ManagerApiSerializerFactory {}),
+                Arc::new(ManagerApiSerializerFactory::default()),
                 Arc::new(ManagerApiCallback::new(Arc::clone(&self.handler))),
                 Arc::clone(&self.logger),
             )

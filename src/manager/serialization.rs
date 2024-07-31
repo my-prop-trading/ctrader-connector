@@ -6,27 +6,17 @@ use my_tcp_sockets::{
     TcpContract, TcpSerializerFactory, TcpSerializerState, TcpSocketSerializer, TcpWriteBuffer,
 };
 
+#[derive(Default)]
 pub struct ManagerApiSerializer {}
-
-impl ManagerApiSerializer {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
 
 pub struct ManagerApiSerializerState {}
 
 impl TcpSerializerState<ProtoMessage> for ManagerApiSerializerState {
     fn is_tcp_contract_related_to_metadata(&self, _contract: &ProtoMessage) -> bool {
-        println!("is_tcp_contract_related_to_metadata");
-        // todo
         false
     }
 
-    fn apply_tcp_contract(&mut self, _contract: &ProtoMessage) {
-        println!("apply_tcp_contract");
-        // todo
-    }
+    fn apply_tcp_contract(&mut self, _contract: &ProtoMessage) {}
 }
 
 #[async_trait]
@@ -83,12 +73,11 @@ impl TcpSocketSerializer<ProtoMessage, ManagerApiSerializerState> for ManagerApi
 
 impl TcpContract for ProtoMessage {
     fn is_pong(&self) -> bool {
-        println!("is_pong");
-
         self.payload_type == ProtoPayloadType::PingRes as u32
     }
 }
 
+#[derive(Default)]
 pub struct ManagerApiSerializerFactory {}
 
 #[async_trait]
@@ -96,7 +85,7 @@ impl TcpSerializerFactory<ProtoMessage, ManagerApiSerializer, ManagerApiSerializ
     for ManagerApiSerializerFactory
 {
     async fn create_serializer(&self) -> ManagerApiSerializer {
-        ManagerApiSerializer::new()
+        ManagerApiSerializer::default()
     }
 
     async fn create_serializer_state(&self) -> ManagerApiSerializerState {
