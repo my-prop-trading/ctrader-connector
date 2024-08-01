@@ -23,7 +23,7 @@ async fn main() {
     });
     let logger = Arc::new(ConsoleLogger {});
     let client = ManagerApiClient::new(handler, config, logger);
-    client.connect().await;
+    client.connect().await.unwrap();
 
     loop {
         // wait for events

@@ -7,7 +7,7 @@ use crate::utils::generate_password_hash;
 use my_tcp_sockets::tcp_connection::TcpSocketConnection;
 use my_tcp_sockets::SocketEventCallback;
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 
 #[async_trait::async_trait]
@@ -24,14 +24,16 @@ pub struct ManagerApiCallback<T: ManagerApiCallbackHandler + Send + Sync + 'stat
     handler: Arc<T>,
     config: Arc<ManagerApiConfig>,
     connection: RwLock<Option<Arc<ManagerApiConnection>>>,
+    connect_timeout: Duration,
 }
 
 impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T> {
-    pub fn new(handler: Arc<T>, config: Arc<ManagerApiConfig>) -> Self {
+    pub fn new(handler: Arc<T>, config: Arc<ManagerApiConfig>, connect_timeout: Duration) -> Self {
         ManagerApiCallback {
             handler,
             config,
             connection: RwLock::new(None),
+            connect_timeout,
         }
     }
 
@@ -39,13 +41,19 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T>
         self.connection.read().await.is_some()
     }
 
-    pub async fn wait_until_connected(&self) {
+    pub async fn wait_until_connected(&self) -> Result<(), String> {
+        let instant = Instant::now();
+
         loop {
             if self.is_connected().await {
-                break;
+                return Ok(());
             }
 
             tokio::time::sleep(Duration::from_millis(250)).await;
+
+            if instant.elapsed() > self.connect_timeout {
+                return Err("Connect timeout".to_string());
+            }
         }
     }
 
@@ -55,7 +63,7 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T>
         payload_type: ProtoCsPayloadType,
     ) -> Result<(), String> {
         while !self.is_connected().await {
-            self.wait_until_connected().await;
+            self.wait_until_connected().await?;
         }
 
         let connection_lock = self.connection.read().await;
