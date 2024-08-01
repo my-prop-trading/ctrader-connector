@@ -16,14 +16,13 @@ pub trait ManagerApiCallbackHandler {
     async fn on_message(&self, event: ManagerApiMessage);
 }
 
+pub type ManagerApiConnection =
+    TcpSocketConnection<ProtoMessage, ManagerApiSerializer, ManagerApiSerializerState>;
+
 pub struct ManagerApiCallback<T: ManagerApiCallbackHandler + Send + Sync + 'static> {
     handler: Arc<T>,
     config: Arc<ManagerApiConfig>,
-    connection: RwLock<
-        Option<
-            Arc<TcpSocketConnection<ProtoMessage, ManagerApiSerializer, ManagerApiSerializerState>>,
-        >,
-    >,
+    connection: RwLock<Option<Arc<ManagerApiConnection>>>,
 }
 
 impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T> {
@@ -41,12 +40,7 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
     SocketEventCallback<ProtoMessage, ManagerApiSerializer, ManagerApiSerializerState>
     for ManagerApiCallback<T>
 {
-    async fn connected(
-        &self,
-        connection: Arc<
-            TcpSocketConnection<ProtoMessage, ManagerApiSerializer, ManagerApiSerializerState>,
-        >,
-    ) {
+    async fn connected(&self, connection: Arc<ManagerApiConnection>) {
         let req = ProtoManagerAuthReq {
             payload_type: Some(ProtoCsPayloadType::ProtoManagerAuthReq as i32),
             plant_id: self.config.plant_id.clone(),
@@ -68,25 +62,14 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
         self.handler.on_connected().await;
     }
 
-    async fn disconnected(
-        &self,
-        _connection: Arc<
-            TcpSocketConnection<ProtoMessage, ManagerApiSerializer, ManagerApiSerializerState>,
-        >,
-    ) {
+    async fn disconnected(&self, _connection: Arc<ManagerApiConnection>) {
         let mut current_connection = self.connection.write().await;
         *current_connection = None;
         drop(current_connection);
         self.handler.on_disconnected().await;
     }
 
-    async fn payload(
-        &self,
-        _connection: &Arc<
-            TcpSocketConnection<ProtoMessage, ManagerApiSerializer, ManagerApiSerializerState>,
-        >,
-        contract: ProtoMessage,
-    ) {
+    async fn payload(&self, _connection: &Arc<ManagerApiConnection>, contract: ProtoMessage) {
         self.handler.on_message(contract.into()).await;
     }
 }
