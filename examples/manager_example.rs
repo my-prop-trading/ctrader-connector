@@ -25,8 +25,7 @@ async fn main() {
     let client = ManagerApiClient::new(handler, config, logger);
     client.connect().await;
 
-    loop {
-        println!("loop");
+    loop { // wait for events
         tokio::time::sleep(Duration::from_secs(1)).await;
     }
 }

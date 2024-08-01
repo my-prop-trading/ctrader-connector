@@ -7,6 +7,7 @@ use crate::utils::generate_password_hash;
 use my_tcp_sockets::tcp_connection::TcpSocketConnection;
 use my_tcp_sockets::SocketEventCallback;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::sync::RwLock;
 
 #[async_trait::async_trait]
@@ -31,6 +32,20 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T>
             handler,
             config,
             connection: RwLock::new(None),
+        }
+    }
+
+    pub async fn is_connected(&self) -> bool {
+        self.connection.read().await.is_some()
+    }
+
+    pub async fn wait_until_connected(&self) {
+        loop {
+            tokio::time::sleep(Duration::from_millis(250)).await;
+
+            if self.is_connected().await {
+                break;
+            }
         }
     }
 }

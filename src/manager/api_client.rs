@@ -32,6 +32,11 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
     }
 
     pub async fn connect(&self) {
+        self.logger.write_info(
+            "ManagerApiClient.connect".into(),
+            "Starting tcp connection..".into(),
+            None,
+        );
         self.tcp_client
             .start(
                 Arc::new(ManagerApiSerializerFactory::default()),
@@ -39,6 +44,8 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
                 Arc::clone(&self.logger),
             )
             .await;
+
+        self.inner_client.wait_until_connected().await;
     }
 }
 
