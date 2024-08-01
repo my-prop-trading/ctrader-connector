@@ -90,19 +90,3 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
         self.handler.on_event(contract.into()).await;
     }
 }
-
-impl From<ProtoMessage> for ManagerApiMessage {
-    fn from(value: ProtoMessage) -> Self {
-        let payload_type = value.payload_type as i32;
-
-        if let Some(event) = ManagerApiMessage::try_from_common(payload_type, &value.payload) {
-            return event;
-        }
-
-        if let Some(event) = ManagerApiMessage::try_from_cs(payload_type, &value.payload) {
-            return event;
-        }
-
-        panic!("failed to parse: {:?}", value);
-    }
-}

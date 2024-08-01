@@ -1,4 +1,4 @@
-use crate::manager::common_messages_external::ProtoErrorRes;
+use crate::manager::common_messages_external::{ProtoErrorRes, ProtoMessage};
 use crate::manager::common_model_messages_external::ProtoPayloadType;
 use crate::manager::cs_messages_external::{ProtoCsPayloadType, ProtoManagerAuthRes};
 
@@ -8,6 +8,22 @@ pub enum ManagerApiMessage {
     HelloEvent,
     ManagerAuthRes(ProtoManagerAuthRes),
     HeartbeatEvent
+}
+
+impl From<ProtoMessage> for ManagerApiMessage {
+    fn from(value: ProtoMessage) -> Self {
+        let payload_type = value.payload_type as i32;
+
+        if let Some(event) = ManagerApiMessage::try_from_common(payload_type, &value.payload) {
+            return event;
+        }
+
+        if let Some(event) = ManagerApiMessage::try_from_cs(payload_type, &value.payload) {
+            return event;
+        }
+
+        panic!("failed to parse: {:?}", value);
+    }
 }
 
 impl ManagerApiMessage {
