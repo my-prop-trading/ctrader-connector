@@ -1,5 +1,9 @@
 use crate::manager::common_messages_external::{ProtoErrorRes, ProtoMessage};
-use crate::manager::cs_messages_external::{ProtoCsPayloadType, ProtoExecutionEvent, ProtoManagerAuthRes, ProtoOrderDetailsRes, ProtoOrderErrorEvent, ProtoTraderChangedEvent, ProtoTraderListRes};
+use crate::manager::cs_messages_external::{
+    ProtoCsPayloadType, ProtoExecutionEvent, ProtoManagerAuthRes, ProtoOrderDetailsRes,
+    ProtoOrderErrorEvent, ProtoTraderChangedEvent, ProtoTraderListRes, ProtoTraderLogonEvent,
+    ProtoTraderLogoutEvent,
+};
 
 #[derive(Debug, Clone)]
 pub enum ManagerApiMessage {
@@ -12,6 +16,8 @@ pub enum ManagerApiMessage {
     ExecutionEvent(ProtoExecutionEvent),
     TraderListRes(ProtoTraderListRes),
     TraderChangedEvent(ProtoTraderChangedEvent),
+    TraderLogonEvent(ProtoTraderLogonEvent),
+    TraderLogoutEvent(ProtoTraderLogoutEvent),
 }
 
 impl ManagerApiMessage {
@@ -264,8 +270,18 @@ impl ManagerApiMessage {
             ProtoCsPayloadType::ProtoManagerGetDealRes => {}
             ProtoCsPayloadType::ProtoManagerClosedPositionListReq => {}
             ProtoCsPayloadType::ProtoManagerClosedPositionListRes => {}
-            ProtoCsPayloadType::ProtoTraderLogonEvent => {}
-            ProtoCsPayloadType::ProtoTraderLogoutEvent => {}
+            ProtoCsPayloadType::ProtoTraderLogonEvent => {
+                let payload = payload.as_ref().unwrap();
+                return Ok(Some(ManagerApiMessage::TraderLogonEvent(
+                    prost::Message::decode(&payload[..]).unwrap(),
+                )));
+            }
+            ProtoCsPayloadType::ProtoTraderLogoutEvent => {
+                let payload = payload.as_ref().unwrap();
+                return Ok(Some(ManagerApiMessage::TraderLogoutEvent(
+                    prost::Message::decode(&payload[..]).unwrap(),
+                )));
+            }
             ProtoCsPayloadType::ProtoManagerNewOrderReq => {}
             ProtoCsPayloadType::ProtoManagerAmendOrderReq => {}
             ProtoCsPayloadType::ProtoManagerCancelOrderReq => {}
