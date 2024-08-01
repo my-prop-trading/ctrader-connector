@@ -103,6 +103,7 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T>
         payload_type: ProtoCsPayloadType,
     ) -> Result<ManagerApiMessage, String> {
         self.send(req, payload_type).await?;
+        // todo: use better sync primitives
         self.store_next_message.store(true, Ordering::Relaxed);
         let instant = Instant::now();
 
