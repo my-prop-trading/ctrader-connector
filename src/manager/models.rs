@@ -1,5 +1,8 @@
 use crate::manager::common_messages_external::{ProtoErrorRes, ProtoMessage};
-use crate::manager::cs_messages_external::{ProtoCsPayloadType, ProtoExecutionEvent, ProtoManagerAuthRes, ProtoOrderDetailsRes, ProtoOrderErrorEvent};
+use crate::manager::cs_messages_external::{
+    ProtoCsPayloadType, ProtoExecutionEvent, ProtoManagerAuthRes, ProtoOrderDetailsRes,
+    ProtoOrderErrorEvent, ProtoTraderListRes,
+};
 
 #[derive(Debug)]
 pub enum ManagerApiMessage {
@@ -10,6 +13,7 @@ pub enum ManagerApiMessage {
     OrderErrorEvent(ProtoOrderErrorEvent),
     OrderDetailsRes(ProtoOrderDetailsRes),
     ExecutionEvent(ProtoExecutionEvent),
+    TraderListRes(ProtoTraderListRes),
 }
 
 impl ManagerApiMessage {
@@ -138,7 +142,12 @@ impl ManagerApiMessage {
             ProtoCsPayloadType::ProtoCrudHolidayProfileRes => {}
             ProtoCsPayloadType::ProtoHolidayProfileChangedEvent => {}
             ProtoCsPayloadType::ProtoTraderListReq => {}
-            ProtoCsPayloadType::ProtoTraderListRes => {}
+            ProtoCsPayloadType::ProtoTraderListRes => {
+                let payload = payload.as_ref().unwrap();
+                return Ok(Some(ManagerApiMessage::TraderListRes(
+                    prost::Message::decode(&payload[..]).unwrap(),
+                )));
+            }
             ProtoCsPayloadType::ProtoPositionListReq => {}
             ProtoCsPayloadType::ProtoPositionListRes => {}
             ProtoCsPayloadType::ProtoPendingOrderListReq => {}

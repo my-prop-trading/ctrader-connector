@@ -35,7 +35,7 @@ async fn main() {
 }
 
 pub async fn close_position(client: &ManagerApiClient<ExampleHandler>) {
-    let result = client.close_position(ProtoManagerClosePositionReq {
+    let result = client.req_close_position(ProtoManagerClosePositionReq {
         payload_type: None,
         trader_id: 329768,
         position_id: 181208,

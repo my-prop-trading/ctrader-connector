@@ -1,5 +1,7 @@
 use crate::manager::callback::{ManagerApiCallback, ManagerApiCallbackHandler};
-use crate::manager::cs_messages_external::{ProtoCsPayloadType, ProtoManagerClosePositionReq};
+use crate::manager::cs_messages_external::{
+    ProtoCsPayloadType, ProtoManagerClosePositionReq, ProtoTraderListReq,
+};
 use crate::manager::serialization::ManagerApiSerializerFactory;
 use crate::models::ManagerCreds;
 use my_tcp_sockets::{TcpClient, TcpClientSocketSettings, TlsSettings};
@@ -52,7 +54,7 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
         Ok(())
     }
 
-    pub async fn close_position(&self, req: ProtoManagerClosePositionReq) -> Result<(), String> {
+    pub async fn req_close_position(&self, req: ProtoManagerClosePositionReq) -> Result<(), String> {
         let mut req = req;
 
         if req.channel.is_none() {
@@ -61,6 +63,12 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
 
         self.inner_client
             .send(req, ProtoCsPayloadType::ProtoManagerClosePositionReq)
+            .await
+    }
+
+    pub async fn req_trader_list(&self, req: ProtoTraderListReq) -> Result<(), String> {
+        self.inner_client
+            .send(req, ProtoCsPayloadType::ProtoTraderListReq)
             .await
     }
 }
