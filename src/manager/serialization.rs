@@ -87,7 +87,7 @@ impl TcpSocketSerializer<ProtoMessage, ManagerApiSerializerState> for ManagerApi
         socket_reader.read_buf(&mut len_buff).await?;
         let len = i32::from_be_bytes(len_buff) as usize;
         let mut data_buf = Vec::with_capacity(len);
-        // safety: we created vec with specified capacity
+        // safety: we created vec with specified capacity with the length according to the protocol
         unsafe { data_buf.set_len(len) }
         socket_reader.read_buf(&mut data_buf[..]).await?;
         let message: ProtoMessage = prost::Message::decode(&data_buf[..]).unwrap();
