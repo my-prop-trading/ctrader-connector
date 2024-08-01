@@ -4,7 +4,7 @@ use crate::manager::cs_messages_external::{
     ProtoOrderErrorEvent, ProtoTraderListRes,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ManagerApiMessage {
     ErrorRes(ProtoErrorRes),
     HelloEvent,

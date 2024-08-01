@@ -6,9 +6,10 @@ use crate::manager::serialization::{ManagerApiSerializer, ManagerApiSerializerSt
 use crate::utils::generate_password_hash;
 use my_tcp_sockets::tcp_connection::TcpSocketConnection;
 use my_tcp_sockets::SocketEventCallback;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use tokio::sync::RwLock;
+use tokio::sync::{Mutex, RwLock};
 
 #[async_trait::async_trait]
 pub trait ManagerApiCallbackHandler {
@@ -24,16 +25,20 @@ pub struct ManagerApiCallback<T: ManagerApiCallbackHandler + Send + Sync + 'stat
     handler: Arc<T>,
     config: Arc<ManagerApiConfig>,
     connection: RwLock<Option<Arc<ManagerApiConnection>>>,
-    connect_timeout: Duration,
+    wait_timeout: Duration,
+    last_message: Mutex<Option<ManagerApiMessage>>,
+    buff_last_message: AtomicBool,
 }
 
 impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T> {
-    pub fn new(handler: Arc<T>, config: Arc<ManagerApiConfig>, connect_timeout: Duration) -> Self {
+    pub fn new(handler: Arc<T>, config: Arc<ManagerApiConfig>, wait_timeout: Duration) -> Self {
         ManagerApiCallback {
             handler,
             config,
             connection: RwLock::new(None),
-            connect_timeout,
+            wait_timeout,
+            last_message: Default::default(),
+            buff_last_message: AtomicBool::new(false),
         }
     }
 
@@ -53,7 +58,7 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T>
 
             tokio::time::sleep(Duration::from_millis(250)).await;
 
-            if instant.elapsed() > self.connect_timeout {
+            if instant.elapsed() > self.wait_timeout {
                 return Err("Connect timeout".to_string());
             }
         }
@@ -82,6 +87,33 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T>
         connection.send(&message).await;
 
         Ok(())
+    }
+
+    pub async fn get<R: prost::Message>(
+        &self,
+        req: R,
+        payload_type: ProtoCsPayloadType,
+    ) -> Result<ManagerApiMessage, String> {
+        self.send(req, payload_type).await?;
+        self.buff_last_message.store(true, Ordering::Relaxed);
+        let instant = Instant::now();
+
+        loop {
+            tokio::time::sleep(Duration::from_millis(50)).await;
+
+            let mut lock = self.last_message.lock().await;
+            if lock.is_some() {
+                let message = lock.take().unwrap();
+                *lock = None;
+                self.buff_last_message.store(false, Ordering::Relaxed);
+
+                return Ok(message);
+            }
+
+            if instant.elapsed() > self.wait_timeout {
+                return Err("Wait timeout".to_string());
+            }
+        }
     }
 }
 
@@ -127,7 +159,11 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
         };
 
         if let Some(message) = message {
-            self.handler.on_message(message).await;
+            if self.buff_last_message.load(Ordering::Relaxed) {
+                self.last_message.lock().await.replace(message);
+            } else {
+                self.handler.on_message(message).await;
+            }
         }
     }
 }

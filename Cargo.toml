@@ -42,6 +42,7 @@ strum = { version = "0.26", features = ["derive"] }
 csv = "1.3.0"
 prost = "0.13.1"
 tonic = "0.12.1"
+ahash = "*"
 
 [build-dependencies]
 tonic-build = { version = "*", features = ["prost"] }
