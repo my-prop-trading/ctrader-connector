@@ -23,7 +23,8 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
             .set_disconnect_timeout(Duration::from_secs(40))
             .set_reconnect_timeout(Duration::from_secs(20))
             .set_seconds_to_ping(10);
-        let callback = ManagerApiCallback::new(handler, Arc::clone(&config), Duration::from_secs(30));
+        let callback =
+            ManagerApiCallback::new(handler, Arc::clone(&config), Duration::from_secs(30));
 
         Self {
             inner_client: Arc::new(callback),
@@ -46,12 +47,20 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
             )
             .await;
 
-        self.inner_client.wait_until_connected().await
+        self.inner_client.wait_until_connected().await?;
+
+        Ok(())
     }
 
     pub async fn close_position(&self, req: ProtoManagerClosePositionReq) -> Result<(), String> {
+        let mut req = req;
+
+        if req.channel.is_none() {
+            req.channel = Some("ManagerAPI".to_string());
+        }
+
         self.inner_client
-            .send(req, ProtoCsPayloadType::ProtoManagerAuthReq)
+            .send(req, ProtoCsPayloadType::ProtoManagerClosePositionReq)
             .await
     }
 }

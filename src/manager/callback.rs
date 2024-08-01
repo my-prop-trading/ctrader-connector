@@ -46,6 +46,8 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T>
 
         loop {
             if self.is_connected().await {
+                // ensure full initialization
+                tokio::time::sleep(Duration::from_millis(500)).await;
                 return Ok(());
             }
 

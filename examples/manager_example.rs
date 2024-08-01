@@ -6,6 +6,7 @@ use rust_extensions::Logger;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
+use ctrader_connector::manager::cs_messages_external::ProtoManagerClosePositionReq;
 
 #[tokio::main]
 async fn main() {
@@ -24,11 +25,25 @@ async fn main() {
     let logger = Arc::new(ConsoleLogger {});
     let client = ManagerApiClient::new(handler, config, logger);
     client.connect().await.unwrap();
+    
+    close_position(&client).await;
 
     loop {
         // wait for events
         tokio::time::sleep(Duration::from_secs(1)).await;
     }
+}
+
+pub async fn close_position(client: &ManagerApiClient<ExampleHandler>) {
+    let result = client.close_position(ProtoManagerClosePositionReq {
+        payload_type: None,
+        trader_id: 329768,
+        position_id: 181208,
+        volume: 100,
+        channel: None,
+    }).await;
+    
+    println!("{:?}", result);
 }
 
 pub struct ExampleHandler {}

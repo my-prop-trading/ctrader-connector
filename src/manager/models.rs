@@ -1,5 +1,5 @@
 use crate::manager::common_messages_external::{ProtoErrorRes, ProtoMessage};
-use crate::manager::cs_messages_external::{ProtoCsPayloadType, ProtoManagerAuthRes};
+use crate::manager::cs_messages_external::{ProtoCsPayloadType, ProtoExecutionEvent, ProtoManagerAuthRes, ProtoOrderDetailsRes, ProtoOrderErrorEvent};
 
 #[derive(Debug)]
 pub enum ManagerApiMessage {
@@ -7,6 +7,9 @@ pub enum ManagerApiMessage {
     HelloEvent,
     ManagerAuthRes(ProtoManagerAuthRes),
     HeartbeatEvent,
+    OrderErrorEvent(ProtoOrderErrorEvent),
+    OrderDetailsRes(ProtoOrderDetailsRes),
+    ExecutionEvent(ProtoExecutionEvent),
 }
 
 impl ManagerApiMessage {
@@ -45,14 +48,24 @@ impl ManagerApiMessage {
             ProtoCsPayloadType::ProtoSpotEvent => {}
             ProtoCsPayloadType::ProtoTrendbarListReq => {}
             ProtoCsPayloadType::ProtoTrendbarListRes => {}
-            ProtoCsPayloadType::ProtoOrderErrorEvent => {}
+            ProtoCsPayloadType::ProtoOrderErrorEvent => {
+                let payload = payload.as_ref().unwrap();
+                return Ok(Some(ManagerApiMessage::OrderErrorEvent(
+                    prost::Message::decode(&payload[..]).unwrap(),
+                )));
+            }
             ProtoCsPayloadType::ProtoVersionReq => {}
             ProtoCsPayloadType::ProtoVersionRes => {}
             ProtoCsPayloadType::ProtoManagerByIdReq => {}
             ProtoCsPayloadType::ProtoManagerByIdRes => {}
             ProtoCsPayloadType::ProtoManagerLightTraderListReq => {}
             ProtoCsPayloadType::ProtoManagerLightTraderListRes => {}
-            ProtoCsPayloadType::ProtoExecutionEvent => {}
+            ProtoCsPayloadType::ProtoExecutionEvent => {
+                let payload = payload.as_ref().unwrap();
+                return Ok(Some(ManagerApiMessage::ExecutionEvent(
+                    prost::Message::decode(&payload[..]).unwrap(),
+                )));
+            }
             ProtoCsPayloadType::ProtoManagerAuthReq => {}
             ProtoCsPayloadType::ProtoManagerAuthRes => {
                 let payload = payload.as_ref().unwrap();
@@ -71,7 +84,12 @@ impl ManagerApiMessage {
             ProtoCsPayloadType::ProtoServerTimeReq => {}
             ProtoCsPayloadType::ProtoServerTimeRes => {}
             ProtoCsPayloadType::ProtoOrderDetailsReq => {}
-            ProtoCsPayloadType::ProtoOrderDetailsRes => {}
+            ProtoCsPayloadType::ProtoOrderDetailsRes => {
+                let payload = payload.as_ref().unwrap();
+                return Ok(Some(ManagerApiMessage::OrderDetailsRes(
+                    prost::Message::decode(&payload[..]).unwrap(),
+                )));
+            }
             ProtoCsPayloadType::ProtoPositionMarginChangedEvent => {}
             ProtoCsPayloadType::ProtoRecalculateAccountMarginReq => {}
             ProtoCsPayloadType::ProtoRecalculateAccountMarginRes => {}
