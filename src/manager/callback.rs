@@ -13,7 +13,7 @@ use tokio::sync::RwLock;
 pub trait ManagerApiCallbackHandler {
     async fn on_connected(&self);
     async fn on_disconnected(&self);
-    async fn on_event(&self, event: ManagerApiMessage);
+    async fn on_message(&self, event: ManagerApiMessage);
 }
 
 pub struct ManagerApiCallback<T: ManagerApiCallbackHandler + Send + Sync + 'static> {
@@ -87,6 +87,6 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
         >,
         contract: ProtoMessage,
     ) {
-        self.handler.on_event(contract.into()).await;
+        self.handler.on_message(contract.into()).await;
     }
 }

@@ -45,7 +45,7 @@ impl ManagerApiCallbackHandler for ExampleHandler {
         println!("on_disconnected");
     }
 
-    async fn on_event(&self, event: ManagerApiMessage) {
+    async fn on_message(&self, event: ManagerApiMessage) {
         println!("event: {:?}", event);
     }
 }
