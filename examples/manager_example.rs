@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use ctrader_connector::manager::api_client::{ManagerApiClient, ManagerApiConfig};
+use ctrader_connector::manager::api_client::{ManagerApiCallback, ManagerApiConfig};
 use ctrader_connector::manager::callback::ManagerApiCallbackHandler;
 use rust_extensions::Logger;
 use std::sync::Arc;
@@ -25,7 +25,7 @@ async fn main() {
         env_name: "demo".to_string(),
     });
     let logger = Arc::new(ConsoleLogger {});
-    let client = ManagerApiClient::new(handler, config, logger);
+    let client = ManagerApiCallback::new(handler, config, logger);
     client.connect().await;
 
     loop {

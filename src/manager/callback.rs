@@ -3,10 +3,11 @@ use crate::manager::common_messages_external::ProtoMessage;
 use crate::manager::cs_messages_external::{ProtoCsPayloadType, ProtoManagerAuthReq};
 use crate::manager::models::ManagerApiMessage;
 use crate::manager::serialization::{ManagerApiSerializer, ManagerApiSerializerState};
+use crate::webservices::utils::generate_password_hash;
 use my_tcp_sockets::tcp_connection::TcpSocketConnection;
 use my_tcp_sockets::SocketEventCallback;
 use std::sync::Arc;
-use crate::webservices::utils::generate_password_hash;
+use tokio::sync::RwLock;
 
 #[async_trait::async_trait]
 pub trait ManagerApiCallbackHandler {
@@ -15,21 +16,30 @@ pub trait ManagerApiCallbackHandler {
     async fn on_event(&self, event: ManagerApiMessage);
 }
 
-pub struct ManagerApiClient<T: ManagerApiCallbackHandler + Send + Sync + 'static> {
+pub struct ManagerApiCallback<T: ManagerApiCallbackHandler + Send + Sync + 'static> {
     handler: Arc<T>,
     config: Arc<ManagerApiConfig>,
+    connection: RwLock<
+        Option<
+            Arc<TcpSocketConnection<ProtoMessage, ManagerApiSerializer, ManagerApiSerializerState>>,
+        >,
+    >,
 }
 
-impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
+impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T> {
     pub fn new(handler: Arc<T>, config: Arc<ManagerApiConfig>) -> Self {
-        ManagerApiClient { handler, config }
+        ManagerApiCallback {
+            handler,
+            config,
+            connection: RwLock::new(None),
+        }
     }
 }
 
 #[async_trait::async_trait]
 impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
-SocketEventCallback<ProtoMessage, ManagerApiSerializer, ManagerApiSerializerState>
-for ManagerApiClient<T>
+    SocketEventCallback<ProtoMessage, ManagerApiSerializer, ManagerApiSerializerState>
+    for ManagerApiCallback<T>
 {
     async fn connected(
         &self,
@@ -52,6 +62,9 @@ for ManagerApiClient<T>
             client_msg_id: None,
         };
         connection.send(&message).await;
+        let mut current_connection = self.connection.write().await;
+        *current_connection = Some(connection.clone());
+        drop(current_connection);
         self.handler.on_connected().await;
     }
 
@@ -61,6 +74,9 @@ for ManagerApiClient<T>
             TcpSocketConnection<ProtoMessage, ManagerApiSerializer, ManagerApiSerializerState>,
         >,
     ) {
+        let mut current_connection = self.connection.write().await;
+        *current_connection = None;
+        drop(current_connection);
         self.handler.on_disconnected().await;
     }
 

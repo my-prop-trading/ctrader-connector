@@ -1,4 +1,4 @@
-use crate::manager::callback::{ManagerApiClient, ManagerApiCallbackHandler};
+use crate::manager::callback::{ManagerApiCallback, ManagerApiCallbackHandler};
 use crate::manager::serialization::ManagerApiSerializerFactory;
 use crate::webservices::creds::ManagerCreds;
 use my_tcp_sockets::{TcpClient, TcpClientSocketSettings, TlsSettings};
@@ -6,14 +6,13 @@ use rust_extensions::Logger;
 use std::sync::Arc;
 use std::time::Duration;
 
-pub struct ManagerApiBuilder<T: ManagerApiCallbackHandler + Send + Sync + 'static> {
+pub struct ManagerApiClient<T: ManagerApiCallbackHandler + Send + Sync + 'static> {
     tcp_client: TcpClient,
     logger: Arc<dyn Logger + Send + Sync + 'static>,
-    handler: Arc<T>,
-    config: Arc<ManagerApiConfig>,
+    inner_client: Arc<ManagerApiCallback<T>>,
 }
 
-impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiBuilder<T> {
+impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
     pub fn new(
         handler: Arc<T>,
         config: Arc<ManagerApiConfig>,
@@ -22,30 +21,23 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiBuilder<T> 
         let tcp_client = TcpClient::new(config.server_name.clone(), config.clone())
             .set_disconnect_timeout(Duration::from_secs(60))
             .set_reconnect_timeout(Duration::from_secs(20));
+        let callback = ManagerApiCallback::new(handler, Arc::clone(&config));
 
         Self {
+            inner_client: Arc::new(callback),
             tcp_client,
             logger,
-            handler,
-            config,
         }
     }
 
-    pub async fn build(self) -> Arc<ManagerApiClient<T>> {
-        let client = Arc::new(ManagerApiClient::new(
-            self.handler,
-            self.config,
-        ));
-
+    pub async fn connect(&self) {
         self.tcp_client
             .start(
                 Arc::new(ManagerApiSerializerFactory::default()),
-                Arc::clone(&client),
+                Arc::clone(&self.inner_client),
                 Arc::clone(&self.logger),
             )
             .await;
-
-        client
     }
 }
 
