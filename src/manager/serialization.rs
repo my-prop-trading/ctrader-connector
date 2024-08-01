@@ -38,8 +38,6 @@ impl TcpSocketSerializer<ProtoMessage, ManagerApiSerializerState> for ManagerApi
         bytes.extend(len_bytes);
         bytes.extend(data_bytes);
         out.write_slice(&bytes[..]);
-
-        println!("serialize: {:?}", bytes);
     }
 
     fn get_ping(&self) -> ProtoMessage {
@@ -70,8 +68,6 @@ impl TcpSocketSerializer<ProtoMessage, ManagerApiSerializerState> for ManagerApi
         unsafe { data_buf.set_len(len) }
         socket_reader.read_buf(&mut data_buf[..]).await?;
         let message: ProtoMessage = prost::Message::decode(&data_buf[..]).unwrap();
-
-        println!("deserialize: {:?}", message);
 
         Ok(message)
     }
