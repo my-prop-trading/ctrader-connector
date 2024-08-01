@@ -28,7 +28,7 @@ pub struct ManagerApiCallback<T: ManagerApiCallbackHandler + Send + Sync + 'stat
     connection: RwLock<Option<Arc<ManagerApiConnection>>>,
     wait_timeout: Duration,
     last_message: Mutex<Option<ManagerApiMessage>>,
-    buff_last_message: AtomicBool,
+    store_next_message: AtomicBool,
     logger: Arc<dyn Logger + Send + Sync + 'static>,
 }
 
@@ -45,7 +45,7 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T>
             connection: RwLock::new(None),
             wait_timeout,
             last_message: Default::default(),
-            buff_last_message: AtomicBool::new(false),
+            store_next_message: AtomicBool::new(false),
             logger,
         }
     }
@@ -103,7 +103,7 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T>
         payload_type: ProtoCsPayloadType,
     ) -> Result<ManagerApiMessage, String> {
         self.send(req, payload_type).await?;
-        self.buff_last_message.store(true, Ordering::Relaxed);
+        self.store_next_message.store(true, Ordering::Relaxed);
         let instant = Instant::now();
 
         loop {
@@ -113,7 +113,7 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T>
             if lock.is_some() {
                 let message = lock.take().unwrap();
                 *lock = None;
-                self.buff_last_message.store(false, Ordering::Relaxed);
+                self.store_next_message.store(false, Ordering::Relaxed);
 
                 return Ok(message);
             }
@@ -170,7 +170,7 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
         };
 
         if let Some(message) = message {
-            if self.buff_last_message.load(Ordering::Relaxed) {
+            if self.store_next_message.load(Ordering::Relaxed) {
                 self.last_message.lock().await.replace(message);
             } else {
                 self.handler.on_message(message).await;
