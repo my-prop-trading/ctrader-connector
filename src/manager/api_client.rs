@@ -26,8 +26,12 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
             .set_disconnect_timeout(Duration::from_secs(40))
             .set_reconnect_timeout(Duration::from_secs(20))
             .set_seconds_to_ping(10);
-        let callback =
-            ManagerApiCallback::new(handler, Arc::clone(&config), Duration::from_secs(30));
+        let callback = ManagerApiCallback::new(
+            handler,
+            Arc::clone(&config),
+            Duration::from_secs(30),
+            logger.clone(),
+        );
 
         Self {
             inner_client: Arc::new(callback),

@@ -6,6 +6,7 @@ use crate::manager::serialization::{ManagerApiSerializer, ManagerApiSerializerSt
 use crate::utils::generate_password_hash;
 use my_tcp_sockets::tcp_connection::TcpSocketConnection;
 use my_tcp_sockets::SocketEventCallback;
+use rust_extensions::Logger;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -28,10 +29,16 @@ pub struct ManagerApiCallback<T: ManagerApiCallbackHandler + Send + Sync + 'stat
     wait_timeout: Duration,
     last_message: Mutex<Option<ManagerApiMessage>>,
     buff_last_message: AtomicBool,
+    logger: Arc<dyn Logger + Send + Sync + 'static>,
 }
 
 impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T> {
-    pub fn new(handler: Arc<T>, config: Arc<ManagerApiConfig>, wait_timeout: Duration) -> Self {
+    pub fn new(
+        handler: Arc<T>,
+        config: Arc<ManagerApiConfig>,
+        wait_timeout: Duration,
+        logger: Arc<dyn Logger + Send + Sync + 'static>,
+    ) -> Self {
         ManagerApiCallback {
             handler,
             config,
@@ -39,6 +46,7 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T>
             wait_timeout,
             last_message: Default::default(),
             buff_last_message: AtomicBool::new(false),
+            logger,
         }
     }
 
@@ -155,7 +163,10 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
         let message = ManagerApiMessage::try_from_proto(contract);
 
         let Ok(message) = message else {
-            panic!("Failed to parse proto: {}", message.unwrap_err());
+            let process = "ManagerApiCallback.payload";
+            let msg = format!("Failed to parse proto: {}", message.unwrap_err());
+            self.logger.write_error(process.into(), msg, None);
+            return;
         };
 
         if let Some(message) = message {
