@@ -1,4 +1,5 @@
 use crate::manager::callback::{ManagerApiCallback, ManagerApiCallbackHandler};
+use crate::manager::cs_messages_external::{ProtoCsPayloadType, ProtoManagerClosePositionReq};
 use crate::manager::serialization::ManagerApiSerializerFactory;
 use crate::models::ManagerCreds;
 use my_tcp_sockets::{TcpClient, TcpClientSocketSettings, TlsSettings};
@@ -46,6 +47,10 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
             .await;
 
         self.inner_client.wait_until_connected().await;
+    }
+
+    pub async fn close_position(&self, req: ProtoManagerClosePositionReq) -> Result<(), String> {
+        self.inner_client.send(req, ProtoCsPayloadType::ProtoManagerAuthReq).await
     }
 }
 

@@ -1,10 +1,12 @@
 use crate::manager::common_messages_external::{ProtoMessage, ProtoPingReq};
 use crate::manager::common_model_messages_external::ProtoPayloadType;
+use crate::manager::cs_messages_external::ProtoCsPayloadType;
 use async_trait::async_trait;
 use my_tcp_sockets::{
     socket_reader::{ReadingTcpContractFail, SocketReader},
     TcpContract, TcpSerializerFactory, TcpSerializerState, TcpSocketSerializer, TcpWriteBuffer,
 };
+use prost::EncodeError;
 use rust_extensions::date_time::DateTimeAsMicroseconds;
 
 #[derive(Default)]
@@ -18,6 +20,22 @@ impl TcpSerializerState<ProtoMessage> for ManagerApiSerializerState {
     }
 
     fn apply_tcp_contract(&mut self, _contract: &ProtoMessage) {}
+}
+
+impl ProtoMessage {
+    pub fn new<P: prost::Message>(
+        payload: P,
+        payload_type: ProtoCsPayloadType,
+    ) -> Result<ProtoMessage, EncodeError> {
+        let mut payload_bytes = vec![];
+        prost::Message::encode(&payload, &mut payload_bytes)?;
+
+        Ok(ProtoMessage {
+            payload_type: payload_type as u32,
+            payload: Some(payload_bytes),
+            client_msg_id: None,
+        })
+    }
 }
 
 #[async_trait]

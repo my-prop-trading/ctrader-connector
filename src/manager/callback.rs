@@ -41,12 +41,37 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T>
 
     pub async fn wait_until_connected(&self) {
         loop {
-            tokio::time::sleep(Duration::from_millis(250)).await;
-
             if self.is_connected().await {
                 break;
             }
+
+            tokio::time::sleep(Duration::from_millis(250)).await;
         }
+    }
+
+    pub async fn send<R: prost::Message>(
+        &self,
+        req: R,
+        payload_type: ProtoCsPayloadType,
+    ) -> Result<(), String> {
+        while !self.is_connected().await {
+            self.wait_until_connected().await;
+        }
+
+        let connection_lock = self.connection.read().await;
+        let connection = connection_lock.as_ref().expect("must exist");
+        let message = ProtoMessage::new(req, payload_type);
+
+        let Ok(message) = message else {
+            return Err(format!(
+                "Failed to create proto message: {:?}",
+                message.unwrap_err()
+            ));
+        };
+
+        connection.send(&message).await;
+
+        Ok(())
     }
 }
 
