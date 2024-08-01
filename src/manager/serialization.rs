@@ -1,10 +1,11 @@
-use crate::manager::common_messages_external::{ProtoHeartbeatEvent, ProtoMessage};
+use crate::manager::common_messages_external::{ProtoMessage, ProtoPingReq};
 use crate::manager::common_model_messages_external::ProtoPayloadType;
 use async_trait::async_trait;
 use my_tcp_sockets::{
     socket_reader::{ReadingTcpContractFail, SocketReader},
     TcpContract, TcpSerializerFactory, TcpSerializerState, TcpSocketSerializer, TcpWriteBuffer,
 };
+use rust_extensions::date_time::DateTimeAsMicroseconds;
 
 #[derive(Default)]
 pub struct ManagerApiSerializer {}
@@ -41,14 +42,18 @@ impl TcpSocketSerializer<ProtoMessage, ManagerApiSerializerState> for ManagerApi
     }
 
     fn get_ping(&self) -> ProtoMessage {
-        let payload_type = ProtoPayloadType::HeartbeatEvent;
-        let req = ProtoHeartbeatEvent { payload_type: None };
+        let payload_type = ProtoPayloadType::PingReq;
+        let timestamp_micros = DateTimeAsMicroseconds::now().unix_microseconds as u64;
+        let req = ProtoPingReq {
+            payload_type: Some(payload_type as i32),
+            timestamp: timestamp_micros / 1000,
+        };
         let mut bytes = vec![];
         prost::Message::encode(&req, &mut bytes).unwrap();
 
         ProtoMessage {
             payload_type: payload_type as u32,
-            payload: None,
+            payload: Some(bytes),
             client_msg_id: None,
         }
     }

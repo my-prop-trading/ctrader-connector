@@ -26,6 +26,7 @@ async fn main() {
     client.connect().await;
 
     loop {
+        println!("loop");
         tokio::time::sleep(Duration::from_secs(1)).await;
     }
 }

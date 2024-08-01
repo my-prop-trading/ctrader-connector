@@ -9,7 +9,7 @@ option java_package = "com.xtrader.managerapi";
 
 option java_outer_classname = "CSContainerMessages";
 
-import "CSModelMessages_External.proto";
+import "_CSModelMessages_External.proto";
 import "CommonModelMessages_External.proto";
 
 
@@ -1859,6 +1859,27 @@ message ProtoLiquidityFeedStatusRes {
 
 // Enum for message types
 enum ProtoCSPayloadType {
+    /// from common
+    PROTO_MESSAGE = 5;
+    PROTO_SERVER_DEPTH_QUOTES_EVENT = 2;
+    //PROTO_SERVER_SPOT_EVENT = 3;
+    PROTO_SERVER_DEPTH_EVENT = 4;
+    PROTO_SERVER_TRAILING_SL_CHANGED_EVENT = 6;
+    PROTO_SERVER_MARKET_DATA_EVENT = 7;
+    ERROR_RES = 50;
+    HEARTBEAT_EVENT = 51;
+    PING_REQ = 52;
+    PING_RES = 53;
+    REGISTER_CSERVER_CONNECTION_REQ = 54;
+    REGISTER_CSERVER_CONNECTION_RES = 55;
+    UNREGISTER_CSERVER_CONNECTION_REQ = 56;
+    UNREGISTER_CSERVER_CONNECTION_RES = 57;
+    REGISTER_CID_CONNECTION_REQ = 58;
+    REGISTER_CID_CONNECTION_RES = 59;
+    UNREGISTER_CID_CONNECTION_REQ = 60;
+    UNREGISTER_CID_CONNECTION_RES = 61;
+    AVAILABLE_SERVICES_EVENT = 66;
+    ///
     PROTO_SPOT_EVENT = 3;
     PROTO_TRENDBAR_LIST_REQ = 113;
     PROTO_TRENDBAR_LIST_RES = 114;

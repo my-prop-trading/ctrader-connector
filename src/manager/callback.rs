@@ -70,6 +70,14 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
     }
 
     async fn payload(&self, _connection: &Arc<ManagerApiConnection>, contract: ProtoMessage) {
-        self.handler.on_message(contract.into()).await;
+        let message = ManagerApiMessage::try_from_proto(contract);
+
+        let Ok(message) = message else {
+            panic!("Failed to parse proto: {}", message.unwrap_err());
+        };
+
+        if let Some(message) = message {
+            self.handler.on_message(message).await;
+        }
     }
 }
