@@ -1,4 +1,3 @@
-use crate::creds::ManagerCreds;
 use crate::webservices::endpoints::WebservicesApiEndpoint;
 use crate::webservices::errors::Error;
 use crate::webservices::models::{
@@ -21,6 +20,7 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::fmt::Debug;
 use tokio::sync::RwLock;
+use crate::models::ManagerCreds;
 
 /// A simple yet powerful RESTful API, designed to cover the basic integration requirements for CRM
 /// systems. It offers the capability to handle common CRM related tasks, such as the creation and

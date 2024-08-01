@@ -1,11 +1,11 @@
-use std::collections::HashMap;
 use ctrader_connector::manager::api_client::{ManagerApiClient, ManagerApiConfig};
 use ctrader_connector::manager::callback::ManagerApiCallbackHandler;
+use ctrader_connector::manager::models::ManagerApiMessage;
+use ctrader_connector::models::ManagerCreds;
 use rust_extensions::Logger;
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
-use ctrader_connector::manager::models::ManagerApiMessage;
-use ctrader_connector::creds::ManagerCreds;
 
 #[tokio::main]
 async fn main() {
@@ -15,11 +15,8 @@ async fn main() {
     };
     let handler = Arc::new(ExampleHandler {});
     let url = std::env::var("CTRADER_MANAGER_API_URL").unwrap();
-    //let parsed_url = url::Url::parse(&url).unwrap();
-    let mut splits = url.split(':').map(|v| v.to_string());
     let config = Arc::new(ManagerApiConfig {
-        server_name: splits.next().unwrap(),
-        host_port: url,
+        url,
         creds,
         plant_id: std::env::var("CTRADER_PLANT_ID").unwrap(),
         env_name: "demo".to_string(),
@@ -61,7 +58,8 @@ impl Logger for ConsoleLogger {
     ) {
         println!("INFO:");
         println!("{}", message);
-        println!("===========================");    }
+        println!("===========================");
+    }
 
     fn write_warning(
         &self,
@@ -71,7 +69,8 @@ impl Logger for ConsoleLogger {
     ) {
         println!("WARNING:");
         println!("{}", message);
-        println!("===========================");    }
+        println!("===========================");
+    }
 
     fn write_error(
         &self,
@@ -81,7 +80,8 @@ impl Logger for ConsoleLogger {
     ) {
         println!("ERROR:");
         println!("{}", message);
-        println!("===========================");    }
+        println!("===========================");
+    }
 
     fn write_fatal_error(
         &self,
@@ -102,5 +102,6 @@ impl Logger for ConsoleLogger {
     ) {
         println!("DEBUG:");
         println!("{}", message);
-        println!("===========================");    }
+        println!("===========================");
+    }
 }

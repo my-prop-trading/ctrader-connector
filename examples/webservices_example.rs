@@ -1,5 +1,4 @@
 use chrono::{Duration, TimeDelta, Utc};
-use ctrader_connector::creds::ManagerCreds;
 use ctrader_connector::webservices::errors::Error;
 use ctrader_connector::webservices::models::CreateCtidRequest;
 use ctrader_connector::webservices::register_user_flow::{RegisterData, RegisterUserFlow};
@@ -17,6 +16,7 @@ use rust_extensions::date_time::DateTimeAsMicroseconds;
 use tokio::sync::Semaphore;
 use tokio::time::sleep;
 use uuid::Uuid;
+use ctrader_connector::models::ManagerCreds;
 
 #[tokio::main]
 async fn main() {
