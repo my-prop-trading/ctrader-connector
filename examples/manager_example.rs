@@ -6,7 +6,8 @@ use rust_extensions::Logger;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
-use ctrader_connector::manager::cs_messages_external::ProtoManagerClosePositionReq;
+use chrono::{TimeDelta, Utc};
+use ctrader_connector::manager::cs_messages_external::{ProtoManagerClosePositionReq, ProtoTraderListReq};
 
 #[tokio::main]
 async fn main() {
@@ -26,12 +27,27 @@ async fn main() {
     let client = ManagerApiClient::new(handler, config, logger);
     client.connect().await.unwrap();
     
-    close_position(&client).await;
+    //close_position(&client).await;
+    //trader_list(&client).await;
 
     loop {
         // wait for events
         tokio::time::sleep(Duration::from_secs(1)).await;
     }
+}
+
+pub async fn trader_list(client: &ManagerApiClient<ExampleHandler>) {
+    let now = Utc::now();
+    let result = client.req_trader_list(ProtoTraderListReq {
+        payload_type: None,
+        from_timestamp: (now - TimeDelta::days(10)).timestamp_millis(),
+        to_timestamp: now.timestamp_millis(),
+        group_id: None,
+        hide_ib_parameters: None,
+        only_sub_accounts: None,
+    }).await;
+
+    println!("{:?}", result);
 }
 
 pub async fn close_position(client: &ManagerApiClient<ExampleHandler>) {
