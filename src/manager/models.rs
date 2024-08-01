@@ -1,8 +1,5 @@
 use crate::manager::common_messages_external::{ProtoErrorRes, ProtoMessage};
-use crate::manager::cs_messages_external::{
-    ProtoCsPayloadType, ProtoExecutionEvent, ProtoManagerAuthRes, ProtoOrderDetailsRes,
-    ProtoOrderErrorEvent, ProtoTraderListRes,
-};
+use crate::manager::cs_messages_external::{ProtoCsPayloadType, ProtoExecutionEvent, ProtoManagerAuthRes, ProtoOrderDetailsRes, ProtoOrderErrorEvent, ProtoTraderChangedEvent, ProtoTraderListRes};
 
 #[derive(Debug, Clone)]
 pub enum ManagerApiMessage {
@@ -14,6 +11,7 @@ pub enum ManagerApiMessage {
     OrderDetailsRes(ProtoOrderDetailsRes),
     ExecutionEvent(ProtoExecutionEvent),
     TraderListRes(ProtoTraderListRes),
+    TraderChangedEvent(ProtoTraderChangedEvent),
 }
 
 impl ManagerApiMessage {
@@ -200,7 +198,12 @@ impl ManagerApiMessage {
             ProtoCsPayloadType::ProtoSwapAndDividendProfileByIdRes => {}
             ProtoCsPayloadType::ProtoCrudTraderReq => {}
             ProtoCsPayloadType::ProtoCrudTraderRes => {}
-            ProtoCsPayloadType::ProtoTraderChangedEvent => {}
+            ProtoCsPayloadType::ProtoTraderChangedEvent => {
+                let payload = payload.as_ref().unwrap();
+                return Ok(Some(ManagerApiMessage::TraderChangedEvent(
+                    prost::Message::decode(&payload[..]).unwrap(),
+                )));
+            }
             ProtoCsPayloadType::ProtoCrudGroupReq => {}
             ProtoCsPayloadType::ProtoCrudGroupRes => {}
             ProtoCsPayloadType::ProtoGroupChangedEvent => {}
