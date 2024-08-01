@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 use chrono::{TimeDelta, Utc};
+use rust_extensions::date_time::DateTimeAsMicroseconds;
 use ctrader_connector::manager::cs_messages_external::{ProtoManagerClosePositionReq, ProtoTraderListReq};
 
 #[tokio::main]
@@ -38,11 +39,11 @@ async fn main() {
 }
 
 pub async fn get_trader_list(client: &ManagerApiClient<ExampleHandler>) {
-    let now = Utc::now();
+    let date = DateTimeAsMicroseconds::from(1722359861739_i64).unix_microseconds / 1000;
     let result = client.get_trader_list(ProtoTraderListReq {
         payload_type: None,
-        from_timestamp: (now - TimeDelta::days(10)).timestamp_millis(),
-        to_timestamp: now.timestamp_millis(),
+        from_timestamp: date,
+        to_timestamp: date,
         group_id: None,
         hide_ib_parameters: None,
         only_sub_accounts: None,
