@@ -5,7 +5,7 @@ use rust_extensions::Logger;
 use std::sync::Arc;
 use std::time::Duration;
 use ctrader_connector::manager::models::ManagerApiMessage;
-use ctrader_connector::webservices::creds::ManagerCreds;
+use ctrader_connector::creds::ManagerCreds;
 
 #[tokio::main]
 async fn main() {

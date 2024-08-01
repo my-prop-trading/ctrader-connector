@@ -1,11 +1,11 @@
-use crate::webservices::creds::ManagerCreds;
+use crate::creds::ManagerCreds;
 use crate::webservices::endpoints::WebservicesApiEndpoint;
 use crate::webservices::errors::Error;
 use crate::webservices::models::{
     CreateCtidRequest, CreateCtidResponse, CreateCtraderManagerTokenRequest,
     CreateCtraderManagerTokenResponse, CreateTraderRequest,
 };
-use crate::webservices::utils::generate_password_hash;
+use crate::utils::generate_password_hash;
 use crate::webservices::{
     ClosedPositionModel, CreateTraderResponse, GetClosedPositionsRequest,
     GetOpenedPositionsRequest, GetSymbolsResponse, GetTraderGroupsResponse, GetTradersRequest,

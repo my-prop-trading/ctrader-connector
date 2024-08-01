@@ -3,7 +3,7 @@ use crate::manager::common_messages_external::ProtoMessage;
 use crate::manager::cs_messages_external::{ProtoCsPayloadType, ProtoManagerAuthReq};
 use crate::manager::models::ManagerApiMessage;
 use crate::manager::serialization::{ManagerApiSerializer, ManagerApiSerializerState};
-use crate::webservices::utils::generate_password_hash;
+use crate::utils::generate_password_hash;
 use my_tcp_sockets::tcp_connection::TcpSocketConnection;
 use my_tcp_sockets::SocketEventCallback;
 use std::sync::Arc;

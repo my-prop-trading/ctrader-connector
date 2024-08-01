@@ -1,6 +1,6 @@
 use crate::manager::callback::{ManagerApiCallback, ManagerApiCallbackHandler};
 use crate::manager::serialization::ManagerApiSerializerFactory;
-use crate::webservices::creds::ManagerCreds;
+use crate::creds::ManagerCreds;
 use my_tcp_sockets::{TcpClient, TcpClientSocketSettings, TlsSettings};
 use rust_extensions::Logger;
 use std::sync::Arc;

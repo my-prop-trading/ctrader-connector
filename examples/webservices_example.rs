@@ -1,10 +1,10 @@
 use chrono::{Duration, TimeDelta, Utc};
-use ctrader_connector::webservices::creds::ManagerCreds;
+use ctrader_connector::creds::ManagerCreds;
 use ctrader_connector::webservices::errors::Error;
 use ctrader_connector::webservices::models::CreateCtidRequest;
 use ctrader_connector::webservices::register_user_flow::{RegisterData, RegisterUserFlow};
 use ctrader_connector::webservices::api_client::WebservicesClient;
-use ctrader_connector::webservices::utils::generate_password_hash;
+use ctrader_connector::utils::generate_password_hash;
 use ctrader_connector::webservices::{
     BalanceChangeType, CreateTraderRequest, GetClosedPositionsRequest, GetOpenedPositionsRequest,
     GetTradersRequest, LinkCtidRequest, TotalMarginCalculationType, TraderAccessRights,
