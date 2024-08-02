@@ -30,26 +30,11 @@ async fn main() {
     
     //close_position(&client).await;
     //trader_list(&client).await;
-    get_trader_list(&client).await;
 
     loop {
         // wait for events
         tokio::time::sleep(Duration::from_secs(1)).await;
     }
-}
-
-pub async fn get_trader_list(client: &ManagerApiClient<ExampleHandler>) {
-    let date = DateTimeAsMicroseconds::from(1722359861739_i64).unix_microseconds / 1000;
-    let result = client.get_trader_list(ProtoTraderListReq {
-        payload_type: None,
-        from_timestamp: date,
-        to_timestamp: date,
-        group_id: None,
-        hide_ib_parameters: None,
-        only_sub_accounts: None,
-    }).await;
-
-    println!("get_trader_list: {:?}", result);
 }
 
 pub async fn trader_list(client: &ManagerApiClient<ExampleHandler>) {

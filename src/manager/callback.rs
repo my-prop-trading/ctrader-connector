@@ -7,10 +7,9 @@ use crate::utils::generate_password_hash;
 use my_tcp_sockets::tcp_connection::TcpSocketConnection;
 use my_tcp_sockets::SocketEventCallback;
 use rust_extensions::Logger;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use tokio::sync::{Mutex, RwLock};
+use tokio::sync::{RwLock};
 
 #[async_trait::async_trait]
 pub trait ManagerApiCallbackHandler {
@@ -20,15 +19,13 @@ pub trait ManagerApiCallbackHandler {
 }
 
 pub type ManagerApiConnection =
-    TcpSocketConnection<ProtoMessage, ManagerApiSerializer, ManagerApiSerializerState>;
+TcpSocketConnection<ProtoMessage, ManagerApiSerializer, ManagerApiSerializerState>;
 
 pub struct ManagerApiCallback<T: ManagerApiCallbackHandler + Send + Sync + 'static> {
     handler: Arc<T>,
     config: Arc<ManagerApiConfig>,
     connection: RwLock<Option<Arc<ManagerApiConnection>>>,
     wait_timeout: Duration,
-    last_message: Mutex<Option<ManagerApiMessage>>,
-    store_next_message: AtomicBool,
     logger: Arc<dyn Logger + Send + Sync + 'static>,
 }
 
@@ -44,8 +41,6 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T>
             config,
             connection: RwLock::new(None),
             wait_timeout,
-            last_message: Default::default(),
-            store_next_message: AtomicBool::new(false),
             logger,
         }
     }
@@ -96,40 +91,12 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T>
 
         Ok(())
     }
-
-    pub async fn get<R: prost::Message>(
-        &self,
-        req: R,
-        payload_type: ProtoCsPayloadType,
-    ) -> Result<ManagerApiMessage, String> {
-        self.send(req, payload_type).await?;
-        // todo: use better sync primitives
-        self.store_next_message.store(true, Ordering::Relaxed);
-        let instant = Instant::now();
-
-        loop {
-            tokio::time::sleep(Duration::from_millis(50)).await;
-
-            let mut lock = self.last_message.lock().await;
-            if lock.is_some() {
-                let message = lock.take().unwrap();
-                *lock = None;
-                self.store_next_message.store(false, Ordering::Relaxed);
-
-                return Ok(message);
-            }
-
-            if instant.elapsed() > self.wait_timeout {
-                return Err("Wait timeout".to_string());
-            }
-        }
-    }
 }
 
 #[async_trait::async_trait]
 impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
-    SocketEventCallback<ProtoMessage, ManagerApiSerializer, ManagerApiSerializerState>
-    for ManagerApiCallback<T>
+SocketEventCallback<ProtoMessage, ManagerApiSerializer, ManagerApiSerializerState>
+for ManagerApiCallback<T>
 {
     async fn connected(&self, connection: Arc<ManagerApiConnection>) {
         let req = ProtoManagerAuthReq {
@@ -171,11 +138,7 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
         };
 
         if let Some(message) = message {
-            if self.store_next_message.load(Ordering::Relaxed) {
-                self.last_message.lock().await.replace(message);
-            } else {
-                self.handler.on_message(message).await;
-            }
+            self.handler.on_message(message).await;
         }
     }
 }
