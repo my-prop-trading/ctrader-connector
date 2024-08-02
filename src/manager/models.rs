@@ -7,14 +7,27 @@ use crate::manager::cs_messages_external::{
 
 #[derive(Debug, Clone)]
 pub enum ManagerApiMessage {
+    Response(ManagerApiResponse),
+    Event(ManagerApiEvent),
+    Error(ManagerApiError),
+}
+
+#[derive(Debug, Clone)]
+pub enum ManagerApiError {
     ErrorRes(ProtoErrorRes),
-    HelloEvent,
-    ManagerAuthRes(ProtoManagerAuthRes),
-    HeartbeatEvent,
     OrderErrorEvent(ProtoOrderErrorEvent),
-    OrderDetailsRes(ProtoOrderDetailsRes),
-    ExecutionEvent(ProtoExecutionEvent),
+}
+#[derive(Debug, Clone)]
+pub enum ManagerApiResponse {
+    ManagerAuthRes(ProtoManagerAuthRes),
     TraderListRes(ProtoTraderListRes),
+    OrderDetailsRes(ProtoOrderDetailsRes),
+}
+
+#[derive(Debug, Clone)]
+pub enum ManagerApiEvent {
+    HelloEvent,
+    ExecutionEvent(ProtoExecutionEvent),
     TraderChangedEvent(ProtoTraderChangedEvent),
     TraderLogonEvent(ProtoTraderLogonEvent),
     TraderLogoutEvent(ProtoTraderLogoutEvent),
@@ -35,13 +48,11 @@ impl ManagerApiMessage {
             ProtoCsPayloadType::ProtoServerMarketDataEvent => {}
             ProtoCsPayloadType::ErrorRes => {
                 let payload = payload.as_ref().unwrap();
-                return Ok(Some(ManagerApiMessage::ErrorRes(
-                    prost::Message::decode(&payload[..]).unwrap(),
+                return Ok(Some(ManagerApiMessage::Error(
+                    ManagerApiError::ErrorRes(prost::Message::decode(&payload[..]).unwrap()),
                 )));
             }
-            ProtoCsPayloadType::HeartbeatEvent => {
-                return Ok(Some(ManagerApiMessage::HeartbeatEvent))
-            }
+            ProtoCsPayloadType::HeartbeatEvent => return Ok(None),
             ProtoCsPayloadType::RegisterCserverConnectionReq => {}
             ProtoCsPayloadType::RegisterCserverConnectionRes => {}
             ProtoCsPayloadType::UnregisterCserverConnectionReq => {}
@@ -58,8 +69,8 @@ impl ManagerApiMessage {
             ProtoCsPayloadType::ProtoTrendbarListRes => {}
             ProtoCsPayloadType::ProtoOrderErrorEvent => {
                 let payload = payload.as_ref().unwrap();
-                return Ok(Some(ManagerApiMessage::OrderErrorEvent(
-                    prost::Message::decode(&payload[..]).unwrap(),
+                return Ok(Some(ManagerApiMessage::Error(
+                    ManagerApiError::OrderErrorEvent(prost::Message::decode(&payload[..]).unwrap()),
                 )));
             }
             ProtoCsPayloadType::ProtoVersionReq => {}
@@ -70,15 +81,17 @@ impl ManagerApiMessage {
             ProtoCsPayloadType::ProtoManagerLightTraderListRes => {}
             ProtoCsPayloadType::ProtoExecutionEvent => {
                 let payload = payload.as_ref().unwrap();
-                return Ok(Some(ManagerApiMessage::ExecutionEvent(
-                    prost::Message::decode(&payload[..]).unwrap(),
+                return Ok(Some(ManagerApiMessage::Event(
+                    ManagerApiEvent::ExecutionEvent(prost::Message::decode(&payload[..]).unwrap()),
                 )));
             }
             ProtoCsPayloadType::ProtoManagerAuthReq => {}
             ProtoCsPayloadType::ProtoManagerAuthRes => {
                 let payload = payload.as_ref().unwrap();
-                return Ok(Some(ManagerApiMessage::ManagerAuthRes(
-                    prost::Message::decode(&payload[..]).unwrap(),
+                return Ok(Some(ManagerApiMessage::Response(
+                    ManagerApiResponse::ManagerAuthRes(
+                        prost::Message::decode(&payload[..]).unwrap(),
+                    ),
                 )));
             }
             ProtoCsPayloadType::ProtoChangeTraderPasswordReq => {}
@@ -94,8 +107,10 @@ impl ManagerApiMessage {
             ProtoCsPayloadType::ProtoOrderDetailsReq => {}
             ProtoCsPayloadType::ProtoOrderDetailsRes => {
                 let payload = payload.as_ref().unwrap();
-                return Ok(Some(ManagerApiMessage::OrderDetailsRes(
-                    prost::Message::decode(&payload[..]).unwrap(),
+                return Ok(Some(ManagerApiMessage::Response(
+                    ManagerApiResponse::OrderDetailsRes(
+                        prost::Message::decode(&payload[..]).unwrap(),
+                    ),
                 )));
             }
             ProtoCsPayloadType::ProtoPositionMarginChangedEvent => {}
@@ -148,8 +163,10 @@ impl ManagerApiMessage {
             ProtoCsPayloadType::ProtoTraderListReq => {}
             ProtoCsPayloadType::ProtoTraderListRes => {
                 let payload = payload.as_ref().unwrap();
-                return Ok(Some(ManagerApiMessage::TraderListRes(
-                    prost::Message::decode(&payload[..]).unwrap(),
+                return Ok(Some(ManagerApiMessage::Response(
+                    ManagerApiResponse::TraderListRes(
+                        prost::Message::decode(&payload[..]).unwrap(),
+                    ),
                 )));
             }
             ProtoCsPayloadType::ProtoPositionListReq => {}
@@ -206,8 +223,10 @@ impl ManagerApiMessage {
             ProtoCsPayloadType::ProtoCrudTraderRes => {}
             ProtoCsPayloadType::ProtoTraderChangedEvent => {
                 let payload = payload.as_ref().unwrap();
-                return Ok(Some(ManagerApiMessage::TraderChangedEvent(
-                    prost::Message::decode(&payload[..]).unwrap(),
+                return Ok(Some(ManagerApiMessage::Event(
+                    ManagerApiEvent::TraderChangedEvent(
+                        prost::Message::decode(&payload[..]).unwrap(),
+                    ),
                 )));
             }
             ProtoCsPayloadType::ProtoCrudGroupReq => {}
@@ -272,15 +291,17 @@ impl ManagerApiMessage {
             ProtoCsPayloadType::ProtoManagerClosedPositionListRes => {}
             ProtoCsPayloadType::ProtoTraderLogonEvent => {
                 let payload = payload.as_ref().unwrap();
-                return Ok(Some(ManagerApiMessage::TraderLogonEvent(
-                    prost::Message::decode(&payload[..]).unwrap(),
+                return Ok(Some(ManagerApiMessage::Event(
+                    ManagerApiEvent::TraderLogonEvent(
+                        prost::Message::decode(&payload[..]).unwrap(),
+                    ),
                 )));
             }
             ProtoCsPayloadType::ProtoTraderLogoutEvent => {
                 let payload = payload.as_ref().unwrap();
-                return Ok(Some(ManagerApiMessage::TraderLogoutEvent(
+                return Ok(Some(ManagerApiMessage::Event(ManagerApiEvent::TraderLogoutEvent(
                     prost::Message::decode(&payload[..]).unwrap(),
-                )));
+                ))));
             }
             ProtoCsPayloadType::ProtoManagerNewOrderReq => {}
             ProtoCsPayloadType::ProtoManagerAmendOrderReq => {}
@@ -338,7 +359,9 @@ impl ManagerApiMessage {
             ProtoCsPayloadType::ProtoCrudMaxAutoExecutionSizeProfileChangedEvent => {}
             ProtoCsPayloadType::ProtoCrudMaxAutoExecutionSizeProfileListReq => {}
             ProtoCsPayloadType::ProtoCrudMaxAutoExecutionSizeProfileListRes => {}
-            ProtoCsPayloadType::ProtoHelloEvent => return Ok(Some(ManagerApiMessage::HelloEvent)),
+            ProtoCsPayloadType::ProtoHelloEvent => {
+                return Ok(Some(ManagerApiMessage::Event(ManagerApiEvent::HelloEvent)))
+            }
         }
 
         Err(format!(
