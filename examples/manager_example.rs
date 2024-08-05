@@ -7,7 +7,6 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 use chrono::{TimeDelta, Utc};
-use rust_extensions::date_time::DateTimeAsMicroseconds;
 use ctrader_connector::manager::cs_messages_external::{ProtoManagerClosePositionReq, ProtoTraderListReq};
 
 #[tokio::main]
@@ -29,7 +28,7 @@ async fn main() {
     client.connect().await.unwrap();
     
     //close_position(&client).await;
-    //trader_list(&client).await;
+    req_trader_list(&client).await;
 
     loop {
         // wait for events
@@ -37,7 +36,7 @@ async fn main() {
     }
 }
 
-pub async fn trader_list(client: &ManagerApiClient<ExampleHandler>) {
+pub async fn req_trader_list(client: &ManagerApiClient<ExampleHandler>) {
     let now = Utc::now();
     let result = client.req_trader_list(ProtoTraderListReq {
         payload_type: None,
