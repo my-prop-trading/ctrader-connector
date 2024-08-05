@@ -15,7 +15,7 @@ use tokio::sync::{RwLock};
 pub trait ManagerApiCallbackHandler {
     async fn on_connected(&self);
     async fn on_disconnected(&self);
-    async fn on_message(&self, event: ManagerApiMessage);
+    async fn on_message(&self, message: ManagerApiMessage);
 }
 
 pub type ManagerApiConnection =
