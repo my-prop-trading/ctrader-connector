@@ -1,6 +1,6 @@
 [package]
 name = "ctrader-connector"
-version = "0.8.1"
+version = "0.8.2"
 edition = "2021"
 authors = ["gorin <mxmgorin@gmail.com>"]
 
@@ -8,7 +8,6 @@ authors = ["gorin <mxmgorin@gmail.com>"]
 [dependencies]
 rust-extensions = { tag = "0.1.4", git = "https://github.com/MyJetTools/rust-extensions.git" }
 my-tcp-sockets = { tag = "0.1.10", git = "https://github.com/MyJetTools/my-tcp-sockets.git", features = ["with-tls"] }
-#my-tcp-sockets = {path = "my-tcp-sockets", features = ["with-tls"] }
 
 http = "*"
 serde = { version = "*", features = ["derive"] }
@@ -22,27 +21,15 @@ futures-util = { version = "*", default-features = false }
 futures-core = { version = "*", default-features = false }
 futures-channel = "*"
 reqwest = { version = "*", features = ["json"] }
-url = "*"
 error-chain = { version = "0.12.4", default-features = false }
-hmac = "*"
-sha2 = "*"
-hex = "*"
 serde_qs = "*"
-ring = "*"
-base64 = "0.21.0"
-lazy_static = "*"
 chrono = "*"
 uuid = { version = "1.7.0", features = ["v4"] }
-aes = "*"
-libaes = "*"
-rand = "*"
-urlencoding = "*"
 md5 = "0.7.0"
 strum = { version = "0.26", features = ["derive"] }
 csv = "1.3.0"
 prost = "0.13.1"
 tonic = "0.12.1"
-ahash = "*"
 
 [build-dependencies]
 tonic-build = { version = "*", features = ["prost"] }
