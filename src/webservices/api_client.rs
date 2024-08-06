@@ -21,7 +21,6 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::fmt::Debug;
 use std::sync::Arc;
-use tokio::sync::RwLock;
 
 /// A simple yet powerful RESTful API, designed to cover the basic integration requirements for CRM
 /// systems. It offers the capability to handle common CRM related tasks, such as the creation and
@@ -30,7 +29,7 @@ pub struct WebservicesClient {
     url: String,
     inner_client: reqwest::Client,
     creds: Arc<dyn ManagerCreds + Send + Sync>,
-    auth_token: RwLock<Option<String>>,
+    auth_token: std::sync::RwLock<Option<String>>,
 }
 
 impl WebservicesClient {
@@ -39,12 +38,12 @@ impl WebservicesClient {
             url: url.into(),
             inner_client: reqwest::Client::new(),
             creds,
-            auth_token: RwLock::new(None),
+            auth_token: std::sync::RwLock::new(None),
         }
     }
 
     pub async fn is_authorized(&self) -> bool {
-        self.auth_token.read().await.is_some()
+        self.auth_token.read().unwrap().is_some()
     }
 
     /// Gets the list of all available symbols on the server.
@@ -161,7 +160,7 @@ impl WebservicesClient {
     /// Creates a token and stores it internally for the next requests
     pub async fn authorize(&self) -> Result<(), Error> {
         let resp = self.create_token().await?;
-        let mut token_lock = self.auth_token.write().await;
+        let mut token_lock = self.auth_token.write().unwrap();
         *token_lock = Some(resp.token);
 
         Ok(())
@@ -182,8 +181,8 @@ impl WebservicesClient {
         endpoint: WebservicesApiEndpoint,
         request: Option<&R>,
     ) -> Result<T, Error> {
-        let token = &*self.auth_token.read().await;
-        let (builder, url, request) = self.get_builder(endpoint, request, token)?;
+        let token = self.get_token_cloned();
+        let (builder, url, request) = self.get_builder(endpoint, request, &token)?;
         let response = builder.send().await;
 
         handle_json(response?, request, &url).await
@@ -194,8 +193,8 @@ impl WebservicesClient {
         endpoint: WebservicesApiEndpoint,
         request: Option<&R>,
     ) -> Result<String, Error> {
-        let token = &*self.auth_token.read().await;
-        let (builder, url, request) = self.get_builder(endpoint, request, token)?;
+        let token = self.get_token_cloned();
+        let (builder, url, request) = self.get_builder(endpoint, request, &token)?;
         let response = builder.send().await;
 
         handle_text(response?, &request, &url).await
@@ -275,6 +274,10 @@ impl WebservicesClient {
         } else {
             format!("{url}{endpoint_str}")
         }
+    }
+
+    fn get_token_cloned(&self) -> Option<String> {
+        (*self.auth_token.read().unwrap()).clone()
     }
 }
 
