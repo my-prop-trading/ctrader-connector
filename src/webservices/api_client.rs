@@ -1,10 +1,11 @@
+use crate::models::ManagerCreds;
+use crate::utils::generate_password_hash;
 use crate::webservices::endpoints::WebservicesApiEndpoint;
 use crate::webservices::errors::Error;
 use crate::webservices::models::{
     CreateCtidRequest, CreateCtidResponse, CreateCtraderManagerTokenRequest,
     CreateCtraderManagerTokenResponse, CreateTraderRequest,
 };
-use crate::utils::generate_password_hash;
 use crate::webservices::{
     ClosedPositionModel, CreateTraderResponse, GetClosedPositionsRequest,
     GetOpenedPositionsRequest, GetSymbolsResponse, GetTraderGroupsResponse, GetTradersRequest,
@@ -19,8 +20,8 @@ use reqwest::{RequestBuilder, Response};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::fmt::Debug;
+use std::sync::Arc;
 use tokio::sync::RwLock;
-use crate::models::ManagerCreds;
 
 /// A simple yet powerful RESTful API, designed to cover the basic integration requirements for CRM
 /// systems. It offers the capability to handle common CRM related tasks, such as the creation and
@@ -28,12 +29,12 @@ use crate::models::ManagerCreds;
 pub struct WebservicesClient {
     url: String,
     inner_client: reqwest::Client,
-    creds: ManagerCreds,
+    creds: Arc<dyn ManagerCreds + Send + Sync>,
     auth_token: RwLock<Option<String>>,
 }
 
 impl WebservicesClient {
-    pub fn new(url: impl Into<String>, creds: ManagerCreds) -> Self {
+    pub fn new(url: impl Into<String>, creds: Arc<dyn ManagerCreds + Send + Sync>) -> Self {
         Self {
             url: url.into(),
             inner_client: reqwest::Client::new(),
@@ -168,8 +169,8 @@ impl WebservicesClient {
 
     pub async fn create_token(&self) -> Result<CreateCtraderManagerTokenResponse, Error> {
         let request = CreateCtraderManagerTokenRequest {
-            login: self.creds.login.clone(),
-            hashed_password: generate_password_hash(&self.creds.password),
+            login: self.creds.get_login().await,
+            hashed_password: generate_password_hash(&self.creds.get_password().await),
         };
         let endpoint = WebservicesApiEndpoint::CreateManagerToken;
 

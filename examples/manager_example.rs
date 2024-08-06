@@ -1,4 +1,4 @@
-use ctrader_connector::manager::api_client::{ManagerApiClient, ManagerApiConfig};
+use ctrader_connector::manager::api_client::{ManagerApiClient, ManagerApiConfigWrapper};
 use ctrader_connector::manager::callback::ManagerApiCallbackHandler;
 use ctrader_connector::manager::models::ManagerApiMessage;
 use ctrader_connector::models::ManagerCreds;
@@ -17,7 +17,7 @@ async fn main() {
     };
     let handler = Arc::new(ExampleHandler {});
     let url = std::env::var("CTRADER_MANAGER_API_URL").unwrap();
-    let config = Arc::new(ManagerApiConfig {
+    let config = Arc::new(ManagerApiConfigWrapper {
         url,
         creds,
         plant_id: std::env::var("CTRADER_PLANT_ID").unwrap(),

@@ -1,4 +1,4 @@
-use crate::manager::api_client::ManagerApiConfig;
+use crate::manager::api_client::ManagerApiConfigWrapper;
 use crate::manager::common_messages_external::ProtoMessage;
 use crate::manager::cs_messages_external::{ProtoCsPayloadType, ProtoManagerAuthReq};
 use crate::manager::models::ManagerApiMessage;
@@ -9,7 +9,7 @@ use my_tcp_sockets::SocketEventCallback;
 use rust_extensions::Logger;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use tokio::sync::{RwLock};
+use tokio::sync::RwLock;
 
 #[async_trait::async_trait]
 pub trait ManagerApiCallbackHandler {
@@ -19,11 +19,11 @@ pub trait ManagerApiCallbackHandler {
 }
 
 pub type ManagerApiConnection =
-TcpSocketConnection<ProtoMessage, ManagerApiSerializer, ManagerApiSerializerState>;
+    TcpSocketConnection<ProtoMessage, ManagerApiSerializer, ManagerApiSerializerState>;
 
 pub struct ManagerApiCallback<T: ManagerApiCallbackHandler + Send + Sync + 'static> {
     handler: Arc<T>,
-    config: Arc<ManagerApiConfig>,
+    config_wrapper: Arc<ManagerApiConfigWrapper>,
     connection: RwLock<Option<Arc<ManagerApiConnection>>>,
     wait_timeout: Duration,
     logger: Arc<dyn Logger + Send + Sync + 'static>,
@@ -32,13 +32,13 @@ pub struct ManagerApiCallback<T: ManagerApiCallbackHandler + Send + Sync + 'stat
 impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T> {
     pub fn new(
         handler: Arc<T>,
-        config: Arc<ManagerApiConfig>,
+        config: Arc<ManagerApiConfigWrapper>,
         wait_timeout: Duration,
         logger: Arc<dyn Logger + Send + Sync + 'static>,
     ) -> Self {
         ManagerApiCallback {
             handler,
-            config,
+            config_wrapper: config,
             connection: RwLock::new(None),
             wait_timeout,
             logger,
@@ -95,16 +95,16 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T>
 
 #[async_trait::async_trait]
 impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
-SocketEventCallback<ProtoMessage, ManagerApiSerializer, ManagerApiSerializerState>
-for ManagerApiCallback<T>
+    SocketEventCallback<ProtoMessage, ManagerApiSerializer, ManagerApiSerializerState>
+    for ManagerApiCallback<T>
 {
     async fn connected(&self, connection: Arc<ManagerApiConnection>) {
         let req = ProtoManagerAuthReq {
             payload_type: Some(ProtoCsPayloadType::ProtoManagerAuthReq as i32),
-            plant_id: self.config.plant_id.clone(),
-            environment_name: self.config.env_name.clone(),
-            login: self.config.creds.login,
-            password_hash: generate_password_hash(&self.config.creds.password),
+            plant_id: self.config_wrapper.config.get_plant_id().await,
+            environment_name: self.config_wrapper.config.get_env_name().await,
+            login: self.config_wrapper.creds.get_login().await,
+            password_hash: generate_password_hash(&self.config_wrapper.creds.get_password().await),
         };
         let mut bytes = vec![];
         prost::Message::encode(&req, &mut bytes).unwrap();
