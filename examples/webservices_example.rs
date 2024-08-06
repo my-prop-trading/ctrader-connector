@@ -20,10 +20,10 @@ use ctrader_connector::models::ManagerCreds;
 
 #[tokio::main]
 async fn main() {
-    let creds = ManagerCreds {
+    let creds = Arc::new(ExampleManagerCreds {
         password: std::env::var("CTRADER_PASSWORD").unwrap(),
         login: std::env::var("CTRADER_LOGIN").unwrap().parse().unwrap(),
-    };
+    });
     let url = std::env::var("CTRADER_URL").unwrap();
 
     let rest_client = WebservicesClient::new(url, creds);
@@ -314,4 +314,19 @@ pub async fn get_closed_parallel(rest_client: &WebservicesClient, login: i64, da
 
     let result: Result<_, _> = try_join_all(futures).await;
     println!("{:?}", result);
+}
+
+pub struct ExampleManagerCreds {
+    pub login: i64,
+    pub password: String,
+}
+
+impl ManagerCreds for ExampleManagerCreds {
+    async fn get_password(&self) -> String {
+        self.password.clone()
+    }
+
+    async fn get_login(&self) -> i64 {
+        self.login
+    }
 }
