@@ -321,6 +321,7 @@ pub struct ExampleManagerCreds {
     pub password: String,
 }
 
+#[async_trait::async_trait]
 impl ManagerCreds for ExampleManagerCreds {
     async fn get_password(&self) -> String {
         self.password.clone()

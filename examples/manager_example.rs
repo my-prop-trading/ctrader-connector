@@ -81,8 +81,8 @@ impl ManagerApiCallbackHandler for ExampleHandler {
         println!("on_disconnected");
     }
 
-    async fn on_message(&self, event: ManagerApiMessage) {
-        println!("event: {:?}", event);
+    async fn on_message(&self, message: ManagerApiMessage) {
+        println!("message: {:?}", message);
     }
 }
 
@@ -151,6 +151,7 @@ pub struct ExampleManagerApiConfig {
     pub env_name: String,
 }
 
+#[async_trait::async_trait]
 impl ManagerApiConfig for ExampleManagerApiConfig {
     async fn get_url(&self) -> String {
         self.url.clone()
@@ -170,6 +171,7 @@ pub struct ExampleManagerCreds {
     pub password: String,
 }
 
+#[async_trait::async_trait]
 impl ManagerCreds for ExampleManagerCreds {
     async fn get_password(&self) -> String {
         self.password.clone()
