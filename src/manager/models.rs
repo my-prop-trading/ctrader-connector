@@ -36,8 +36,11 @@ pub enum ManagerApiEvent {
 impl ManagerApiMessage {
     pub fn try_from_proto(proto: ProtoMessage) -> Result<Option<Self>, String> {
         let payload = proto.payload;
-        let payload_type =
-            ProtoCsPayloadType::try_from(proto.payload_type as i32).expect("must be valid proto");
+        let payload_type = ProtoCsPayloadType::try_from(proto.payload_type as i32);
+
+        let Ok(payload_type) = payload_type else {
+            return Ok(None);
+        };
 
         match payload_type {
             ProtoCsPayloadType::ProtoMessage => {}
@@ -48,9 +51,9 @@ impl ManagerApiMessage {
             ProtoCsPayloadType::ProtoServerMarketDataEvent => {}
             ProtoCsPayloadType::ErrorRes => {
                 let payload = payload.as_ref().unwrap();
-                return Ok(Some(ManagerApiMessage::Error(
-                    ManagerApiError::ErrorRes(prost::Message::decode(&payload[..]).unwrap()),
-                )));
+                return Ok(Some(ManagerApiMessage::Error(ManagerApiError::ErrorRes(
+                    prost::Message::decode(&payload[..]).unwrap(),
+                ))));
             }
             ProtoCsPayloadType::HeartbeatEvent => return Ok(None),
             ProtoCsPayloadType::RegisterCserverConnectionReq => {}
@@ -299,9 +302,11 @@ impl ManagerApiMessage {
             }
             ProtoCsPayloadType::ProtoTraderLogoutEvent => {
                 let payload = payload.as_ref().unwrap();
-                return Ok(Some(ManagerApiMessage::Event(ManagerApiEvent::TraderLogoutEvent(
-                    prost::Message::decode(&payload[..]).unwrap(),
-                ))));
+                return Ok(Some(ManagerApiMessage::Event(
+                    ManagerApiEvent::TraderLogoutEvent(
+                        prost::Message::decode(&payload[..]).unwrap(),
+                    ),
+                )));
             }
             ProtoCsPayloadType::ProtoManagerNewOrderReq => {}
             ProtoCsPayloadType::ProtoManagerAmendOrderReq => {}
