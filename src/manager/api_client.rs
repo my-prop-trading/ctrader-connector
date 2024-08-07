@@ -10,34 +10,35 @@ use std::sync::Arc;
 use std::time::Duration;
 
 pub struct ManagerApiClient<T: ManagerApiCallbackHandler + Send + Sync + 'static> {
-    tcp_client: TcpClient,
+    tcp_client: tokio::sync::Mutex<Option<TcpClient>>,
     logger: Arc<dyn Logger + Send + Sync + 'static>,
     inner_client: Arc<ManagerApiCallback<T>>,
+    config_wrapper: Arc<ManagerApiConfigWrapper>,
 }
 
 impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
-    pub async fn new(
+    pub fn new(
         handler: Arc<T>,
         config: Arc<dyn ManagerApiConfig + Send + Sync>,
         creds: Arc<dyn ManagerCreds + Send + Sync>,
         logger: Arc<dyn Logger + Send + Sync + 'static>,
     ) -> Self {
-        let config = Arc::new(ManagerApiConfigWrapper { config, creds });
-        let tcp_client = TcpClient::new(config.get_domain().await, config.clone())
-            .set_disconnect_timeout(Duration::from_secs(40))
-            .set_reconnect_timeout(Duration::from_secs(20))
-            .set_seconds_to_ping(10);
+        let config_wrapper = Arc::new(ManagerApiConfigWrapper {
+            config: Arc::clone(&config),
+            creds,
+        });
         let callback = ManagerApiCallback::new(
             handler,
-            Arc::clone(&config),
+            Arc::clone(&config_wrapper),
             Duration::from_secs(30),
             logger.clone(),
         );
 
         Self {
             inner_client: Arc::new(callback),
-            tcp_client,
+            tcp_client: Default::default(),
             logger,
+            config_wrapper,
         }
     }
 
@@ -47,13 +48,20 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
             "Starting tcp connection..".into(),
             None,
         );
-        self.tcp_client
+        let domain_name = self.config_wrapper.get_domain().await;
+        let tcp_client = TcpClient::new(domain_name, self.config_wrapper.clone())
+            .set_disconnect_timeout(Duration::from_secs(40))
+            .set_reconnect_timeout(Duration::from_secs(20))
+            .set_seconds_to_ping(10);
+
+        tcp_client
             .start(
                 Arc::new(ManagerApiSerializerFactory::default()),
                 Arc::clone(&self.inner_client),
                 Arc::clone(&self.logger),
             )
             .await;
+        self.tcp_client.lock().await.replace(tcp_client);
 
         self.inner_client.wait_until_connected().await?;
 
@@ -65,7 +73,11 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
     }
 
     pub async fn disconnect(&self) {
-        self.tcp_client.stop().await;
+        let tcp_client = &*self.tcp_client.lock().await;
+
+        if let Some(tcp_client) = tcp_client {
+            tcp_client.stop().await;
+        }
     }
 
     pub async fn req_close_position(

@@ -25,9 +25,9 @@ async fn main() {
         env_name: "demo".to_string(),
     });
     let logger = Arc::new(ConsoleLogger {});
-    let client = ManagerApiClient::new(handler, config, creds, logger).await;
+    let client = ManagerApiClient::new(handler, config, creds, logger);
     client.connect().await.unwrap();
-    
+
     //reconnect(&client).await;
     //close_position(&client).await;
     //req_trader_list(&client).await;
