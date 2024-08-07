@@ -1,22 +1,22 @@
 use chrono::{Duration, TimeDelta, Utc};
+use ctrader_connector::models::ManagerCreds;
+use ctrader_connector::utils::generate_password_hash;
+use ctrader_connector::webservices::api_client::{WebservicesApiConfig, WebservicesClient};
 use ctrader_connector::webservices::errors::Error;
 use ctrader_connector::webservices::models::CreateCtidRequest;
 use ctrader_connector::webservices::register_user_flow::{RegisterData, RegisterUserFlow};
-use ctrader_connector::webservices::api_client::WebservicesClient;
-use ctrader_connector::utils::generate_password_hash;
 use ctrader_connector::webservices::{
     BalanceChangeType, CreateTraderRequest, GetClosedPositionsRequest, GetOpenedPositionsRequest,
     GetTradersRequest, LinkCtidRequest, TotalMarginCalculationType, TraderAccessRights,
     TraderAccountType, UpdateTraderBalanceRequest, UpdateTraderRequest,
 };
-use futures_util::future::{try_join_all};
+use futures_util::future::try_join_all;
+use rust_extensions::date_time::DateTimeAsMicroseconds;
 use std::ops::Sub;
 use std::sync::Arc;
-use rust_extensions::date_time::DateTimeAsMicroseconds;
 use tokio::sync::Semaphore;
 use tokio::time::sleep;
 use uuid::Uuid;
-use ctrader_connector::models::ManagerCreds;
 
 #[tokio::main]
 async fn main() {
@@ -24,9 +24,11 @@ async fn main() {
         password: std::env::var("CTRADER_PASSWORD").unwrap(),
         login: std::env::var("CTRADER_LOGIN").unwrap().parse().unwrap(),
     });
-    let url = std::env::var("CTRADER_URL").unwrap();
+    let config = ExampleWebservicesApiConfig {
+        url: std::env::var("CTRADER_URL").unwrap(),
+    };
 
-    let rest_client = WebservicesClient::new(url, creds);
+    let rest_client = WebservicesClient::new(config, creds);
     rest_client.authorize().await.unwrap();
     //let data = register(&rest_client).await.unwrap();
     //make_deposit(&rest_client, data.trader.login, 1000.0).await;
@@ -41,27 +43,30 @@ async fn main() {
     //get_closed_parallel(&rest_client, 3238431, 300).await;
 }
 
-pub async fn get_symbols(rest_client: &WebservicesClient) {
+pub async fn get_symbols(rest_client: &WebservicesClient<ExampleWebservicesApiConfig>) {
     let resp = rest_client.get_symbols().await;
 
     println!("{:?}", resp)
 }
 
-pub async fn get_groups(rest_client: &WebservicesClient) {
+pub async fn get_groups(rest_client: &WebservicesClient<ExampleWebservicesApiConfig>) {
     let resp = rest_client.get_trader_groups().await;
 
     println!("{:?}", resp)
 }
 
-pub async fn get_trader(rest_client: &WebservicesClient, login: i64) {
+pub async fn get_trader(rest_client: &WebservicesClient<ExampleWebservicesApiConfig>, login: i64) {
     let resp = rest_client.get_trader(login).await;
-    
+
     println!("{:?}", resp);
-    println!("profit: {}", resp.as_ref().unwrap().equity - resp.as_ref().unwrap().balance);
+    println!(
+        "profit: {}",
+        resp.as_ref().unwrap().equity - resp.as_ref().unwrap().balance
+    );
 }
 
 pub async fn update_group(
-    rest_client: &WebservicesClient,
+    rest_client: &WebservicesClient<ExampleWebservicesApiConfig>,
     login: i64,
     group_name: impl Into<String>,
 ) {
@@ -91,7 +96,7 @@ pub async fn update_group(
 }
 
 pub async fn update_access_rights(
-    rest_client: &WebservicesClient,
+    rest_client: &WebservicesClient<ExampleWebservicesApiConfig>,
     login: i64,
     access_rights: TraderAccessRights,
 ) {
@@ -120,15 +125,17 @@ pub async fn update_access_rights(
     println!("{:?}", resp)
 }
 
-pub async fn get_opened_positions(rest_client: &WebservicesClient, login: Option<i64>) {
+pub async fn get_opened_positions(rest_client: &WebservicesClient<ExampleWebservicesApiConfig>, login: Option<i64>) {
     let request = GetOpenedPositionsRequest { login };
     let resp = rest_client.get_opened_positions(&request).await;
 
     println!("{:?}", resp)
 }
 
-pub async fn get_closed_positions(rest_client: &WebservicesClient, login: Option<i64>) {
-    let date = DateTimeAsMicroseconds::from_str("2024-07-30T17:47:50.545Z").unwrap().to_chrono_utc();
+pub async fn get_closed_positions(rest_client: &WebservicesClient<ExampleWebservicesApiConfig>, login: Option<i64>) {
+    let date = DateTimeAsMicroseconds::from_str("2024-07-30T17:47:50.545Z")
+        .unwrap()
+        .to_chrono_utc();
     let request = GetClosedPositionsRequest {
         from: date + TimeDelta::microseconds(1),
         to: Utc::now(),
@@ -139,7 +146,7 @@ pub async fn get_closed_positions(rest_client: &WebservicesClient, login: Option
     println!("{:?}", resp)
 }
 
-pub async fn get_traders(rest_client: &WebservicesClient) {
+pub async fn get_traders(rest_client: &WebservicesClient<ExampleWebservicesApiConfig>) {
     let request = GetTradersRequest {
         from: Utc::now().sub(TimeDelta::try_days(600).unwrap()),
         to: Utc::now(),
@@ -150,7 +157,7 @@ pub async fn get_traders(rest_client: &WebservicesClient) {
     println!("{:?}", resp)
 }
 
-pub async fn deposit(rest_client: &WebservicesClient) {
+pub async fn deposit(rest_client: &WebservicesClient<ExampleWebservicesApiConfig>) {
     let result = rest_client
         .update_trader_balance(&UpdateTraderBalanceRequest {
             comment: None,
@@ -166,7 +173,7 @@ pub async fn deposit(rest_client: &WebservicesClient) {
     println!("{:?}", result)
 }
 
-pub async fn register(rest_client: &WebservicesClient) -> Result<RegisterData, Error> {
+pub async fn register(rest_client: &WebservicesClient<ExampleWebservicesApiConfig>) -> Result<RegisterData, Error> {
     let flow = RegisterUserFlow {
         user_email: get_test_email(),
         broker_name: std::env::var("CTRADER_BROKER_NAME").unwrap(),
@@ -186,7 +193,7 @@ pub async fn register(rest_client: &WebservicesClient) -> Result<RegisterData, E
     result
 }
 
-pub async fn create_ctid(rest_client: &WebservicesClient) {
+pub async fn create_ctid(rest_client: &WebservicesClient<ExampleWebservicesApiConfig>) {
     let request = CreateCtidRequest {
         email: get_test_email(),
         broker_name: std::env::var("CTRADER_BROKER_NAME").unwrap(),
@@ -197,7 +204,7 @@ pub async fn create_ctid(rest_client: &WebservicesClient) {
     println!("{:?}", resp)
 }
 
-pub async fn create_trader(rest_client: &WebservicesClient) {
+pub async fn create_trader(rest_client: &WebservicesClient<ExampleWebservicesApiConfig>) {
     let request = CreateTraderRequest {
         access_rights: TraderAccessRights::FullAccess,
         account_type: TraderAccountType::Hedged,
@@ -224,7 +231,7 @@ pub async fn create_trader(rest_client: &WebservicesClient) {
     println!("{:?}", resp)
 }
 
-pub async fn link_ctid(rest_client: &WebservicesClient) {
+pub async fn link_ctid(rest_client: &WebservicesClient<ExampleWebservicesApiConfig>) {
     let request = LinkCtidRequest {
         trader_login: 0,
         trader_password_hash: generate_test_password_hash(),
@@ -238,7 +245,7 @@ pub async fn link_ctid(rest_client: &WebservicesClient) {
     println!("{:?}", resp)
 }
 
-pub async fn make_deposit(rest_client: &WebservicesClient, login: i64, precise_amount: f64) {
+pub async fn make_deposit(rest_client: &WebservicesClient<ExampleWebservicesApiConfig>, login: i64, precise_amount: f64) {
     let request = UpdateTraderBalanceRequest {
         comment: None,
         external_id: None,
@@ -283,7 +290,7 @@ pub struct MockRequest {
     pub login: Option<u64>,
 }
 
-pub async fn get_closed_parallel(rest_client: &WebservicesClient, login: i64, days: i64) {
+pub async fn get_closed_parallel(rest_client: &WebservicesClient<ExampleWebservicesApiConfig>, login: i64, days: i64) {
     let days_period = 1;
     let num_requests = days / days_period;
     let max_concurrent_requests = 10;
@@ -329,5 +336,16 @@ impl ManagerCreds for ExampleManagerCreds {
 
     async fn get_login(&self) -> i64 {
         self.login
+    }
+}
+
+pub struct ExampleWebservicesApiConfig {
+    pub url: String,
+}
+
+#[async_trait::async_trait]
+impl WebservicesApiConfig for ExampleWebservicesApiConfig {
+    async fn get_url(&self) -> String {
+        self.url.clone()
     }
 }

@@ -22,20 +22,25 @@ use serde::Serialize;
 use std::fmt::Debug;
 use std::sync::Arc;
 
+#[async_trait::async_trait]
+pub trait WebservicesApiConfig {
+    async fn get_url(&self) -> String;
+}
+
 /// A simple yet powerful RESTful API, designed to cover the basic integration requirements for CRM
 /// systems. It offers the capability to handle common CRM related tasks, such as the creation and
 /// updates of users and trading accounts, and performing deposits and withdrawals to those accounts.
-pub struct WebservicesClient {
-    url: String,
+pub struct WebservicesClient<C: WebservicesApiConfig> {
+    config: C,
     inner_client: reqwest::Client,
     creds: Arc<dyn ManagerCreds + Send + Sync>,
     auth_token: std::sync::RwLock<Option<String>>,
 }
 
-impl WebservicesClient {
-    pub fn new(url: impl Into<String>, creds: Arc<dyn ManagerCreds + Send + Sync>) -> Self {
+impl<C: WebservicesApiConfig> WebservicesClient<C> {
+    pub fn new(config: C, creds: Arc<dyn ManagerCreds + Send + Sync>) -> Self {
         Self {
-            url: url.into(),
+            config,
             inner_client: reqwest::Client::new(),
             creds,
             auth_token: std::sync::RwLock::new(None),
@@ -182,7 +187,8 @@ impl WebservicesClient {
         request: Option<&R>,
     ) -> Result<T, Error> {
         let token = self.get_token_cloned();
-        let (builder, url, request) = self.get_builder(endpoint, request, &token)?;
+        let base_url = self.config.get_url().await;
+        let (builder, url, request) = self.get_builder(&base_url, endpoint, request, &token)?;
         let response = builder.send().await;
 
         handle_json(response?, request, &url).await
@@ -194,7 +200,8 @@ impl WebservicesClient {
         request: Option<&R>,
     ) -> Result<String, Error> {
         let token = self.get_token_cloned();
-        let (builder, url, request) = self.get_builder(endpoint, request, &token)?;
+        let base_url = self.config.get_url().await;
+        let (builder, url, request) = self.get_builder(&base_url, endpoint, request, &token)?;
         let response = builder.send().await;
 
         handle_text(response?, &request, &url).await
@@ -202,6 +209,7 @@ impl WebservicesClient {
 
     fn get_builder<R: Serialize>(
         &self,
+        base_url: &str,
         endpoint: WebservicesApiEndpoint,
         request: Option<&R>,
         token: &Option<String>,
@@ -212,9 +220,9 @@ impl WebservicesClient {
 
         let url = if http_method == Method::GET {
             let query_string = serde_qs::to_string(&request).expect("must be valid model");
-            self.build_full_url(&endpoint, Some(query_string), token)
+            self.build_full_url(base_url, &endpoint, Some(query_string), token)
         } else {
-            self.build_full_url(&endpoint, None, token)
+            self.build_full_url(base_url, &endpoint, None, token)
         };
 
         let mut builder = self.inner_client.request(http_method, &url);
@@ -256,23 +264,23 @@ impl WebservicesClient {
 
     fn build_full_url(
         &self,
+        base_url: &str,
         endpoint: &WebservicesApiEndpoint,
         query_string: Option<String>,
         token: &Option<String>,
     ) -> String {
-        let url = &self.url;
         let endpoint_str = String::from(endpoint);
 
         if let Some(token) = token {
             let token_param_name = "token";
 
             if let Some(query_string) = query_string {
-                format!("{url}{endpoint_str}?{query_string}&{token_param_name}={token}")
+                format!("{base_url}{endpoint_str}?{query_string}&{token_param_name}={token}")
             } else {
-                format!("{url}{endpoint_str}?{token_param_name}={token}")
+                format!("{base_url}{endpoint_str}?{token_param_name}={token}")
             }
         } else {
-            format!("{url}{endpoint_str}")
+            format!("{base_url}{endpoint_str}")
         }
     }
 
