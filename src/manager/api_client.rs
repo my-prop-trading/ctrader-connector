@@ -60,6 +60,14 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
         Ok(())
     }
 
+    pub async fn is_connected(&self) -> bool {
+        self.inner_client.is_connected().await
+    }
+
+    pub async fn disconnect(&self) {
+        self.tcp_client.stop().await;
+    }
+
     pub async fn req_close_position(
         &self,
         req: ProtoManagerClosePositionReq,

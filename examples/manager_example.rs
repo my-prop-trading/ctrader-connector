@@ -1,7 +1,5 @@
 use chrono::{TimeDelta, Utc};
-use ctrader_connector::manager::api_client::{
-    ManagerApiClient, ManagerApiConfig,
-};
+use ctrader_connector::manager::api_client::{ManagerApiClient, ManagerApiConfig};
 use ctrader_connector::manager::callback::ManagerApiCallbackHandler;
 use ctrader_connector::manager::cs_messages_external::{
     ProtoManagerClosePositionReq, ProtoTraderListReq,
@@ -29,14 +27,20 @@ async fn main() {
     let logger = Arc::new(ConsoleLogger {});
     let client = ManagerApiClient::new(handler, config, creds, logger).await;
     client.connect().await.unwrap();
-
+    
+    //reconnect(&client).await;
     //close_position(&client).await;
-    req_trader_list(&client).await;
+    //req_trader_list(&client).await;
 
     loop {
         // wait for events
         tokio::time::sleep(Duration::from_secs(1)).await;
     }
+}
+
+pub async fn reconnect(client: &ManagerApiClient<ExampleHandler>) {
+    client.disconnect().await;
+    client.connect().await.unwrap();
 }
 
 pub async fn req_trader_list(client: &ManagerApiClient<ExampleHandler>) {
