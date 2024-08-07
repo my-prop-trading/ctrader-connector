@@ -30,14 +30,14 @@ pub trait WebservicesApiConfig {
 /// A simple yet powerful RESTful API, designed to cover the basic integration requirements for CRM
 /// systems. It offers the capability to handle common CRM related tasks, such as the creation and
 /// updates of users and trading accounts, and performing deposits and withdrawals to those accounts.
-pub struct WebservicesClient<C: WebservicesApiConfig> {
+pub struct WebservicesApiClient<C: WebservicesApiConfig> {
     config: C,
     inner_client: reqwest::Client,
     creds: Arc<dyn ManagerCreds + Send + Sync>,
     auth_token: std::sync::RwLock<Option<String>>,
 }
 
-impl<C: WebservicesApiConfig> WebservicesClient<C> {
+impl<C: WebservicesApiConfig> WebservicesApiClient<C> {
     pub fn new(config: C, creds: Arc<dyn ManagerCreds + Send + Sync>) -> Self {
         Self {
             config,

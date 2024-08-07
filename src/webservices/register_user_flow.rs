@@ -1,5 +1,5 @@
 use crate::utils::generate_password_hash;
-use crate::webservices::api_client::{WebservicesApiConfig, WebservicesClient};
+use crate::webservices::api_client::{WebservicesApiConfig, WebservicesApiClient};
 use crate::webservices::errors::Error;
 use crate::webservices::{
     CreateCtidRequest, CreateCtidResponse, CreateTraderRequest, CreateTraderResponse,
@@ -28,7 +28,7 @@ impl RegisterUserFlow {
     /// 3. Link the new account to the cTID (API call 5.2).
     pub async fn execute<T: WebservicesApiConfig>(
         self,
-        rest_client: &WebservicesClient<T>,
+        rest_client: &WebservicesApiClient<T>,
     ) -> Result<RegisterData, Error> {
         let create_ctid_resp = rest_client
             .create_ctid(&CreateCtidRequest {
