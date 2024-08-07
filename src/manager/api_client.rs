@@ -73,7 +73,7 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
     }
 
     pub async fn disconnect(&self) {
-        let tcp_client = &*self.tcp_client.lock().await;
+        let tcp_client = self.tcp_client.lock().await.take();
 
         if let Some(tcp_client) = tcp_client {
             tcp_client.stop().await;
