@@ -1,7 +1,7 @@
 use chrono::{Duration, TimeDelta, Utc};
 use ctrader_connector::models::ManagerCreds;
 use ctrader_connector::utils::generate_password_hash;
-use ctrader_connector::webservices::api_client::{WebservicesApiConfig, WebservicesApiClient};
+use ctrader_connector::webservices::api_client::{WebservicesApiClient, WebservicesApiConfig};
 use ctrader_connector::webservices::errors::Error;
 use ctrader_connector::webservices::models::CreateCtidRequest;
 use ctrader_connector::webservices::register_user_flow::{RegisterData, RegisterUserFlow};
@@ -55,7 +55,10 @@ pub async fn get_groups(rest_client: &WebservicesApiClient<ExampleWebservicesApi
     println!("{:?}", resp)
 }
 
-pub async fn get_trader(rest_client: &WebservicesApiClient<ExampleWebservicesApiConfig>, login: i64) {
+pub async fn get_trader(
+    rest_client: &WebservicesApiClient<ExampleWebservicesApiConfig>,
+    login: i64,
+) {
     let resp = rest_client.get_trader(login).await;
 
     println!("{:?}", resp);
@@ -125,14 +128,20 @@ pub async fn update_access_rights(
     println!("{:?}", resp)
 }
 
-pub async fn get_opened_positions(rest_client: &WebservicesApiClient<ExampleWebservicesApiConfig>, login: Option<i64>) {
+pub async fn get_opened_positions(
+    rest_client: &WebservicesApiClient<ExampleWebservicesApiConfig>,
+    login: Option<i64>,
+) {
     let request = GetOpenedPositionsRequest { login };
     let resp = rest_client.get_opened_positions(&request).await;
 
     println!("{:?}", resp)
 }
 
-pub async fn get_closed_positions(rest_client: &WebservicesApiClient<ExampleWebservicesApiConfig>, login: Option<i64>) {
+pub async fn get_closed_positions(
+    rest_client: &WebservicesApiClient<ExampleWebservicesApiConfig>,
+    login: Option<i64>,
+) {
     let date = DateTimeAsMicroseconds::from_str("2024-07-30T17:47:50.545Z")
         .unwrap()
         .to_chrono_utc();
@@ -173,7 +182,9 @@ pub async fn deposit(rest_client: &WebservicesApiClient<ExampleWebservicesApiCon
     println!("{:?}", result)
 }
 
-pub async fn register(rest_client: &WebservicesApiClient<ExampleWebservicesApiConfig>) -> Result<RegisterData, Error> {
+pub async fn register(
+    rest_client: &WebservicesApiClient<ExampleWebservicesApiConfig>,
+) -> Result<RegisterData, Error> {
     let flow = RegisterUserFlow {
         user_email: get_test_email(),
         broker_name: std::env::var("CTRADER_BROKER_NAME").unwrap(),
@@ -245,7 +256,11 @@ pub async fn link_ctid(rest_client: &WebservicesApiClient<ExampleWebservicesApiC
     println!("{:?}", resp)
 }
 
-pub async fn make_deposit(rest_client: &WebservicesApiClient<ExampleWebservicesApiConfig>, login: i64, precise_amount: f64) {
+pub async fn make_deposit(
+    rest_client: &WebservicesApiClient<ExampleWebservicesApiConfig>,
+    login: i64,
+    precise_amount: f64,
+) {
     let request = UpdateTraderBalanceRequest {
         comment: None,
         external_id: None,
@@ -290,7 +305,11 @@ pub struct MockRequest {
     pub login: Option<u64>,
 }
 
-pub async fn get_closed_parallel(rest_client: &WebservicesApiClient<ExampleWebservicesApiConfig>, login: i64, days: i64) {
+pub async fn get_closed_parallel(
+    rest_client: &WebservicesApiClient<ExampleWebservicesApiConfig>,
+    login: i64,
+    days: i64,
+) {
     let days_period = 1;
     let num_requests = days / days_period;
     let max_concurrent_requests = 10;

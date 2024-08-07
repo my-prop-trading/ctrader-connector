@@ -1,5 +1,5 @@
 use crate::utils::generate_password_hash;
-use crate::webservices::api_client::{WebservicesApiConfig, WebservicesApiClient};
+use crate::webservices::api_client::{WebservicesApiClient, WebservicesApiConfig};
 use crate::webservices::errors::Error;
 use crate::webservices::{
     CreateCtidRequest, CreateCtidResponse, CreateTraderRequest, CreateTraderResponse,

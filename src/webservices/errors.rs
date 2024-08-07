@@ -25,4 +25,3 @@ pub enum WebservicesErrorCode {
     #[serde(rename = "TRADER_NOT_FOUND")]
     TraderNotFound,
 }
-
