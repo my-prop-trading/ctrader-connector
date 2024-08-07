@@ -47,11 +47,11 @@ impl<C: WebservicesApiConfig> WebservicesApiClient<C> {
         }
     }
 
-    pub async fn clear_token(&self) {
+    pub fn clear_token(&self) {
         let _ = self.auth_token.write().unwrap().take();
     }
 
-    pub async fn is_authorized(&self) -> bool {
+    pub fn is_authorized(&self) -> bool {
         self.auth_token.read().unwrap().is_some()
     }
 
