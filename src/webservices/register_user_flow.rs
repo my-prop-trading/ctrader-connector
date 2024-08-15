@@ -20,6 +20,7 @@ pub struct RegisterUserFlow {
     pub first_name: Option<String>,
     pub last_name: Option<String>,
     pub swap_free: Option<bool>,
+    pub description: Option<String>,
 }
 
 impl RegisterUserFlow {
@@ -51,7 +52,7 @@ impl RegisterUserFlow {
                 leverage_in_cents: self.leverage_in_cents,
                 total_margin_calculation_type: TotalMarginCalculationType::Max,
                 contact_details: None,
-                description: None,
+                description: self.description,
                 is_limited_risk: None,
                 name: self.first_name,
                 last_name: self.last_name,

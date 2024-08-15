@@ -196,6 +196,7 @@ pub async fn register(
         first_name: None,
         last_name: None,
         swap_free: None,
+        description: None,
     };
     let result = flow.execute(rest_client).await;
 
