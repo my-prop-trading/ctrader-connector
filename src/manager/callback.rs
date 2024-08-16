@@ -133,7 +133,7 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
         let Ok(message) = message else {
             let process = "ManagerApiCallback.payload";
             let msg = format!("Failed to parse proto: {}", message.unwrap_err());
-            self.logger.write_error(process.into(), msg, None);
+            self.logger.write_info(process.into(), msg, None);
             return;
         };
 
