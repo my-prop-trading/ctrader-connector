@@ -453,7 +453,7 @@ pub struct TraderModel {
     #[serde(rename = "totalMarginCalculationType")]
     pub total_margin_calculation_type: String,
     #[serde(rename = "brokerName")]
-    pub broker_name: String,
+    pub broker_name: Option<String>,
     #[serde(rename = "frenchRisk")]
     pub french_risk: bool,
     #[serde(rename = "isLimitedRisk")]
