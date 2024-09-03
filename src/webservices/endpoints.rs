@@ -1,5 +1,6 @@
 use http::Method;
 
+#[derive(Clone, Copy, Debug)]
 pub enum WebservicesApiEndpoint {
     CreateManagerToken,
     CreateCtid,

@@ -195,7 +195,7 @@ impl<C: WebservicesApiConfig> WebservicesApiClient<C> {
         let (builder, url, request) = self.get_builder(&base_url, endpoint, request, &token)?;
         let response = builder.send().await;
 
-        handle_json(response?, request, &url).await
+        handle_json(response?, request, &url, endpoint.get_http_method()).await
     }
 
     pub async fn send<R: Serialize>(
@@ -208,7 +208,7 @@ impl<C: WebservicesApiConfig> WebservicesApiClient<C> {
         let (builder, url, request) = self.get_builder(&base_url, endpoint, request, &token)?;
         let response = builder.send().await;
 
-        handle_text(response?, &request, &url).await
+        handle_text(response?, &request, &url, endpoint.get_http_method()).await
     }
 
     fn get_builder<R: Serialize>(
@@ -297,8 +297,9 @@ async fn handle_json<T: DeserializeOwned + Debug>(
     response: Response,
     request_json: Option<String>,
     request_url: &str,
+    request_method: Method,
 ) -> Result<T, Error> {
-    let text = handle_text(response, &request_json, request_url).await?;
+    let text = handle_text(response, &request_json, request_url, request_method).await?;
     let result: Result<T, _> = serde_json::from_str(&text);
 
     let Ok(body) = result else {
@@ -317,35 +318,36 @@ async fn handle_text(
     response: Response,
     request_json: &Option<String>,
     request_url: &str,
+    request_method: Method,
 ) -> Result<String, Error> {
     match response.status() {
         StatusCode::OK | StatusCode::CREATED | StatusCode::NO_CONTENT => {
             let result: Result<String, _> = response.text().await;
 
             let Ok(text) = result else {
-                bail!(format!("Failed to read response body. Url {request_url}"));
+                bail!(format!("Failed to read response body. Url: {request_method:?} {request_url}"));
             };
 
             Ok(text)
         }
         StatusCode::INTERNAL_SERVER_ERROR => {
-            bail!(format!("Internal Server Error. Url: {request_url}"));
+            bail!(format!("Internal Server Error. Url: {request_method:?} {request_url}"));
         }
         StatusCode::SERVICE_UNAVAILABLE => {
-            bail!(format!("Service Unavailable. Url: {request_url}"));
+            bail!(format!("Service Unavailable. Url: {request_method:?} {request_url}"));
         }
         StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
-            bail!(format!("Unauthorized or forbidden. Url: {request_url}"));
+            bail!(format!("Unauthorized or forbidden. Url: {request_method:?} {request_url}"));
         }
         StatusCode::BAD_REQUEST => {
             let error = response.text().await?;
             bail!(format!(
-                "Received bad request status. Url: {request_url}. Request: {request_json:?}. Response: {error:?}"
+                "Received bad request status. Url: {request_method:?} {request_url}. Request: {request_json:?}. Response: {error:?}"
             ));
         }
         code => {
             let error = response.text().await?;
-            bail!(format!("Received response code: {code:?}. Url: {request_url}. Request: {request_json:?} Response: {error:?}"));
+            bail!(format!("Received response code: {code:?}. Url: {request_method:?} {request_url}. Request: {request_json:?} Response: {error:?}"));
         }
     }
 }
