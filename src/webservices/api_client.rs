@@ -14,9 +14,8 @@ use crate::webservices::{
     UpdateTraderRequest,
 };
 use error_chain::bail;
+use flurl::{FlUrl, FlUrlResponse};
 use http::{Method, StatusCode};
-use reqwest::header::{HeaderMap, HeaderValue};
-use reqwest::{RequestBuilder, Response};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::fmt::Debug;
@@ -32,7 +31,6 @@ pub trait WebservicesApiConfig {
 /// updates of users and trading accounts, and performing deposits and withdrawals to those accounts.
 pub struct WebservicesApiClient<C: WebservicesApiConfig> {
     config: C,
-    inner_client: reqwest::Client,
     creds: Arc<dyn ManagerCreds + Send + Sync>,
     auth_token: std::sync::RwLock<Option<String>>,
 }
@@ -41,7 +39,6 @@ impl<C: WebservicesApiConfig> WebservicesApiClient<C> {
     pub fn new(config: C, creds: Arc<dyn ManagerCreds + Send + Sync>) -> Self {
         Self {
             config,
-            inner_client: reqwest::Client::new(),
             creds,
             auth_token: std::sync::RwLock::new(None),
         }
@@ -185,72 +182,118 @@ impl<C: WebservicesApiConfig> WebservicesApiClient<C> {
         self.send_deserialized(endpoint, Some(&request)).await
     }
 
-    pub async fn send_deserialized<R: Serialize, T: DeserializeOwned + Debug>(
+    pub async fn send_deserialized<R: Serialize + Debug, T: DeserializeOwned + Debug>(
         &self,
         endpoint: WebservicesApiEndpoint,
         request: Option<&R>,
     ) -> Result<T, Error> {
-        let token = self.get_token_cloned();
-        let base_url = self.config.get_url().await;
-        let (builder, url, request) = self.get_builder(&base_url, endpoint, request, &token)?;
-        let response = builder.send().await;
-
-        handle_json(response?, request, &url, endpoint.get_http_method()).await
+        self.send_flurl_deserialized(endpoint, request).await
     }
 
-    pub async fn send<R: Serialize>(
+    pub async fn send<R: Serialize + Debug>(
         &self,
         endpoint: WebservicesApiEndpoint,
         request: Option<&R>,
     ) -> Result<String, Error> {
-        let token = self.get_token_cloned();
-        let base_url = self.config.get_url().await;
-        let (builder, url, request) = self.get_builder(&base_url, endpoint, request, &token)?;
-        let response = builder.send().await;
-
-        handle_text(response?, &request, &url, endpoint.get_http_method()).await
+        self.send_flurl(endpoint, request).await
     }
 
-    fn get_builder<R: Serialize>(
+    async fn send_flurl_deserialized<R: Serialize + Debug, T: DeserializeOwned + Debug>(
         &self,
-        base_url: &str,
         endpoint: WebservicesApiEndpoint,
         request: Option<&R>,
-        token: &Option<String>,
-    ) -> Result<(RequestBuilder, String, Option<String>), Error> {
-        let headers = self.build_headers();
-        let http_method = endpoint.get_http_method();
-        let mut request_json = None;
+    ) -> Result<T, Error> {
+        let response = self.send_flurl(endpoint, request).await?;
+        let result: Result<T, _> = serde_json::from_str(&response);
 
-        let url = if http_method == Method::GET {
-            let query_string = serde_qs::to_string(&request).expect("must be valid model");
-            self.build_full_url(base_url, &endpoint, Some(query_string), token)
-        } else {
-            self.build_full_url(base_url, &endpoint, None, token)
+        let Ok(body) = result else {
+            let msg = format!(
+                "Failed to deserialize. Url: {:?} {:?}. Request: {:?}. Body: {}",
+                endpoint.get_http_method(),
+                String::from(&endpoint),
+                request,
+                response
+            );
+            return Err(msg.into());
         };
 
-        let mut builder = self.inner_client.request(http_method, &url);
+        Ok(body)
+    }
+
+    async fn send_flurl<R: Serialize + Debug>(
+        &self,
+        endpoint: WebservicesApiEndpoint,
+        request: Option<&R>,
+    ) -> Result<String, Error> {
+        let mut request_json = None;
 
         if let Some(request) = request {
             let body = serde_json::to_string(request)?;
             request_json = Some(body.clone());
-            builder = builder.body(body);
         }
 
-        Ok((builder.headers(headers), url, request_json))
+        let request_bytes: Option<Vec<u8>> = if let Some(request) = request {
+            Some(serde_json::to_string(request)?.into_bytes())
+        } else {
+            None
+        };
+        let (flurl, url) = self.build_flurl(endpoint, request).await?;
+        let http_method = endpoint.get_http_method();
+
+        let result = if http_method == Method::GET {
+            flurl.get().await
+        } else if http_method == Method::POST {
+            flurl.post(request_bytes).await
+        } else if http_method == Method::PUT {
+            flurl.put(request_bytes).await
+        } else if http_method == Method::PATCH {
+            flurl.patch(request_bytes).await
+        } else if http_method == Method::DELETE {
+            flurl.delete().await
+        } else {
+            panic!("not implemented");
+        };
+
+        let Ok(resp) = result else {
+            return Err(format!(
+                "FlUrl failed to receive_body: Url: {}. Request: {:?}. {:?}",
+                url,
+                request_json,
+                result.unwrap_err()
+            )
+            .into());
+        };
+
+        handle_flurl_text(resp, &request_json, &url, endpoint.get_http_method()).await
     }
 
-    fn build_headers(&self) -> HeaderMap {
-        let mut custom_headers = HeaderMap::new();
+    pub async fn build_flurl<R: Serialize>(
+        &self,
+        endpoint: WebservicesApiEndpoint,
+        request: Option<&R>,
+    ) -> Result<(FlUrl, String), Error> {
+        let token = self.get_token_cloned();
+        let base_url = self.config.get_url().await;
+        let http_method = endpoint.get_http_method();
+
+        let url = if http_method == Method::GET {
+            let query_string = serde_qs::to_string(&request).expect("must be valid model");
+            self.build_full_url(&base_url, &endpoint, Some(query_string), &token)
+        } else {
+            self.build_full_url(&base_url, &endpoint, None, &token)
+        };
+
+        let flurl = self.add_headers(FlUrl::new(&url));
+
+        Ok((flurl, url))
+    }
+
+    fn add_headers(&self, flurl: FlUrl) -> FlUrl {
         let json_content_str = "application/json";
 
-        custom_headers.insert(
-            "Content-Type",
-            HeaderValue::from_str(json_content_str).unwrap(),
-        );
-        custom_headers.insert("Accept", HeaderValue::from_str(json_content_str).unwrap());
-
-        custom_headers
+        flurl
+            .with_header("Content-Type", json_content_str)
+            .with_header("Accept", json_content_str)
     }
 
     pub fn build_query_string(&self, params: Vec<(&str, &str)>) -> String {
@@ -293,60 +336,46 @@ impl<C: WebservicesApiConfig> WebservicesApiClient<C> {
     }
 }
 
-async fn handle_json<T: DeserializeOwned + Debug>(
-    response: Response,
-    request_json: Option<String>,
-    request_url: &str,
-    request_method: Method,
-) -> Result<T, Error> {
-    let text = handle_text(response, &request_json, request_url, request_method).await?;
-    let result: Result<T, _> = serde_json::from_str(&text);
-
-    let Ok(body) = result else {
-        bail!(
-            "Failed to deserialize body. Url: {}.  Error: {:?}. Body: {}",
-            request_url,
-            result.unwrap_err(),
-            text
-        );
-    };
-
-    Ok(body)
-}
-
-async fn handle_text(
-    response: Response,
+async fn handle_flurl_text(
+    response: FlUrlResponse,
     request_json: &Option<String>,
     request_url: &str,
     request_method: Method,
 ) -> Result<String, Error> {
-    match response.status() {
-        StatusCode::OK | StatusCode::CREATED | StatusCode::NO_CONTENT => {
-            let result: Result<String, _> = response.text().await;
+    let status_code = StatusCode::from_u16(response.get_status_code()).unwrap();
+    let result = response.receive_body().await;
 
-            let Ok(text) = result else {
-                bail!(format!("Failed to read response body. Url: {request_method:?} {request_url}"));
-            };
+    let Ok(body_bytes) = result else {
+        return Err(format!("FlUrl failed to receive_body: {:?}", result.unwrap_err()).into());
+    };
 
-            Ok(text)
-        }
+    let body_str = String::from_utf8(body_bytes).unwrap();
+
+    match status_code {
+        StatusCode::OK | StatusCode::CREATED | StatusCode::NO_CONTENT => Ok(body_str),
         StatusCode::INTERNAL_SERVER_ERROR => {
-            bail!(format!("Internal Server Error. Url: {request_method:?} {request_url}"));
+            bail!(format!(
+                "Internal Server Error. Url: {request_method:?} {request_url}"
+            ));
         }
         StatusCode::SERVICE_UNAVAILABLE => {
-            bail!(format!("Service Unavailable. Url: {request_method:?} {request_url}"));
+            bail!(format!(
+                "Service Unavailable. Url: {request_method:?} {request_url}"
+            ));
         }
         StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
-            bail!(format!("Unauthorized or forbidden. Url: {request_method:?} {request_url}"));
+            bail!(format!(
+                "Unauthorized or forbidden. Url: {request_method:?} {request_url}"
+            ));
         }
         StatusCode::BAD_REQUEST => {
-            let error = response.text().await?;
+            let error = body_str;
             bail!(format!(
                 "Received bad request status. Url: {request_method:?} {request_url}. Request: {request_json:?}. Response: {error:?}"
             ));
         }
         code => {
-            let error = response.text().await?;
+            let error = body_str;
             bail!(format!("Received response code: {code:?}. Url: {request_method:?} {request_url}. Request: {request_json:?} Response: {error:?}"));
         }
     }
