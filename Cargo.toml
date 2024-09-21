@@ -20,7 +20,6 @@ futures = "*"
 futures-util = { version = "*", default-features = false }
 futures-core = { version = "*", default-features = false }
 futures-channel = "*"
-reqwest = { version = "*", features = ["json"] }
 error-chain = { version = "0.12.4", default-features = false }
 serde_qs = "*"
 chrono = "*"
@@ -30,6 +29,7 @@ strum = { version = "0.26", features = ["derive"] }
 csv = "1.3.0"
 prost = "0.13.1"
 tonic = "0.12.1"
+flurl = { tag = "0.5.3", git = "https://github.com/MyJetTools/fl-url.git" }
 
 [build-dependencies]
 tonic-build = { version = "*", features = ["prost"] }
