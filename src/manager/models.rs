@@ -1,8 +1,8 @@
 use crate::manager::common_messages_external::{ProtoErrorRes, ProtoMessage};
 use crate::manager::cs_messages_external::{
-    ProtoCsPayloadType, ProtoExecutionEvent, ProtoManagerAuthRes, ProtoOrderDetailsRes,
-    ProtoOrderErrorEvent, ProtoTraderChangedEvent, ProtoTraderListRes, ProtoTraderLogonEvent,
-    ProtoTraderLogoutEvent,
+    ProtoBalanceHistoryListRes, ProtoCsPayloadType, ProtoExecutionEvent, ProtoManagerAuthRes,
+    ProtoOrderDetailsRes, ProtoOrderErrorEvent, ProtoTraderChangedEvent, ProtoTraderListRes,
+    ProtoTraderLogonEvent, ProtoTraderLogoutEvent,
 };
 
 #[derive(Debug, Clone)]
@@ -22,6 +22,7 @@ pub enum ManagerApiResponse {
     ManagerAuthRes(ProtoManagerAuthRes),
     TraderListRes(ProtoTraderListRes),
     OrderDetailsRes(ProtoOrderDetailsRes),
+    BalanceHistoryRes(ProtoBalanceHistoryListRes),
 }
 
 #[derive(Debug, Clone)]
@@ -179,7 +180,14 @@ impl ManagerApiMessage {
             ProtoCsPayloadType::ProtoManagerListReq => {}
             ProtoCsPayloadType::ProtoManagerListRes => {}
             ProtoCsPayloadType::ProtoBalanceHistoryListReq => {}
-            ProtoCsPayloadType::ProtoBalanceHistoryListRes => {}
+            ProtoCsPayloadType::ProtoBalanceHistoryListRes => {
+                let payload = payload.as_ref().unwrap();
+                return Ok(Some(ManagerApiMessage::Response(
+                    ManagerApiResponse::BalanceHistoryRes(
+                        prost::Message::decode(&payload[..]).unwrap(),
+                    ),
+                )));
+            }
             ProtoCsPayloadType::ProtoExposureSymbolListReq => {}
             ProtoCsPayloadType::ProtoExposureSymbolListRes => {}
             ProtoCsPayloadType::ProtoServerSettingsReq => {}

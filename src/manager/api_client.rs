@@ -1,7 +1,5 @@
 use crate::manager::callback::{ManagerApiCallback, ManagerApiCallbackHandler};
-use crate::manager::cs_messages_external::{
-    ProtoCsPayloadType, ProtoManagerClosePositionReq, ProtoTraderListReq,
-};
+use crate::manager::cs_messages_external::{ProtoBalanceHistoryListReq, ProtoCsPayloadType, ProtoManagerClosePositionReq, ProtoTraderListReq};
 use crate::manager::serialization::ManagerApiSerializerFactory;
 use crate::models::ManagerCreds;
 use my_tcp_sockets::{TcpClient, TcpClientSocketSettings, TlsSettings};
@@ -98,6 +96,12 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
     pub async fn req_trader_list(&self, req: ProtoTraderListReq) -> Result<(), String> {
         self.inner_client
             .send(req, ProtoCsPayloadType::ProtoTraderListReq)
+            .await
+    }
+
+    pub async fn req_balance_history(&self, req: ProtoBalanceHistoryListReq) -> Result<(), String> {
+        self.inner_client
+            .send(req, ProtoCsPayloadType::ProtoBalanceHistoryListReq)
             .await
     }
 }
