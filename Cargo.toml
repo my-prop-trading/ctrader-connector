@@ -1,6 +1,6 @@
 [package]
 name = "ctrader-connector"
-version = "0.9.10"
+version = "0.10.0"
 edition = "2021"
 authors = ["gorin <mxmgorin@gmail.com>"]
 
@@ -14,12 +14,9 @@ serde = { version = "*", features = ["derive"] }
 serde_json = "*"
 serde_derive = "*"
 tokio = { version = "*", features = ["full"] }
-tokio-util = "*"
 async-trait = "*"
 futures = "*"
 futures-util = { version = "*", default-features = false }
-futures-core = { version = "*", default-features = false }
-futures-channel = "*"
 error-chain = { version = "0.12.4", default-features = false }
 serde_qs = "*"
 chrono = "*"
@@ -29,7 +26,7 @@ strum = { version = "0.26", features = ["derive"] }
 csv = "1.3.0"
 prost = "0.13.1"
 tonic = "0.12.1"
-flurl = { tag = "0.5.3", git = "https://github.com/MyJetTools/fl-url.git" }
+flurl = { tag = "0.6.1", git = "https://github.com/MyJetTools/fl-url.git" }
 
 [build-dependencies]
 tonic-build = { version = "*", features = ["prost"] }
