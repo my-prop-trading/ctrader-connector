@@ -10,9 +10,11 @@ use rust_extensions::Logger;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
+use flurl::my_tls::tokio_rustls::rustls;
 
 #[tokio::main]
 async fn main() {
+    rustls::crypto::ring::default_provider().install_default().expect("Failed to install rustls crypto provider");
     let creds = Arc::new(ExampleManagerCreds {
         password: std::env::var("CTRADER_PASSWORD").unwrap(),
         login: std::env::var("CTRADER_LOGIN").unwrap().parse().unwrap(),
