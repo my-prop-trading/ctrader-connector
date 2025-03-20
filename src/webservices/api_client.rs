@@ -208,7 +208,8 @@ impl<C: WebservicesApiConfig> WebservicesApiClient<C> {
 
         let Ok(body) = result else {
             let msg = format!(
-                "Failed to deserialize. Url: {:?} {:?}. Request: {:?}. Body: {}",
+                "Failed to deserialize: {:?}. Url: {:?} {:?}. Request: {:?}. Body: {}",
+                result,
                 endpoint.get_http_method(),
                 String::from(&endpoint),
                 request,

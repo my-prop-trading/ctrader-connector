@@ -11,9 +11,9 @@ use ctrader_connector::webservices::{
     TraderAccountType, UpdateTraderBalanceRequest, UpdateTraderRequest,
 };
 use futures_util::future::try_join_all;
-use rust_extensions::date_time::DateTimeAsMicroseconds;
 use std::ops::Sub;
 use std::sync::Arc;
+use rust_extensions::date_time::DateTimeAsMicroseconds;
 use tokio::sync::Semaphore;
 use tokio::time::sleep;
 use uuid::Uuid;
@@ -33,13 +33,13 @@ async fn main() {
     //let data = register(&rest_client).await.unwrap();
     //make_deposit(&rest_client, data.trader.login, 1000.0).await;
     //get_opened_positions(&rest_client, Some(3238431)).await;
-    //get_closed_positions(&rest_client, Some(3238505)).await;
+    //get_closed_positions(&rest_client, Some(3275496)).await;
     //update_group(&rest_client, 3238431, "enabled_accounts").await;
     //update_access_rights(&rest_client, 3238431, TraderAccessRights::FullAccess).await;
-    get_trader(&rest_client, 3238507).await;
+    //get_trader(&rest_client, 3238507).await;
     //get_groups(&rest_client).await;
     //get_symbols(&rest_client).await;
-    //get_traders(&rest_client).await;
+    get_traders(&rest_client).await;
     //get_closed_parallel(&rest_client, 3238431, 300).await;
 }
 
@@ -142,11 +142,9 @@ pub async fn get_closed_positions(
     rest_client: &WebservicesApiClient<ExampleWebservicesApiConfig>,
     login: Option<i64>,
 ) {
-    let date = DateTimeAsMicroseconds::from_str("2024-07-30T17:47:50.545Z")
-        .unwrap()
-        .to_chrono_utc();
+
     let request = GetClosedPositionsRequest {
-        from: date + TimeDelta::microseconds(1),
+        from: Utc::now() - TimeDelta::days(2),
         to: Utc::now(),
         login,
     };
@@ -157,13 +155,19 @@ pub async fn get_closed_positions(
 
 pub async fn get_traders(rest_client: &WebservicesApiClient<ExampleWebservicesApiConfig>) {
     let request = GetTradersRequest {
-        from: Utc::now().sub(TimeDelta::try_days(600).unwrap()),
-        to: Utc::now(),
+        from: DateTimeAsMicroseconds::from_str("2022-06-24T08:04:45.114189745Z").unwrap().to_chrono_utc(),
+        to: DateTimeAsMicroseconds::from_str("2025-03-20T08:04:45.114190497Z").unwrap().to_chrono_utc(),
         group_id: None,
     };
     let resp = rest_client.get_traders(&request).await;
 
-    println!("{:?}", resp)
+    if resp.is_err() {
+        println!("Err")
+    } else {
+        println!("Ok");
+    }
+    
+    //println!("{:?}", resp)
 }
 
 pub async fn deposit(rest_client: &WebservicesApiClient<ExampleWebservicesApiConfig>) {
@@ -172,7 +176,7 @@ pub async fn deposit(rest_client: &WebservicesApiClient<ExampleWebservicesApiCon
             comment: None,
             external_id: None,
             external_note: None,
-            login: 3238402,
+            login: 3275496,
             precise_amount: 1.0,
             source: None,
             change_type: BalanceChangeType::Deposit,
