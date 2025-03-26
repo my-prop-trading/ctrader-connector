@@ -284,7 +284,8 @@ impl<C: WebservicesApiConfig> WebservicesApiClient<C> {
             self.build_full_url(&base_url, &endpoint, None, &token)
         };
 
-        let flurl = self.add_headers(FlUrl::new(&url));
+        let flurl = self.add_headers(FlUrl::new(&url))
+            .do_not_reuse_connection();
 
         Ok((flurl, url))
     }
