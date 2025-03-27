@@ -11,7 +11,6 @@ use ctrader_connector::webservices::{
     TraderAccountType, UpdateTraderBalanceRequest, UpdateTraderRequest,
 };
 use futures_util::future::try_join_all;
-use std::ops::Sub;
 use std::sync::Arc;
 use rust_extensions::date_time::DateTimeAsMicroseconds;
 use tokio::sync::Semaphore;
@@ -28,7 +27,7 @@ async fn main() {
         url: std::env::var("CTRADER_URL").unwrap(),
     };
 
-    let rest_client = WebservicesApiClient::new(config, creds);
+    let rest_client = WebservicesApiClient::new(config, creds, false);
     rest_client.authorize().await.unwrap();
     //let data = register(&rest_client).await.unwrap();
     //make_deposit(&rest_client, data.trader.login, 1000.0).await;

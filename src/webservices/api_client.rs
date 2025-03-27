@@ -14,7 +14,7 @@ use crate::webservices::{
     UpdateTraderRequest,
 };
 use error_chain::bail;
-use flurl::{FlUrl, FlUrlResponse};
+use flurl::{FlUrl, FlUrlMode, FlUrlResponse};
 use http::{Method, StatusCode};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -33,14 +33,16 @@ pub struct WebservicesApiClient<C: WebservicesApiConfig> {
     config: C,
     creds: Arc<dyn ManagerCreds + Send + Sync>,
     auth_token: std::sync::RwLock<Option<String>>,
+    use_http2: bool,
 }
 
 impl<C: WebservicesApiConfig> WebservicesApiClient<C> {
-    pub fn new(config: C, creds: Arc<dyn ManagerCreds + Send + Sync>) -> Self {
+    pub fn new(config: C, creds: Arc<dyn ManagerCreds + Send + Sync>, use_http2: bool) -> Self {
         Self {
             config,
             creds,
             auth_token: std::sync::RwLock::new(None),
+            use_http2,
         }
     }
 
@@ -284,7 +286,12 @@ impl<C: WebservicesApiConfig> WebservicesApiClient<C> {
             self.build_full_url(&base_url, &endpoint, None, &token)
         };
 
-        let flurl = self.add_headers(FlUrl::new(&url));
+        let flurl = if self.use_http2 {
+            FlUrl::new(&url).update_mode(FlUrlMode::H2)
+        } else {
+            FlUrl::new(&url)
+        };
+        let flurl = self.add_headers(flurl);
 
         Ok((flurl, url))
     }
