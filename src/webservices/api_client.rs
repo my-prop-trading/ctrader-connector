@@ -166,12 +166,12 @@ impl<C: WebservicesApiConfig> WebservicesApiClient<C> {
     }
 
     /// Creates a token and stores it internally for the next requests
-    pub async fn authorize(&self) -> Result<(), Error> {
+    pub async fn authorize(&self) -> Result<String, Error> {
         let resp = self.create_token().await?;
         let mut token_lock = self.auth_token.write().unwrap();
-        *token_lock = Some(resp.token);
+        *token_lock = Some(resp.token.clone());
 
-        Ok(())
+        Ok(resp.token)
     }
 
     pub async fn create_token(&self) -> Result<CreateCtraderManagerTokenResponse, Error> {
