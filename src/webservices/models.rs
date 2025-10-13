@@ -606,7 +606,7 @@ pub struct OpenedPositionModel {
     #[serde(rename = "bookType")]
     pub book_type: BookType,
     #[serde(rename = "stake")]
-    pub stake: f64,
+    pub stake: Option<f64>,
     #[serde(rename = "spreadBetting")]
     pub spread_betting: bool,
     #[serde(rename = "usedMargin")]

@@ -103,9 +103,7 @@ impl<C: WebservicesApiConfig> WebservicesApiClient<C> {
         request: &GetClosedPositionsRequest,
     ) -> Result<Vec<ClosedPositionModel>, Error> {
         let endpoint = WebservicesApiEndpoint::GetClosedPositions;
-        let data = self.send(endpoint, Some(request)).await?;
-
-        parse_positions(&data)
+        self.send_deserialized(endpoint, Some(request)).await
     }
 
     /// Gets either a list of all open positions or a list of open positions originated by
@@ -115,9 +113,7 @@ impl<C: WebservicesApiConfig> WebservicesApiClient<C> {
         request: &GetOpenedPositionsRequest,
     ) -> Result<Vec<OpenedPositionModel>, Error> {
         let endpoint = WebservicesApiEndpoint::GetOpenedPositions;
-        let data = self.send(endpoint, Some(request)).await?;
-
-        parse_positions(&data)
+        self.send_deserialized(endpoint, Some(request)).await
     }
 
     /// Changes the balance of a trader entity (including allocating/removing credit).
