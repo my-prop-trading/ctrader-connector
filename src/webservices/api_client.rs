@@ -14,6 +14,7 @@ use crate::webservices::{
     UpdateTraderRequest,
 };
 use error_chain::bail;
+use flurl::body::FlUrlBody;
 use flurl::{FlUrl, FlUrlMode, FlUrlResponse};
 use http::{Method, StatusCode};
 use serde::de::DeserializeOwned;
@@ -235,8 +236,8 @@ impl<C: WebservicesApiConfig> WebservicesApiClient<C> {
             request_json = Some(body.clone());
         }
 
-        let request_bytes: Option<Vec<u8>> = if let Some(request) = request {
-            Some(serde_json::to_string(request)?.into_bytes())
+        let body: Option<_> = if let Some(request) = request {
+            Some(FlUrlBody::as_json(&request))
         } else {
             None
         };
@@ -246,11 +247,11 @@ impl<C: WebservicesApiConfig> WebservicesApiClient<C> {
         let result = if http_method == Method::GET {
             flurl.get().await
         } else if http_method == Method::POST {
-            flurl.post(request_bytes).await
+            flurl.post(body.unwrap()).await
         } else if http_method == Method::PUT {
-            flurl.put(request_bytes).await
+            flurl.put(body.unwrap()).await
         } else if http_method == Method::PATCH {
-            flurl.patch(request_bytes).await
+            flurl.patch(body.unwrap()).await
         } else if http_method == Method::DELETE {
             flurl.delete().await
         } else {
