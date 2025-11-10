@@ -20,6 +20,7 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::fmt::Debug;
 use std::sync::Arc;
+use std::time::Duration;
 
 #[async_trait::async_trait]
 pub trait WebservicesApiConfig {
@@ -34,15 +35,17 @@ pub struct WebservicesApiClient<C: WebservicesApiConfig> {
     creds: Arc<dyn ManagerCreds + Send + Sync>,
     auth_token: std::sync::RwLock<Option<String>>,
     use_http2: bool,
+    timeout: Duration,
 }
 
 impl<C: WebservicesApiConfig> WebservicesApiClient<C> {
-    pub fn new(config: C, creds: Arc<dyn ManagerCreds + Send + Sync>, use_http2: bool) -> Self {
+    pub fn new(config: C, creds: Arc<dyn ManagerCreds + Send + Sync>, use_http2: bool, timeout: Duration) -> Self {
         Self {
             config,
             creds,
             auth_token: std::sync::RwLock::new(None),
             use_http2,
+            timeout,
         }
     }
 
@@ -287,6 +290,7 @@ impl<C: WebservicesApiConfig> WebservicesApiClient<C> {
         } else {
             FlUrl::new(&url)
         };
+        let flurl = flurl.set_timeout(self.timeout);
         let flurl = self.add_headers(flurl);
 
         Ok((flurl, url))
