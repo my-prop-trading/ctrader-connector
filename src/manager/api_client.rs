@@ -1,5 +1,5 @@
 use crate::manager::callback::{ManagerApiCallback, ManagerApiCallbackHandler};
-use crate::manager::cs_messages_external::{ProtoBalanceHistoryListReq, ProtoCsPayloadType, ProtoManagerClosePositionReq, ProtoTraderListReq};
+use crate::manager::cs_messages_external::{ProtoBalanceHistoryListReq, ProtoCsPayloadType, ProtoManagerClosePositionReq, ProtoOrderDetailsReq, ProtoTraderListReq};
 use crate::manager::serialization::ManagerApiSerializerFactory;
 use crate::models::ManagerCreds;
 use my_tcp_sockets::{TcpClient, TcpClientSocketSettings, TlsSettings};
@@ -104,7 +104,13 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
             .send(req, ProtoCsPayloadType::ProtoBalanceHistoryListReq)
             .await
     }
-}
+
+
+    pub async fn req_order_details(&self, req: ProtoOrderDetailsReq) -> Result<(), String> {
+        self.inner_client
+            .send(req, ProtoCsPayloadType::ProtoOrderDetailsReq)
+            .await
+    }}
 
 pub struct ManagerApiConfigWrapper {
     pub config: Arc<dyn ManagerApiConfig + Send + Sync + 'static>,
