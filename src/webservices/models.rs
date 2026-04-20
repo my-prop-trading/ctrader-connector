@@ -153,6 +153,11 @@ pub struct CreateTraderRequest {
     /// A flag determining whether the account is charged swaps (swapFree=true) or administrative fees (swapFree=false).
     #[serde(rename = "swapFree")]
     pub swap_free: Option<bool>,
+    /// The lifetime policy of the account. The following values are accepted:.
+    /// "UNLIMITED". The account does not expire.  
+    /// "LIMITED_CREATION_FREE". The account is a free account (not charged), and it expires after a limited period (up to a month).  
+    #[serde(rename = "accountLifetimeType")]
+    pub account_lifetime_type: AccountLifeTimeType,
 }
 
 #[derive(strum::Display, Debug, Clone, Serialize, Deserialize)]
@@ -204,6 +209,18 @@ pub enum TotalMarginCalculationType {
     #[strum(to_string = "NET")]
     #[serde(rename = "NET")]
     Net,
+}
+
+#[derive(strum::Display, Debug, Clone, Serialize, Deserialize)]
+pub enum AccountLifeTimeType {
+    /// The account does not expire.
+    #[strum(to_string = "UNLIMITED")]
+    #[serde(rename = "UNLIMITED")]
+    Unlimited,
+    /// The account is a free account (not charged), and it expires after a limited period (up to a month).  
+    #[strum(to_string = "LIMITED_CREATION_FREE")]
+    #[serde(rename = "LIMITED_CREATION_FREE")]
+    LimitedCreationFree,
 }
 
 #[derive(strum::Display, Debug, Clone, Serialize, Deserialize)]
