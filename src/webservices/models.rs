@@ -153,6 +153,11 @@ pub struct CreateTraderRequest {
     /// A flag determining whether the account is charged swaps (swapFree=true) or administrative fees (swapFree=false).
     #[serde(rename = "swapFree")]
     pub swap_free: Option<bool>,
+    /// The lifetime policy of the account. The following values are accepted:.
+    /// "UNLIMITED". The account does not expire.  
+    /// "LIMITED_CREATION_FREE". The account is a free account (not charged), and it expires after a limited period (up to a month).  
+    #[serde(rename = "accountLifetimeType")]
+    pub account_lifetime_type: AccountLifeTimeType,
 }
 
 #[derive(strum::Display, Debug, Clone, Serialize, Deserialize)]
@@ -207,6 +212,18 @@ pub enum TotalMarginCalculationType {
 }
 
 #[derive(strum::Display, Debug, Clone, Serialize, Deserialize)]
+pub enum AccountLifeTimeType {
+    /// The account does not expire.
+    #[strum(to_string = "UNLIMITED")]
+    #[serde(rename = "UNLIMITED")]
+    Unlimited = 0,
+    /// The account is a free account (not charged), and it expires after a limited period (up to a month).  
+    #[strum(to_string = "LIMITED_CREATION_FREE")]
+    #[serde(rename = "LIMITED_CREATION_FREE")]
+    LimitedCreationFree = 1,
+}
+
+#[derive(strum::Display, Debug, Clone, Serialize, Deserialize)]
 pub enum TraderAccountType {
     /// The account can open positions in both directions for the same symbol simultaneously.
     #[strum(to_string = "HEDGED")]
@@ -220,6 +237,18 @@ pub enum TraderAccountType {
     #[strum(to_string = "SPREAD_BETTING")]
     #[serde(rename = "SPREAD_BETTING")]
     SpreadBetting,
+}
+
+impl TryFrom<i64> for AccountLifeTimeType {
+    type Error = String;
+
+    fn try_from(value: i64) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(AccountLifeTimeType::Unlimited),
+            1 => Ok(AccountLifeTimeType::LimitedCreationFree),
+            _ => Err(format!("'{}' is not a valid value for AccountLifeTimeType", value)),
+        }
+    }
 }
 
 #[derive(strum::Display, Debug, Clone, Serialize, Deserialize)]

@@ -6,9 +6,7 @@ use ctrader_connector::webservices::errors::Error;
 use ctrader_connector::webservices::models::CreateCtidRequest;
 use ctrader_connector::webservices::register_user_flow::{RegisterData, RegisterUserFlow};
 use ctrader_connector::webservices::{
-    BalanceChangeType, CreateTraderRequest, GetClosedPositionsRequest, GetOpenedPositionsRequest,
-    GetTradersRequest, LinkCtidRequest, TotalMarginCalculationType, TraderAccessRights,
-    TraderAccountType, UpdateTraderBalanceRequest, UpdateTraderRequest,
+    AccountLifeTimeType, BalanceChangeType, CreateTraderRequest, GetClosedPositionsRequest, GetOpenedPositionsRequest, GetTradersRequest, LinkCtidRequest, TotalMarginCalculationType, TraderAccessRights, TraderAccountType, UpdateTraderBalanceRequest, UpdateTraderRequest
 };
 use futures_util::future::try_join_all;
 use rust_extensions::date_time::DateTimeAsMicroseconds;
@@ -204,6 +202,7 @@ pub async fn register(
         last_name: None,
         swap_free: None,
         description: None,
+        account_lifetime_type: 0,
     };
     let result = flow.execute(rest_client).await;
 
@@ -244,6 +243,7 @@ pub async fn create_trader(rest_client: &WebservicesApiClient<ExampleWebservices
         send_own_statement: None,
         send_statement_to_broker: None,
         swap_free: None,
+        account_lifetime_type: AccountLifeTimeType::Unlimited,
     };
     let resp = rest_client.create_trader(&request).await;
 

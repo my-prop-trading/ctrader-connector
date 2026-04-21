@@ -21,6 +21,7 @@ pub struct RegisterUserFlow {
     pub last_name: Option<String>,
     pub swap_free: Option<bool>,
     pub description: Option<String>,
+    pub account_lifetime_type: i64,
 }
 
 impl RegisterUserFlow {
@@ -61,6 +62,8 @@ impl RegisterUserFlow {
                 send_own_statement: None,
                 send_statement_to_broker: None,
                 swap_free: self.swap_free,
+                account_lifetime_type: self.account_lifetime_type
+                    .try_into().expect("Request contained an invalid enum discriminant"),
             })
             .await?;
 
