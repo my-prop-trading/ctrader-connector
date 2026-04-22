@@ -7,11 +7,12 @@ use crate::utils::generate_password_hash;
 use my_tcp_sockets::tcp_connection::TcpSocketConnection;
 use my_tcp_sockets::SocketEventCallback;
 use rust_extensions::Logger;
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 
-const PROCESS: &str = "ManagerApiCallback.payload";
+const PROCESS: &str = "ManagerApiCallback";
 
 #[async_trait::async_trait]
 pub trait ManagerApiCallbackHandler {
@@ -113,8 +114,9 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
     for ManagerApiCallback<T>
 {
     async fn connected(&mut self, connection: Arc<ManagerApiConnection>) {
+        let log_ctx = Some(HashMap::from([("ConnectionId".to_string(), connection.id.to_string())]));
         self.logger
-            .write_debug_info(PROCESS.into(), "Connected 1: received".into(), None);
+            .write_debug_info(PROCESS.into(), "Connected 1: received".into(), log_ctx.clone());
         let req = ProtoManagerAuthReq {
             payload_type: Some(ProtoCsPayloadType::ProtoManagerAuthReq as i32),
             plant_id: self.config_wrapper.config.get_plant_id().await,
@@ -130,7 +132,7 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
             client_msg_id: None,
         };
         self.logger
-            .write_debug_info(PROCESS.into(), "Connected 2: sending auth".into(), None);
+            .write_debug_info(PROCESS.into(), "Connected 2: sending auth".into(), log_ctx.clone());
 
         connection.send(&message).await;
         let mut current_connection = self.connection.write().await;
@@ -141,21 +143,26 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
         self.handler.on_connected().await;
 
         self.logger
-            .write_debug_info(PROCESS.into(), "Connected 3: finished".into(), None);
+            .write_debug_info(PROCESS.into(), "Connected 3: finished".into(), log_ctx);
     }
 
-    async fn disconnected(&mut self, _connection: Arc<ManagerApiConnection>) {
+    async fn disconnected(&mut self, connection: Arc<ManagerApiConnection>) {
+        let log_ctx = Some(HashMap::from([("ConnectionId".to_string(), connection.id.to_string())]));
+        self.logger
+            .write_debug_info(PROCESS.into(), "Disconnected: received".into(), log_ctx.clone());
         let mut current_connection = self.connection.write().await;
         *current_connection = None;
 
         drop(current_connection);
 
         self.handler.on_disconnected().await;
+        self.logger
+            .write_debug_info(PROCESS.into(), "Disconnected: finished".into(), log_ctx);
     }
 
     async fn payload(&mut self, _connection: &Arc<ManagerApiConnection>, contract: ProtoMessage) {
         self.logger
-            .write_debug_info(PROCESS.into(), "Payout received".into(), None);
+            .write_debug_info(PROCESS.into(), "Payload received".into(), None);
         let message = ManagerApiMessage::try_from_proto(contract);
 
         match message {
