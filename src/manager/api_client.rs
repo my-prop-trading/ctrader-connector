@@ -10,7 +10,7 @@ use std::time::Duration;
 pub struct ManagerApiClient<T: ManagerApiCallbackHandler + Send + Sync + 'static> {
     tcp_client: tokio::sync::Mutex<Option<TcpClient>>,
     logger: Arc<dyn Logger + Send + Sync + 'static>,
-    inner_client: Arc<ManagerApiCallback<T>>,
+    inner_client: ManagerApiCallback<T>,
     config_wrapper: Arc<ManagerApiConfigWrapper>,
 }
 
@@ -33,7 +33,7 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
         );
 
         Self {
-            inner_client: Arc::new(callback),
+            inner_client: callback,
             tcp_client: Default::default(),
             logger,
             config_wrapper,
@@ -55,7 +55,7 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
         tcp_client
             .start(
                 Arc::new(ManagerApiSerializerFactory::default()),
-                Arc::clone(&self.inner_client),
+                self.inner_client.clone(),
                 Arc::clone(&self.logger),
             )
             .await;

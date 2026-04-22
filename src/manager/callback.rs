@@ -24,9 +24,21 @@ pub type ManagerApiConnection =
 pub struct ManagerApiCallback<T: ManagerApiCallbackHandler + Send + Sync + 'static> {
     handler: Arc<T>,
     config_wrapper: Arc<ManagerApiConfigWrapper>,
-    connection: RwLock<Option<Arc<ManagerApiConnection>>>,
+    connection: Arc<RwLock<Option<Arc<ManagerApiConnection>>>>,
     wait_timeout: Duration,
     logger: Arc<dyn Logger + Send + Sync + 'static>,
+}
+
+impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> Clone for ManagerApiCallback<T> {
+    fn clone(&self) -> Self {
+        Self {
+            handler: self.handler.clone(),
+            config_wrapper: self.config_wrapper.clone(),
+            connection: self.connection.clone(),
+            wait_timeout: self.wait_timeout.clone(),
+            logger: self.logger.clone(),
+        }
+    }
 }
 
 impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T> {
@@ -39,7 +51,7 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T>
         ManagerApiCallback {
             handler,
             config_wrapper: config,
-            connection: RwLock::new(None),
+            connection: Arc::new(RwLock::new(None)),
             wait_timeout,
             logger,
         }
@@ -96,7 +108,7 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T>
 #[async_trait::async_trait]
 impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
     SocketEventCallback<ProtoMessage, ManagerApiSerializer, ManagerApiSerializerState>
-    for Arc<ManagerApiCallback<T>>
+    for ManagerApiCallback<T>
 {
     async fn connected(&mut self, connection: Arc<ManagerApiConnection>) {
         let req = ProtoManagerAuthReq {
