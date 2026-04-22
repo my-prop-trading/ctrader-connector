@@ -7,7 +7,7 @@ authors = ["gorin <mxmgorin@gmail.com>"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
 rust-extensions = { tag = "0.1.5", git = "https://github.com/MyJetTools/rust-extensions.git" }
-my-tcp-sockets = { tag = "0.1.12", git = "https://github.com/MyJetTools/my-tcp-sockets.git", features = ["with-tls"] }
+my-tcp-sockets = { git = "https://github.com/my-prop-trading/my-tcp-sockets.git", features = ["with-tls"] }
 
 http = "*"
 serde = { version = "*", features = ["derive"] }
