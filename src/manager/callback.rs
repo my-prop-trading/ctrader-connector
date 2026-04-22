@@ -116,13 +116,18 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
         connection.send(&message).await;
         let mut current_connection = self.connection.write().await;
         *current_connection = Some(connection.clone());
-        
+
+        drop(current_connection);
+
         self.handler.on_connected().await;
     }
 
     async fn disconnected(&mut self, _connection: Arc<ManagerApiConnection>) {
         let mut current_connection = self.connection.write().await;
         *current_connection = None;
+
+        drop(current_connection);
+
         self.handler.on_disconnected().await;
     }
 
