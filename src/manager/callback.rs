@@ -11,6 +11,8 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 
+const PROCESS: &str = "ManagerApiCallback.payload";
+
 #[async_trait::async_trait]
 pub trait ManagerApiCallbackHandler {
     async fn on_connected(&self);
@@ -111,6 +113,8 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
     for ManagerApiCallback<T>
 {
     async fn connected(&mut self, connection: Arc<ManagerApiConnection>) {
+        self.logger
+            .write_debug_info(PROCESS.into(), "Connected 1: received".into(), None);
         let req = ProtoManagerAuthReq {
             payload_type: Some(ProtoCsPayloadType::ProtoManagerAuthReq as i32),
             plant_id: self.config_wrapper.config.get_plant_id().await,
@@ -125,6 +129,9 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
             payload: Some(bytes),
             client_msg_id: None,
         };
+        self.logger
+            .write_debug_info(PROCESS.into(), "Connected 2: sending auth".into(), None);
+
         connection.send(&message).await;
         let mut current_connection = self.connection.write().await;
         *current_connection = Some(connection.clone());
@@ -132,6 +139,9 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
         drop(current_connection);
 
         self.handler.on_connected().await;
+
+        self.logger
+            .write_debug_info(PROCESS.into(), "Connected 3: finished".into(), None);
     }
 
     async fn disconnected(&mut self, _connection: Arc<ManagerApiConnection>) {
@@ -144,6 +154,8 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
     }
 
     async fn payload(&mut self, _connection: &Arc<ManagerApiConnection>, contract: ProtoMessage) {
+        self.logger
+            .write_debug_info(PROCESS.into(), "Payout received".into(), None);
         let message = ManagerApiMessage::try_from_proto(contract);
 
         match message {
@@ -152,9 +164,8 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
             }
             Ok(None) => {}
             Err(e) => {
-                let process = "ManagerApiCallback.payload";
                 let msg = format!("Failed to parse proto: {}", e);
-                self.logger.write_info(process.into(), msg, None);
+                self.logger.write_info(PROCESS.into(), msg, None);
             }
         }
     }
