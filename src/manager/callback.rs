@@ -96,9 +96,9 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T>
 #[async_trait::async_trait]
 impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
     SocketEventCallback<ProtoMessage, ManagerApiSerializer, ManagerApiSerializerState>
-    for Arc<ManagerApiCallback<T>>
+    for ManagerApiCallback<T>
 {
-    async fn connected(&mut self, connection: Arc<ManagerApiConnection>) {
+    async fn connected(&self, connection: Arc<ManagerApiConnection>) {
         let req = ProtoManagerAuthReq {
             payload_type: Some(ProtoCsPayloadType::ProtoManagerAuthReq as i32),
             plant_id: self.config_wrapper.config.get_plant_id().await,
@@ -122,7 +122,7 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
         self.handler.on_connected().await;
     }
 
-    async fn disconnected(&mut self, _connection: Arc<ManagerApiConnection>) {
+    async fn disconnected(&self, _connection: Arc<ManagerApiConnection>) {
         let mut current_connection = self.connection.write().await;
         *current_connection = None;
 
@@ -131,7 +131,7 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
         self.handler.on_disconnected().await;
     }
 
-    async fn payload(&mut self, _connection: &Arc<ManagerApiConnection>, contract: ProtoMessage) {
+    async fn payload(&self, _connection: &Arc<ManagerApiConnection>, contract: ProtoMessage) {
         let message = ManagerApiMessage::try_from_proto(contract);
 
         match message {
