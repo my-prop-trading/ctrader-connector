@@ -28,7 +28,7 @@ async fn main() {
     let rest_client =
         WebservicesApiClient::new(config, creds, false, std::time::Duration::from_secs(20));
     rest_client.authorize().await.unwrap();
-    //let data = register(&rest_client).await.unwrap();
+    let data = register(&rest_client).await.unwrap();
     //make_deposit(&rest_client, data.trader.login, 1000.0).await;
     //get_opened_positions(&rest_client, Some(3238431)).await;
     //get_closed_positions(&rest_client, Some(3275496)).await;
@@ -202,7 +202,7 @@ pub async fn register(
         last_name: None,
         swap_free: None,
         description: None,
-        account_lifetime_type: 0,
+        account_lifetime_type: 1,
     };
     let result = flow.execute(rest_client).await;
 
@@ -245,6 +245,7 @@ pub async fn create_trader(rest_client: &WebservicesApiClient<ExampleWebservices
         swap_free: None,
         account_lifetime_type: AccountLifeTimeType::Unlimited,
     };
+    println!("{:?}", request)
     let resp = rest_client.create_trader(&request).await;
 
     println!("{:?}", resp)
