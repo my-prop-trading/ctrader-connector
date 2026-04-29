@@ -100,6 +100,10 @@ impl TcpContract for ProtoMessage {
     fn is_pong(&self) -> bool {
         self.payload_type == ProtoPayloadType::PingRes as u32
     }
+
+    fn is_ping(&self) -> bool {
+        self.payload_type == ProtoCsPayloadType::PingReq as u32
+    }
 }
 
 #[derive(Default)]

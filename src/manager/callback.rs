@@ -102,7 +102,7 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiCallback<T>
             ));
         };
 
-        connection.send(&message).await;
+        connection.send(&message);
 
         Ok(())
     }
@@ -134,7 +134,7 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static>
         self.logger
             .write_debug_info(PROCESS.into(), "Connected 2: sending auth".into(), log_ctx.clone());
 
-        connection.send(&message).await;
+        connection.send(&message);
         let mut current_connection = self.connection.write().await;
         *current_connection = Some(connection.clone());
 
