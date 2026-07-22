@@ -1,6 +1,6 @@
 [package]
 name = "ctrader-connector"
-version = "0.11.6"
+version = "0.11.7"
 edition = "2021"
 authors = ["gorin <mxmgorin@gmail.com>"]
 
@@ -28,4 +28,4 @@ tonic = "0.12.1"
 rustls = "0.23.25"
 flurl = { git = "https://github.com/MyJetTools/fl-url.git", tag = "0.6.1" }
 [build-dependencies]
-tonic-build = { version = "*", features = ["prost"] }
+tonic-build = { version = "0.12", features = ["prost"] }
