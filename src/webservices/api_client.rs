@@ -14,7 +14,7 @@ use crate::webservices::{
     UpdateTraderRequest,
 };
 use error_chain::bail;
-use flurl::body::FlUrlBody;
+use flurl::body::HttpRequestBody;
 use flurl::{FlUrl, FlUrlMode, FlUrlResponse};
 use http::{Method, StatusCode};
 use serde::de::DeserializeOwned;
@@ -235,12 +235,12 @@ impl<C: WebservicesApiConfig> WebservicesApiClient<C> {
             request_json = Some(body.clone());
         }
 
-        // flurl 0.6.1 takes `impl Into<FlUrlBody>` instead of `Option<Vec<u8>>`.
+        // flurl 0.7.0 takes `impl Into<HttpRequestBody>` instead of `Option<Vec<u8>>`.
         // Content-Type is set explicitly in `add_headers`, so send the serialized JSON
         // as raw bytes with no auto content-type to preserve the previous behaviour.
         let body = match &request_json {
-            Some(json) => FlUrlBody::from_raw_data(json.clone().into_bytes(), None),
-            None => FlUrlBody::empty(),
+            Some(json) => HttpRequestBody::from_raw_data(json.clone().into_bytes(), None),
+            None => HttpRequestBody::empty(),
         };
 
         let (flurl, url) = self.build_flurl(endpoint, request).await?;
