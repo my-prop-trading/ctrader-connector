@@ -661,3 +661,19 @@ pub enum PositionDirection {
     #[serde(rename = "SELL")]
     Sell,
 }
+
+/// Asks the cTID backend for a one-time SSO code for a user (Copy widget hand-off).
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct GetAuthCodeRequest {
+    #[serde(rename = "brokerNames")]
+    pub broker_names: Vec<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct GetAuthCodeResponse {
+    /// Single-use, valid for 60 seconds.
+    // The Spotware docs print the field as "сode" with a Cyrillic "с"; accept both spellings
+    // until we see what the server actually sends.
+    #[serde(rename = "code", alias = "сode")]
+    pub code: String,
+}

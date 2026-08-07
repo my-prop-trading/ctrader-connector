@@ -4,7 +4,7 @@ use crate::webservices::endpoints::WebservicesApiEndpoint;
 use crate::webservices::errors::Error;
 use crate::webservices::models::{
     CreateCtidRequest, CreateCtidResponse, CreateCtraderManagerTokenRequest,
-    CreateCtraderManagerTokenResponse, CreateTraderRequest,
+    CreateCtraderManagerTokenResponse, CreateTraderRequest, GetAuthCodeRequest, GetAuthCodeResponse,
 };
 use crate::webservices::{
     ClosedPositionModel, CreateTraderResponse, GetClosedPositionsRequest,
@@ -165,6 +165,20 @@ impl<C: WebservicesApiConfig> WebservicesApiClient<C> {
         self.send_deserialized(endpoint, Some(request)).await
     }
 
+    /// Issues a one-time SSO code for a cTID user. The code is single-use and expires in 60
+    /// seconds, so request it right before handing the user over to the cTrader app.
+    pub async fn get_auth_code(
+        &self,
+        user_id: i64,
+        broker_names: Vec<String>,
+    ) -> Result<String, Error> {
+        let endpoint = WebservicesApiEndpoint::GetAuthCode(user_id);
+        let request = GetAuthCodeRequest { broker_names };
+        let resp: GetAuthCodeResponse = self.send_deserialized(endpoint, Some(&request)).await?;
+
+        Ok(resp.code)
+    }
+
     /// Creates a token and stores it internally for the next requests
     pub async fn authorize(&self) -> Result<String, Error> {
         let resp = self.create_token().await?;
@@ -282,11 +296,14 @@ impl<C: WebservicesApiConfig> WebservicesApiClient<C> {
         let base_url = self.config.get_url().await;
         let http_method = endpoint.get_http_method();
 
+        let bearer_auth = endpoint.uses_bearer_auth();
+        let url_token = if bearer_auth { &None } else { &token };
+
         let url = if http_method == Method::GET {
             let query_string = serde_qs::to_string(&request).expect("must be valid model");
-            self.build_full_url(&base_url, &endpoint, Some(query_string), &token)
+            self.build_full_url(&base_url, &endpoint, Some(query_string), url_token)
         } else {
-            self.build_full_url(&base_url, &endpoint, None, &token)
+            self.build_full_url(&base_url, &endpoint, None, url_token)
         };
 
         let flurl = if self.use_http2 {
@@ -295,17 +312,23 @@ impl<C: WebservicesApiConfig> WebservicesApiClient<C> {
             FlUrl::new(&url)
         };
         let flurl = flurl.set_timeout(self.timeout);
-        let flurl = self.add_headers(flurl);
+        let bearer = if bearer_auth { token.as_deref() } else { None };
+        let flurl = self.add_headers(flurl, bearer);
 
         Ok((flurl, url))
     }
 
-    fn add_headers(&self, flurl: FlUrl) -> FlUrl {
+    fn add_headers(&self, flurl: FlUrl, bearer_token: Option<&str>) -> FlUrl {
         let json_content_str = "application/json";
 
-        flurl
+        let flurl = flurl
             .with_header("Content-Type", json_content_str)
-            .with_header("Accept", json_content_str)
+            .with_header("Accept", json_content_str);
+
+        match bearer_token {
+            Some(token) => flurl.with_header("Authorization", format!("Bearer {token}")),
+            None => flurl,
+        }
     }
 
     pub fn build_query_string(&self, params: Vec<(&str, &str)>) -> String {

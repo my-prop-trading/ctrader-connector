@@ -20,6 +20,9 @@ pub enum WebservicesApiEndpoint {
     GetOpenedPositions,
     GetTraderGroups,
     GetSymbols,
+    /// Issues a one-time SSO code for a cTID user (e.g. to open the Copy widget).
+    /// Requires cTID {user_id}
+    GetAuthCode(i64),
 }
 
 impl From<&WebservicesApiEndpoint> for String {
@@ -57,6 +60,9 @@ impl From<&WebservicesApiEndpoint> for String {
             WebservicesApiEndpoint::GetOpenedPositions => {
                 format!("/{api_version}/webserv/openPositions")
             }
+            WebservicesApiEndpoint::GetAuthCode(user_id) => {
+                format!("/cid/v1/users/{user_id}/authcode")
+            }
         }
     }
 }
@@ -76,6 +82,13 @@ impl WebservicesApiEndpoint {
             WebservicesApiEndpoint::GetSymbols => Method::GET,
             WebservicesApiEndpoint::GetTrader(_) => Method::GET,
             WebservicesApiEndpoint::GetOpenedPositions => Method::GET,
+            WebservicesApiEndpoint::GetAuthCode(_) => Method::POST,
         }
+    }
+
+    /// The cTID SSO endpoints authenticate with `Authorization: Bearer <manager token>`,
+    /// while the rest of the WebServices API carries the token as a `token` query param.
+    pub fn uses_bearer_auth(&self) -> bool {
+        matches!(self, WebservicesApiEndpoint::GetAuthCode(_))
     }
 }
