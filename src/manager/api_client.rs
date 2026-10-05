@@ -52,6 +52,15 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
             .set_reconnect_timeout(Duration::from_secs(20))
             .set_seconds_to_ping(10);
 
+        // A dropped TcpClient keeps its connection loop running, and every live connection
+        // delivers each event to the same handler.
+        let mut current_tcp_client = self.tcp_client.lock().await;
+
+        if let Some(prev_tcp_client) = current_tcp_client.take() {
+            prev_tcp_client.try_disconnect_current_connection().await;
+            prev_tcp_client.stop().await;
+        }
+
         tcp_client
             .start(
                 Arc::new(ManagerApiSerializerFactory::default()),
@@ -59,7 +68,8 @@ impl<T: ManagerApiCallbackHandler + Send + Sync + 'static> ManagerApiClient<T> {
                 Arc::clone(&self.logger),
             )
             .await;
-        self.tcp_client.lock().await.replace(tcp_client);
+        current_tcp_client.replace(tcp_client);
+        drop(current_tcp_client);
 
         self.inner_client.wait_until_connected().await?;
 
