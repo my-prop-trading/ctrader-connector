@@ -1,8 +1,8 @@
 use crate::manager::common_messages_external::{ProtoErrorRes, ProtoMessage};
 use crate::manager::cs_messages_external::{
     ProtoBalanceHistoryListRes, ProtoCsPayloadType, ProtoExecutionEvent, ProtoManagerAuthRes,
-    ProtoOrderDetailsRes, ProtoOrderErrorEvent, ProtoTraderChangedEvent, ProtoTraderListRes,
-    ProtoTraderLogonEvent, ProtoTraderLogoutEvent,
+    ProtoOrderDetailsRes, ProtoOrderErrorEvent, ProtoPendingOrderListRes, ProtoTraderChangedEvent,
+    ProtoTraderListRes, ProtoTraderLogonEvent, ProtoTraderLogoutEvent,
 };
 
 #[derive(Debug, Clone)]
@@ -23,6 +23,7 @@ pub enum ManagerApiResponse {
     TraderListRes(ProtoTraderListRes),
     OrderDetailsRes(ProtoOrderDetailsRes),
     BalanceHistoryRes(ProtoBalanceHistoryListRes),
+    PendingOrderListRes(ProtoPendingOrderListRes),
 }
 
 #[derive(Debug, Clone)]
@@ -176,7 +177,14 @@ impl ManagerApiMessage {
             ProtoCsPayloadType::ProtoPositionListReq => {}
             ProtoCsPayloadType::ProtoPositionListRes => {}
             ProtoCsPayloadType::ProtoPendingOrderListReq => {}
-            ProtoCsPayloadType::ProtoPendingOrderListRes => {}
+            ProtoCsPayloadType::ProtoPendingOrderListRes => {
+                let payload = payload.as_ref().ok_or("ProtoPendingOrderListRes without payload")?;
+                let res = prost::Message::decode(&payload[..])
+                    .map_err(|err| format!("Failed to decode ProtoPendingOrderListRes: {err}"))?;
+                return Ok(Some(ManagerApiMessage::Response(
+                    ManagerApiResponse::PendingOrderListRes(res),
+                )));
+            }
             ProtoCsPayloadType::ProtoManagerListReq => {}
             ProtoCsPayloadType::ProtoManagerListRes => {}
             ProtoCsPayloadType::ProtoBalanceHistoryListReq => {}
